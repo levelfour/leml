@@ -20,7 +20,7 @@ let () =
   Arg.parse [] (fun s -> file := s) usage_msg;
   let valid, s = validate_filename !file in
   if not valid then
-    failwith s
+    let _ = Printf.eprintf "Error: %s\n%s" s usage_msg in exit 1
   else
     file := s;
 
