@@ -1,0 +1,6 @@
+# omake
+.omakedb
+.omakedb.lock
+*.omc
+
+*.s

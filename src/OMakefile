@@ -1,0 +1,46 @@
+PROGRAM=leml
+
+.PHONY: clean
+clean:
+	rm -rf $(PROGRAM) $(PROGRAM).opt *.omc \
+		*.o *.cmi *.cmx *.cmxa \
+		lexer.ml parser.ml parser.mli
+
+########################################################################
+# OCaml configuration.
+#
+
+NATIVE_ENABLED = true
+
+# Check build tools
+# ocamlfind
+if $(not $(OCAMLFIND_EXISTS))
+   eprintln(This project requires ocamlfind, but is was not found.)
+   eprintln(You need to install ocamlfind and run "omake --configure".)
+   exit 1
+
+# menhir
+if $(not $(MENHIR_AVAILABLE))
+   eprintln(This project requires menhir, but is was not found.)
+   eprintln(You need to install menhir and run "omake --configure".)
+   exit 1
+
+OCAMLLEX = ocamllex
+OCAMLYACC = ocamlyacc
+# MENHIR_ENABLED = true
+
+USE_OCAMLFIND = true
+OCAMLPACKS[] =
+   extlib
+
+OCamlGeneratedFiles(lexer.ml parser.ml parser.mli)
+
+FILES[] =
+   main
+   id
+   lexer
+   parser
+   syntax
+   type
+
+.DEFAULT: $(OCamlProgram $(PROGRAM), $(FILES))
