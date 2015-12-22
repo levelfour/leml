@@ -160,16 +160,13 @@ llvm::Value* NBinaryExpression::codeGen(CodeGenContext& context) {
 		default:         return nullptr;
 	}
 
-	return llvm::BinaryOperator::Create(
+	return context.builder->CreateBinOp(
 			instr,
 			lhs.codeGen(context),
-			rhs.codeGen(context),
-			"",
-			context.currentBlock());
+			rhs.codeGen(context));
 }
 
 llvm::Value* NCompExpression::codeGen(CodeGenContext& context) {
-	llvm::Instruction::OtherOps instr = llvm::Instruction::ICmp;
 	llvm::CmpInst::Predicate pred;
 
 	switch(op) {
@@ -182,12 +179,11 @@ llvm::Value* NCompExpression::codeGen(CodeGenContext& context) {
 		default:             return nullptr;
 	}
 
-	llvm::Value* valCmp = llvm::CmpInst::Create(
-			instr, pred,
+	llvm::Value* valCmp = context.builder->CreateICmp(
+			pred,
 			lhs.codeGen(context),
 			rhs.codeGen(context),
-			"cmp",
-			context.currentBlock());
+			"cmp");
 
 	// convert comparing result (i1) to i32
 	return context.builder->CreateZExtOrBitCast(
