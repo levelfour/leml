@@ -167,10 +167,10 @@ exp:
     { Syntax.Let((Id.gentmp Type.Unit, Type.Unit), $1, $3) }
 | exp SEMICOLON
     { $1 }
-| ARRAY_CREATE simple_exp simple_exp
-    %prec prec_app
-    { Syntax.Array($2, $3) }
 */
+| TARRAY_CREATE simple_exp simple_exp
+    %prec prec_app
+    { $$ = new NArrayExpression(*$2, *$3); }
 | error
     { std::cerr << "parser error\n"; assert(false); }
 

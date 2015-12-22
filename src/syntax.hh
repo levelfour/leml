@@ -203,4 +203,16 @@ public:
 	}
 };
 
+class NArrayExpression: public NExpression {
+public:
+	NExpression& length;
+	NExpression& data;
+	std::vector<NExpression*> *array;
+	NArrayExpression(NExpression& length, NExpression& data): length(length), data(data) {
+		array = new std::vector<NExpression*>;
+	}
+	virtual ~NArrayExpression() { delete array; }
+	virtual llvm::Value* codeGen(CodeGenContext& context);
+};
+
 #endif // __SYNTAX_HPP__

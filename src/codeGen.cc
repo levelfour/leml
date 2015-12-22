@@ -332,3 +332,9 @@ llvm::Value* NCallExpression::codeGen(CodeGenContext& context) {
 	}
 	return context.builder->CreateCall(fn, argValues);
 }
+
+llvm::Value* NArrayExpression::codeGen(CodeGenContext& context) {
+	llvm::Value* arrayLength = length.codeGen(context);
+	llvm::Value* valData = data.codeGen(context);
+	return context.builder->CreateAlloca(llvm::Type::getInt32Ty(llvm::getGlobalContext()), arrayLength);
+}
