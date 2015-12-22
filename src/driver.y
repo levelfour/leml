@@ -103,7 +103,7 @@ exp:
     { $$ = $1; }
 | TNOT exp
     %prec prec_app
-    { $$ = new NUnaryExpression($1, *$2); }
+    { $$ = new NUnaryExpression(TMINUS, *$2); }
 | TMINUS exp
     %prec prec_unary_minus
 	{

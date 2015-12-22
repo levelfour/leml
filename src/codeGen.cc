@@ -142,7 +142,21 @@ llvm::Value* NIdentifier::codeGen(CodeGenContext& context) {
 }
 
 llvm::Value* NUnaryExpression::codeGen(CodeGenContext& context) {
-	return NULL;
+	switch(op) {
+		case TMINUS:
+		{
+			return context.builder->CreateSub(
+				llvm::ConstantInt::get(llvm::Type::getInt32Ty(llvm::getGlobalContext()), 0),
+				expr.codeGen(context));
+		}
+		case TMINUS_DOT:
+		{
+			return context.builder->CreateFSub(
+				llvm::ConstantInt::get(llvm::Type::getDoubleTy(llvm::getGlobalContext()), 0),
+				expr.codeGen(context));
+		}
+		default: return nullptr;
+	}
 }
 
 llvm::Value* NBinaryExpression::codeGen(CodeGenContext& context) {
