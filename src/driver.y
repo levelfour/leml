@@ -163,11 +163,11 @@ exp:
     { Syntax.LetTuple($3, $6, $8) }
 | simple_exp DOT LPAREN exp RPAREN LESS_MINUS exp
     { Syntax.Put($1, $4, $7) }
-| exp SEMICOLON exp
-    { Syntax.Let((Id.gentmp Type.Unit, Type.Unit), $1, $3) }
-| exp SEMICOLON
-    { $1 }
 */
+| exp TSEMICOLON exp
+    { $$ = new NLetExpression(*(new NIdentifier("_")), $1, $3); }
+| exp TSEMICOLON
+    { $$ = $1; }
 | TARRAY_CREATE simple_exp simple_exp
     %prec prec_app
     { $$ = new NArrayExpression(*$2, *$3); }
