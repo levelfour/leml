@@ -3,4 +3,7 @@
 .omakedb.lock
 *.omc
 
+# generated
+*.dSYM
+
 *.s

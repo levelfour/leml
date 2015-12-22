@@ -1,7 +1,0 @@
-SRC_DIR=src
-
-.PHONY: clean
-clean:
-	rm -rf *.omc $(SRC_DIR)/*.omc
-
-.SUBDIRS: $(SRC_DIR)
