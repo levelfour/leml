@@ -94,6 +94,7 @@ int main() {
 
 		// generate LLVM IR
 		context.generateCode(*programBlock);
+		std::cout << *programBlock << std::endl;
 
 		// run on LLVM JIT
 		auto valRet = context.runCode();

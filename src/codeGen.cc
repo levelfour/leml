@@ -238,7 +238,7 @@ llvm::Value* NIfExpression::codeGen(CodeGenContext& context) {
 	context.builder->SetInsertPoint(blkCont);
 	llvm::PHINode* pn = context.builder->CreatePHI(
 			llvm::Type::getInt32Ty(llvm::getGlobalContext()),
-			2, "iftmp");
+			2, "if.tmp");
 	pn->addIncoming(valThen, blkThen);
 	pn->addIncoming(valElse, blkElse);
 
@@ -298,6 +298,7 @@ llvm::Value* NFundefExpression::codeGen(CodeGenContext& context) {
 		argValue->setName(arg->id.name);
 		context.builder->CreateStore(argValue, context.locals()[arg->id.name]);
 	}
+
 	// build function body
 	llvm::Value* valRet = block.codeGen(context);
 

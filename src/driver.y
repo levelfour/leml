@@ -154,7 +154,7 @@ exp:
     { $$ = new NLetRecExpression($3->id, $3->args, *$3, *$5); }
 | exp actual_args
     %prec prec_app
-    { $$ = new NCallExpression(*$1, $2); }
+    { $$ = new NCallExpression(*$<id>1, $2); }
 	/*
 | elems
     { Syntax.Tuple($1) }

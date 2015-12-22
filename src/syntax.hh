@@ -162,6 +162,10 @@ public:
 	NFundefExpression(NIdentifier& id, std::vector<NLetExpression*> args, NExpression& block):
 		id(id), args(args), block(block) {}
 	virtual llvm::Value* codeGen(CodeGenContext& context);
+	virtual std::ostream& print(std::ostream& os) const {
+		os << block;
+		return os;
+	}
 };
 
 class NLetRecExpression: public NExpression {
@@ -173,6 +177,14 @@ public:
 	NLetRecExpression(NIdentifier& id, std::vector<NLetExpression*> args, NFundefExpression& fundef, NExpression& expr):
 		id(id), args(args), fundef(fundef), eval(expr) {}
 	virtual llvm::Value* codeGen(CodeGenContext& context);
+	virtual std::ostream& print(std::ostream& os) const {
+		os << "let rec " << id.name;
+		for(auto arg: args) {
+			os << " " << arg->id.name;
+		}
+		os << " = \n" << fundef << std::endl << "in " << eval;
+		return os;
+	}
 };
 
 class NCallExpression: public NExpression {
@@ -182,6 +194,13 @@ public:
 	NCallExpression(NIdentifier& fun, std::vector<NExpression*> *args):
 		id(fun), args(args) {}
 	virtual llvm::Value* codeGen(CodeGenContext& context);
+	virtual std::ostream& print(std::ostream& os) const {
+		os << id.name;
+		for(auto arg: *args) {
+			os << " " << *arg;
+		}
+		return os;
+	}
 };
 
 #endif // __SYNTAX_HPP__
