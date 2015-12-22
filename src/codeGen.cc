@@ -270,9 +270,10 @@ llvm::Value* NLetExpression::codeGen(CodeGenContext& context) {
 	if(assign != nullptr) {
 		NAssignment assn(id, *assign);
 		assn.codeGen(context);
-		eval->codeGen(context);
+		return eval->codeGen(context);
+	} else {
+		return alloc;
 	}
-	return alloc;
 }
 
 llvm::Value* NLetRecExpression::codeGen(CodeGenContext& context) {
