@@ -1,6 +1,7 @@
 %{
 #include <iostream>
 #include <cstdlib>
+#include <cassert>
 #include "syntax.hh"
 
 extern int yylex();
@@ -169,9 +170,9 @@ exp:
 | ARRAY_CREATE simple_exp simple_exp
     %prec prec_app
     { Syntax.Array($2, $3) }
-| error
-    { failwith "parser error" }
 */
+| error
+    { std::cerr << "parser error\n"; assert(false); }
 
 fundef:
   id_decl formal_args TEQUAL exp

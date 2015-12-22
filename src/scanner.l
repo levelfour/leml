@@ -1,6 +1,7 @@
 %{
 #include <iostream>
 #include <string>
+#include <cassert>
 #include "syntax.hh"
 #include "parser.hh"
 
@@ -50,5 +51,5 @@ create_array    { return TOKEN(TARRAY_CREATE); }
 ";"     { return TOKEN(TSEMICOLON); }
 [a-z][0-9a-zA-Z_']* { SAVE_TOKEN; return TIDENT; }
 <<EOF>> { yyterminate(); }
-.       { printf("unknown token"); yyterminate(); }
+.       { std::cerr << "unknown token\n"; assert(false); }
 %%
