@@ -104,49 +104,49 @@ exp:
     { $$ = $1; }
 | TNOT exp
     %prec prec_app
-    { $$ = new NUnaryExpression(TMINUS, *$2); }
+    { $$ = new NUnaryExpression(LNot, *$2); }
 | TMINUS exp
     %prec prec_unary_minus
 	{
 		if(typeid(NFloat) == typeid(*$2)) {
 			$$ = new NFloat(-(dynamic_cast<NFloat *>$2)->value);
 		} else {
-			$$ = new NUnaryExpression($1, *$2);
+			$$ = new NUnaryExpression(LNeg, *$2);
 		}
 	}
 | exp TPLUS exp
-    { $$ = new NBinaryExpression($2, *$1, *$3); }
+    { $$ = new NBinaryExpression(LAdd, *$1, *$3); }
 | exp TMINUS exp
-    { $$ = new NBinaryExpression($2, *$1, *$3); }
+    { $$ = new NBinaryExpression(LSub, *$1, *$3); }
 | exp TAST exp
-    { $$ = new NBinaryExpression($2, *$1, *$3); }
+    { $$ = new NBinaryExpression(LMul, *$1, *$3); }
 | exp TSLASH exp
-    { $$ = new NBinaryExpression($2, *$1, *$3); }
+    { $$ = new NBinaryExpression(LDiv, *$1, *$3); }
 | exp TEQUAL exp
-    { $$ = new NCompExpression($2, *$1, *$3); }
+    { $$ = new NCompExpression(LEq, *$1, *$3); }
 | exp TLESS_GREATER exp
-    { $$ = new NCompExpression($2, *$1, *$3); }
+    { $$ = new NCompExpression(LNeq, *$1, *$3); }
 | exp TLESS exp
-    { $$ = new NCompExpression($2, *$1, *$3); }
+    { $$ = new NCompExpression(LLT, *$1, *$3); }
 | exp TGREATER exp
-    { $$ = new NCompExpression($2, *$1, *$3); }
+    { $$ = new NCompExpression(LGT, *$1, *$3); }
 | exp TLESS_EQUAL exp
-    { $$ = new NCompExpression($2, *$1, *$3); }
+    { $$ = new NCompExpression(LLE, *$1, *$3); }
 | exp TGREATER_EQUAL exp
-    { $$ = new NCompExpression($2, *$1, *$3); }
+    { $$ = new NCompExpression(LGE, *$1, *$3); }
 | TIF exp TTHEN exp TELSE exp
     { $$ = new NIfExpression(*$2, *$4, *$6); }
 | TMINUS_DOT exp
     %prec prec_unary_minus
-	{ $$ = new NUnaryExpression($1, *$2); }
+	{ $$ = new NUnaryExpression(LFNeg, *$2); }
 | exp TPLUS_DOT exp
-    { $$ = new NBinaryExpression($2, *$1, *$3); }
+    { $$ = new NBinaryExpression(LFAdd, *$1, *$3); }
 | exp TMINUS_DOT exp
-    { $$ = new NBinaryExpression($2, *$1, *$3); }
+    { $$ = new NBinaryExpression(LFSub, *$1, *$3); }
 | exp TAST_DOT exp
-    { $$ = new NBinaryExpression($2, *$1, *$3); }
+    { $$ = new NBinaryExpression(LFMul, *$1, *$3); }
 | exp TSLASH_DOT exp
-    { $$ = new NBinaryExpression($2, *$1, *$3); }
+    { $$ = new NBinaryExpression(LFDiv, *$1, *$3); }
 | TLET id_decl TEQUAL exp TIN exp
     %prec prec_let
     { $$ = new NLetExpression(*$2, $4, $6); }

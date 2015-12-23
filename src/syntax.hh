@@ -6,6 +6,26 @@
 #include <string>
 #include <llvm/IR/Value.h>
 
+enum Operation {
+	LNot,
+	LNeg,
+	LAdd,
+	LSub,
+	LMul,
+	LDiv,
+	LFNeg,
+	LFAdd,
+	LFSub,
+	LFMul,
+	LFDiv,
+	LEq,
+	LNeq,
+	LLE,
+	LLT,
+	LGE,
+	LGT,
+};
+
 class CodeGenContext;
 class NExpression;
 class NLetExpression;

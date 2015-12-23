@@ -143,13 +143,13 @@ llvm::Value* NIdentifier::codeGen(CodeGenContext& context) {
 
 llvm::Value* NUnaryExpression::codeGen(CodeGenContext& context) {
 	switch(op) {
-		case TMINUS:
+		case LNeg:
 		{
 			return context.builder->CreateSub(
 				llvm::ConstantInt::get(llvm::Type::getInt32Ty(llvm::getGlobalContext()), 0),
 				expr.codeGen(context));
 		}
-		case TMINUS_DOT:
+		case LFNeg:
 		{
 			return context.builder->CreateFSub(
 				llvm::ConstantInt::get(llvm::Type::getDoubleTy(llvm::getGlobalContext()), 0),
@@ -163,14 +163,14 @@ llvm::Value* NBinaryExpression::codeGen(CodeGenContext& context) {
 	llvm::Instruction::BinaryOps instr;
 
 	switch(op) {
-		case TPLUS:      instr = llvm::Instruction::Add; break;
-		case TMINUS:     instr = llvm::Instruction::Sub; break;
-		case TAST:       instr = llvm::Instruction::Mul; break;
-		case TSLASH:     instr = llvm::Instruction::SDiv; break;
-		case TPLUS_DOT:  instr = llvm::Instruction::FAdd; break;
-		case TMINUS_DOT: instr = llvm::Instruction::FSub; break;
-		case TAST_DOT:   instr = llvm::Instruction::FMul; break;
-		case TSLASH_DOT: instr = llvm::Instruction::FDiv; break;
+		case LAdd:  instr = llvm::Instruction::Add; break;
+		case LSub:  instr = llvm::Instruction::Sub; break;
+		case LMul:  instr = llvm::Instruction::Mul; break;
+		case LDiv:  instr = llvm::Instruction::SDiv; break;
+		case LFAdd: instr = llvm::Instruction::FAdd; break;
+		case LFSub: instr = llvm::Instruction::FSub; break;
+		case LFMul: instr = llvm::Instruction::FMul; break;
+		case LFDiv: instr = llvm::Instruction::FDiv; break;
 		default:         return nullptr;
 	}
 
@@ -184,12 +184,12 @@ llvm::Value* NCompExpression::codeGen(CodeGenContext& context) {
 	llvm::CmpInst::Predicate pred;
 
 	switch(op) {
-		case TEQUAL:         pred = llvm::CmpInst::ICMP_EQ;  break;
-		case TLESS_GREATER:  pred = llvm::CmpInst::ICMP_NE;  break;
-		case TLESS:          pred = llvm::CmpInst::ICMP_SLT; break;
-		case TLESS_EQUAL:    pred = llvm::CmpInst::ICMP_SLE; break;
-		case TGREATER:       pred = llvm::CmpInst::ICMP_SGT; break;
-		case TGREATER_EQUAL: pred = llvm::CmpInst::ICMP_SGE; break;
+		case LEq:  pred = llvm::CmpInst::ICMP_EQ;  break;
+		case LNeq: pred = llvm::CmpInst::ICMP_NE;  break;
+		case LLT:  pred = llvm::CmpInst::ICMP_SLT; break;
+		case LLE:  pred = llvm::CmpInst::ICMP_SLE; break;
+		case LGT:  pred = llvm::CmpInst::ICMP_SGT; break;
+		case LGE:  pred = llvm::CmpInst::ICMP_SGE; break;
 		default:             return nullptr;
 	}
 
