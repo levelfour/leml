@@ -1,0 +1,20 @@
+#ifndef __INFER_HH__
+#define __INFER_HH__
+
+#include <vector>
+#include <map>
+#include <llvm/IR/Type.h>
+#include <llvm/IR/Module.h>
+#include <llvm/IR/LLVMContext.h>
+
+#include "syntax.hh"
+#include "type.hh"
+
+typedef std::map<NIdentifier*, LemlType*> TypeEnv;
+
+static bool occur(LemlType* r1, LemlType* t);
+void unify(LemlType* t1, LemlType* t2);
+LemlType* infer(NExpression* expr, TypeEnv env);
+static llvm::Type* llvmType(LemlType* type);
+
+#endif // __INFER_HH__

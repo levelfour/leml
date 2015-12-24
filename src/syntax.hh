@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <llvm/IR/Value.h>
+#include "type.hh"
 
 enum Operation {
 	LNot,
@@ -158,11 +159,13 @@ public:
 class NLetExpression: public NExpression {
 public:
 	NIdentifier& id;
+	LemlType* t;
 	NExpression* assign;
 	NExpression* eval;
-	NLetExpression(NIdentifier& s): id(s), assign(nullptr), eval(nullptr) {}
+	NLetExpression(NIdentifier& s):
+		id(s), t(newty()), assign(nullptr), eval(nullptr) {}
 	NLetExpression(NIdentifier& s, NExpression* assign, NExpression* eval):
-		id(s), assign(assign), eval(eval) {}
+		id(s), t(newty()), assign(assign), eval(eval) {}
 	virtual llvm::Value* codeGen(CodeGenContext& context);
 	virtual std::ostream& print(std::ostream& os) const {
 		os << "let " << id;
@@ -191,11 +194,12 @@ public:
 class NLetRecExpression: public NExpression {
 public:
 	NIdentifier& id;
+	LemlType* t;
 	std::vector<NLetExpression*> args;
 	NFundefExpression& fundef;
 	NExpression& eval;
 	NLetRecExpression(NIdentifier& id, std::vector<NLetExpression*> args, NFundefExpression& fundef, NExpression& expr):
-		id(id), args(args), fundef(fundef), eval(expr) {}
+		id(id), t(newty()), args(args), fundef(fundef), eval(expr) {}
 	virtual llvm::Value* codeGen(CodeGenContext& context);
 	virtual std::ostream& print(std::ostream& os) const {
 		os << "let rec " << id.name;

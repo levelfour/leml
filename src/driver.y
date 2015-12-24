@@ -7,7 +7,7 @@
 extern int yylex();
 void yyerror(const char *s) { printf("ERROR: %s\n", s); }
 
-NExpression *programBlock;
+NExpression *program;
 %}
 
 %require "2.7"
@@ -77,7 +77,7 @@ NExpression *programBlock;
 
 %%
 
-program: exp { programBlock = $1; };
+program: exp { program = $1; };
 
 simple_exp:
   TLPAREN exp TRPAREN

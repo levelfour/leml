@@ -1,10 +1,52 @@
 #include <iostream>
 #include "syntax.hh"
+#include "infer.hh"
 #include "codeGen.hh"
 
-extern NExpression *programBlock;
+extern NExpression *program;
 extern int yyparse();
 extern int yydebug;
+
+int main() {
+
+	// initialization of LLVM
+	LLVMInitializeNativeTarget();
+	LLVMInitializeNativeAsmPrinter();
+	LLVMInitializeNativeAsmParser();
+
+	// initialization of bison
+#ifdef YYDEBUG
+	yydebug = 1;
+#endif
+
+	// lexer/parser
+	if(yyparse() == 0) {
+
+		// type inference / check
+		auto* t = infer(program, TypeEnv());
+		if(t == nullptr) {
+			std::cerr << "type check failure" << std::endl;
+			exit(EXIT_FAILURE);
+		}
+
+		// initialize LLVM context
+		CodeGenContext context;
+//		llvm::Function* fn_printf = createPrintfFunction(context);
+//		llvm::Function* fn_print_int = createPrintIntFunction(context, fn_printf);
+//		context.addCoreFunctions(fn_print_int);
+
+		// generate LLVM IR
+		context.generateCode(*program);
+		std::cout << *program << std::endl;
+
+		// run on LLVM JIT
+		auto valRet = context.runCode();
+		std::cout << "return value = " << valRet
+				  << ", type = " << t->tag << std::endl;
+	}
+
+	return 0;
+}
 
 
 llvm::Function* createPrintfFunction(CodeGenContext& context) {
@@ -71,35 +113,3 @@ llvm::Function* createPrintIntFunction(CodeGenContext& context, llvm::Function* 
 	return func;
 }
 
-int main() {
-
-	// initialization of LLVM
-	LLVMInitializeNativeTarget();
-	LLVMInitializeNativeAsmPrinter();
-	LLVMInitializeNativeAsmParser();
-
-	// initialization of bison
-#ifdef YYDEBUG
-	yydebug = 1;
-#endif
-
-	// lexer/parser
-	if(yyparse() == 0) {
-
-		// initialize LLVM context
-		CodeGenContext context;
-//		llvm::Function* fn_printf = createPrintfFunction(context);
-//		llvm::Function* fn_print_int = createPrintIntFunction(context, fn_printf);
-//		context.addCoreFunctions(fn_print_int);
-
-		// generate LLVM IR
-		context.generateCode(*programBlock);
-		std::cout << *programBlock << std::endl;
-
-		// run on LLVM JIT
-		auto valRet = context.runCode();
-		std::cout << "return value = " << valRet << std::endl;
-	}
-
-	return 0;
-}
