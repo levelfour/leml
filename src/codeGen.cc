@@ -277,11 +277,6 @@ llvm::Value* NLetExpression::codeGen(CodeGenContext& context) {
 }
 
 llvm::Value* NLetRecExpression::codeGen(CodeGenContext& context) {
-	fundef.codeGen(context);
-	return eval.codeGen(context);
-}
-
-llvm::Value* NFundefExpression::codeGen(CodeGenContext& context) {
 	// build function prototype
 	std::vector<llvm::Type*> argtypes;
 	for(auto _: args) {
@@ -311,18 +306,29 @@ llvm::Value* NFundefExpression::codeGen(CodeGenContext& context) {
 	}
 
 	// build function body
-	llvm::Value* valRet = block.codeGen(context);
+	llvm::Value* valRet = body.codeGen(context);
 
 	// emit return value
 	context.builder->CreateRet(valRet);
 
 	context.popBlock();
-	return fn;
+
+	return eval.codeGen(context);
+}
+
+llvm::Value* NFundefExpression::codeGen(CodeGenContext& context) {
+#ifdef LEML_DEBUG
+	// do not call NFundefExpression::codeGen
+	assert(false);
+#endif
+	return nullptr;
 }
 
 llvm::Value* NCallExpression::codeGen(CodeGenContext& context) {
 	// get function
-	llvm::Function *fn = context.module->getFunction(id.name.c_str());
+	NIdentifier* id = dynamic_cast<NIdentifier*>(&fun);
+	assert(id != nullptr); // TODO: higher-order function
+	llvm::Function *fn = context.module->getFunction(id->name.c_str());
 	assert(fn != nullptr);
 
 	// generate code of arguments

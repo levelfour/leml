@@ -1,6 +1,8 @@
 #ifndef __TYPE_HH__
 #define __TYPE_HH__
 
+#include <iostream>
+#include <string>
 #include <vector>
 
 enum LemlTypeTag {
@@ -24,6 +26,12 @@ struct LemlType {
 
 	// list data for Function type, Tuple type
 	std::vector<LemlType*> array;
+
+	operator std::string() const;
+	friend std::ostream& operator<<(std::ostream& os, const LemlType& ty) {
+		os << static_cast<std::string>(ty);
+		return os;
+	}
 };
 
 LemlType* newty();

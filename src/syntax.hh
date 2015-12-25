@@ -41,13 +41,12 @@ public:
 
 class NExpression: public Node {
 public:
+	virtual llvm::Value* codeGen(CodeGenContext& context) { return nullptr; }
 	virtual std::ostream& print(std::ostream& os) const {
 		os << "exp";
 		return os;
 	}
 };
-
-class NStatement: public Node {};
 
 class NUnit: public NExpression {};
 
@@ -196,30 +195,30 @@ public:
 	NIdentifier& id;
 	LemlType* t;
 	std::vector<NLetExpression*> args;
-	NFundefExpression& fundef;
+	NExpression& body;
 	NExpression& eval;
-	NLetRecExpression(NIdentifier& id, std::vector<NLetExpression*> args, NFundefExpression& fundef, NExpression& expr):
-		id(id), t(newty()), args(args), fundef(fundef), eval(expr) {}
+	NLetRecExpression(NIdentifier& id, std::vector<NLetExpression*> args, NExpression& body, NExpression& expr):
+		id(id), t(newty()), args(args), body(body), eval(expr) {}
 	virtual llvm::Value* codeGen(CodeGenContext& context);
 	virtual std::ostream& print(std::ostream& os) const {
 		os << "let rec " << id.name;
 		for(auto arg: args) {
 			os << " " << arg->id.name;
 		}
-		os << " = \n" << fundef << std::endl << "in " << eval;
+		os << " = \n" << body << std::endl << "in " << eval;
 		return os;
 	}
 };
 
 class NCallExpression: public NExpression {
 public:
-	NIdentifier& id;
+	NExpression& fun;
 	std::vector<NExpression*> *args;
-	NCallExpression(NIdentifier& fun, std::vector<NExpression*> *args):
-		id(fun), args(args) {}
+	NCallExpression(NExpression& fun, std::vector<NExpression*> *args):
+		fun(fun), args(args) {}
 	virtual llvm::Value* codeGen(CodeGenContext& context);
 	virtual std::ostream& print(std::ostream& os) const {
-		os << id.name;
+		os << "(" << fun << ")";
 		for(auto arg: *args) {
 			os << " " << *arg;
 		}

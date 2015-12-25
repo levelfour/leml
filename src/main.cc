@@ -23,11 +23,19 @@ int main() {
 	if(yyparse() == 0) {
 
 		// type inference / check
-		auto* t = infer(program, TypeEnv());
-		if(t == nullptr) {
-			std::cerr << "type check failure" << std::endl;
+		LemlType* t;
+		try {
+			t = infer(program, TypeEnv());
+			if(t == nullptr) {
+				std::cerr << "type check failure" << std::endl;
+				exit(EXIT_FAILURE);
+			}
+		} catch(UnificationError e) {
+			std::cerr << e.what() << std::endl;
 			exit(EXIT_FAILURE);
 		}
+
+		std::cout << *t << std::endl;
 
 		// initialize LLVM context
 		CodeGenContext context;
@@ -42,7 +50,7 @@ int main() {
 		// run on LLVM JIT
 		auto valRet = context.runCode();
 		std::cout << "return value = " << valRet
-				  << ", type = " << t->tag << std::endl;
+				  << ", type = " << *t << std::endl;
 	}
 
 	return 0;

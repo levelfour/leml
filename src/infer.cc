@@ -17,6 +17,8 @@ static void vectorLengthAssersion(std::vector<T> v1, std::vector<T> v2) {
 
 // type r1 occurs in t ?
 static bool occur(LemlType* r1, LemlType* t) {
+	assert(t != nullptr);
+
 	if(t->tag == Fun) {
 		bool result = false;
 		for(auto ty: t->array) {
@@ -32,12 +34,12 @@ static bool occur(LemlType* r1, LemlType* t) {
 		return result;
 	} else if(t->tag ==	Array) {
 		return occur(r1, t->data);
-	} else if(t->tag == Var && t->data == r1) {
+	} else if(t->tag == Var && t->data == r1 && r1 != nullptr) {
 		return true;
 	} else if(t->tag == Var && t->data == nullptr) {
 		return false;
 	} else if(t->tag == Var) {
-		return occur(t->data, r1);
+		return occur(r1, t->data);
 	} else {
 		return false;
 	}
@@ -72,26 +74,31 @@ void unify(LemlType* t1, LemlType* t2) {
 	} else if(t2->tag == Var && t2->data != nullptr) {
 		unify(t1, t2->data);
 	} else if(t1->tag == Var && t1->data == nullptr) {
-		if(occur(t1->data, t2)) throw "unify";
+		if(occur(t1->data, t2)) {
+			std::cout << "throw " << *t1 << std::endl;
+			throw UnificationError(t1, t2);
+		}
 		t1->data = t2;
 	} else if(t2->tag == Var && t2->data == nullptr) {
-		if(occur(t2->data, t1)) throw "unify";
+		if(occur(t2->data, t1)) throw UnificationError(t1, t2);
 		t2->data = t1;
 	} else {
-		throw "unify";
+		throw UnificationError(t1, t2);
 	}
 }
 
 LemlType *infer(NExpression* expr, TypeEnv env) {
-	if(typeid(expr) == typeid(NUnit)) {
+	assert(expr != nullptr);
+
+	if(typeid(*expr) == typeid(NUnit)) {
 		return typeUnit;
-	} else if(typeid(expr) == typeid(NBoolean)) {
+	} else if(typeid(*expr) == typeid(NBoolean)) {
 		return typeBool;
-	} else if(typeid(expr) == typeid(NInteger)) {
+	} else if(typeid(*expr) == typeid(NInteger)) {
 		return typeInt;
-	} else if(typeid(expr) == typeid(NFloat)) {
+	} else if(typeid(*expr) == typeid(NFloat)) {
 		return typeFloat;
-	} else if(typeid(expr) == typeid(NUnaryExpression)) {
+	} else if(typeid(*expr) == typeid(NUnaryExpression)) {
 		NUnaryExpression* e = dynamic_cast<NUnaryExpression*>(expr);
 		switch(e->op) {
 			case LNot:
@@ -104,7 +111,7 @@ LemlType *infer(NExpression* expr, TypeEnv env) {
 				unify(typeFloat, infer(&e->expr, env));
 				return typeFloat;
 		}
-	} else if(typeid(expr) == typeid(NBinaryExpression)) {
+	} else if(typeid(*expr) == typeid(NBinaryExpression)) {
 		NBinaryExpression* e = dynamic_cast<NBinaryExpression*>(expr);
 		switch(e->op) {
 			case LAdd:
@@ -121,6 +128,10 @@ LemlType *infer(NExpression* expr, TypeEnv env) {
 				unify(typeFloat, infer(&e->lhs, env));
 				unify(typeFloat, infer(&e->rhs, env));
 				return typeFloat;
+		}
+	} else if(typeid(*expr) == typeid(NCompExpression)) {
+		NCompExpression* e = dynamic_cast<NCompExpression*>(expr);
+		switch(e->op) {
 			case LEq:
 			case LNeq:
 			case LLT:
@@ -130,28 +141,49 @@ LemlType *infer(NExpression* expr, TypeEnv env) {
 				unify(infer(&e->lhs, env), infer(&e->rhs, env));
 				return typeBool;
 		}
-	} else if(typeid(expr) == typeid(NIfExpression)) {
+	} else if(typeid(*expr) == typeid(NIfExpression)) {
 		NIfExpression* e = dynamic_cast<NIfExpression*>(expr);
 		unify(infer(&e->cond, env), typeBool);
 		auto* t2 = infer(&e->true_exp, env);
 		auto* t3 = infer(&e->false_exp, env);
 		unify(t2, t3);
 		return t2;
-	} else if(typeid(expr) == typeid(NLetExpression)) {
+	} else if(typeid(*expr) == typeid(NLetExpression)) {
 		NLetExpression* e = dynamic_cast<NLetExpression*>(expr);
 		unify(e->t, infer(e->assign, env));
-		env[&e->id] = e->t;
+		env[e->id.name] = e->t;
 		return infer(e->eval, env);
-	} else if(typeid(expr) == typeid(NLetRecExpression)) {
+	} else if(typeid(*expr) == typeid(NIdentifier)) {
+		NIdentifier* e = dynamic_cast<NIdentifier*>(expr);
+		auto t = env.find(e->name);
+		if(t != env.end()) {
+			// env memorized this variable
+			return t->second;
+		} else {
+			// TODO: inference on external variable
+			return nullptr;
+		}
+	} else if(typeid(*expr) == typeid(NLetRecExpression)) {
 		NLetRecExpression* e = dynamic_cast<NLetRecExpression*>(expr);
-		env[&e->id] = e->t;
-		// TODO:
+		env[e->id.name] = e->t;
+		TypeEnv envBody = env;
+		std::vector<LemlType*> typeArgs;
+		for(auto arg: e->args) {
+			envBody[arg->id.name] = arg->t;
+			typeArgs.push_back(arg->t);
+		}
+		unify(e->t, new LemlType({Fun, infer(&e->body, envBody), typeArgs}));
 		return infer(&e->eval, env);
-	} else if(typeid(expr) == typeid(NCallExpression)) {
+	} else if(typeid(*expr) == typeid(NCallExpression)) {
 		NCallExpression* e = dynamic_cast<NCallExpression*>(expr);
-		// TODO:
-		return nullptr;
-	} else if(typeid(expr) == typeid(NArrayExpression)) {
+		auto* t = newty();
+		std::vector<LemlType*> typeArgs;
+		for(auto arg: *e->args) {
+			typeArgs.push_back(infer(arg, env));
+		}
+		unify(infer(&e->fun, env), new LemlType({Fun, t, typeArgs}));
+		return t;
+	} else if(typeid(*expr) == typeid(NArrayExpression)) {
 		NArrayExpression* e = dynamic_cast<NArrayExpression*>(expr);
 		return new LemlType({Array, infer(&e->data, env), {}});
 	}
