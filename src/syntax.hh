@@ -147,14 +147,6 @@ public:
 	}
 };
 
-class NAssignment: public NExpression {
-public:
-	NIdentifier& lhs;
-	NExpression& rhs;
-	NAssignment(NIdentifier& lhs, NExpression& rhs): lhs(lhs), rhs(rhs) {}
-	virtual llvm::Value* codeGen(CodeGenContext& context);
-};
-
 class NLetExpression: public NExpression {
 public:
 	NIdentifier& id;

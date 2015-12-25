@@ -244,7 +244,7 @@ llvm::Type* llvmType(LemlType* type) {
 		case Int:
 			return reinterpret_cast<llvm::Type*>(llvm::Type::getInt32Ty(llvm::getGlobalContext()));
 		case Float:
-			return llvm::Type::getFloatTy(llvm::getGlobalContext());
+			return llvm::Type::getDoubleTy(llvm::getGlobalContext());
 		case Fun:
 		{
 			std::vector<llvm::Type*> argtypes;

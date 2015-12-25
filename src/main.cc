@@ -43,7 +43,7 @@ int main() {
 //		context.addCoreFunctions(fn_print_int);
 
 		// generate LLVM IR
-		context.generateCode(*program);
+		context.generateCode(*program, t);
 		std::cout << *program << std::endl;
 
 		// run on LLVM JIT

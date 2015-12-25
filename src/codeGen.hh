@@ -15,6 +15,7 @@
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/GenericValue.h>
 #include <llvm/ExecutionEngine/MCJIT.h>
+#include "type.hh"
 
 class NExpression;
 
@@ -27,6 +28,7 @@ public:
 class CodeGenContext {
 	std::stack<CodeGenBlock *> blocks;
 	llvm::Function *fnMain;
+	llvm::Type* typeRet;
 
 public:
 	llvm::Module *module;
@@ -34,7 +36,7 @@ public:
 	CodeGenContext();
 	virtual ~CodeGenContext();
 
-	void generateCode(NExpression& root);
+	void generateCode(NExpression& root, LemlType* type);
 	int runCode();
 	std::map<std::string, llvm::Value*>& locals();
 	llvm::BasicBlock *currentBlock();

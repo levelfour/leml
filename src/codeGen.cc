@@ -44,16 +44,15 @@ void CodeGenContext::popBlock() {
 }
 
 // Compile the AST into a module
-void CodeGenContext::generateCode(NExpression& root)
+void CodeGenContext::generateCode(NExpression& root, LemlType* type)
 {
 	std::cout << "Generating code...\n";
 
 	// Create the top level interpreter function to call as entry
 	llvm::ArrayRef<llvm::Type*> argTypes;
+	typeRet = llvmType(type);
 	llvm::FunctionType *ftype = llvm::FunctionType::get(
-			llvm::Type::getInt32Ty(llvm::getGlobalContext()),
-			argTypes,
-			false);
+			typeRet, argTypes, false);
 	fnMain = llvm::Function::Create(
 			ftype,
 			llvm::GlobalValue::InternalLinkage,
@@ -84,7 +83,7 @@ int CodeGenContext::runCode() {
 		.create();
 
 	// get main function and execute
-	// llvm::ExecutionEngine::getPointerToFunction is deprecated in ver3.7
+	// llvm::ExecutionEngine::getPointerToFunction is deprecated in ver3.6
 	int (*fpMain)() = (int (*)())ee->getFunctionAddress("main");
 	auto valRet = fpMain();
 
@@ -242,23 +241,16 @@ llvm::Value* NIfExpression::codeGen(CodeGenContext& context) {
 	return pn;
 }
 
-llvm::Value* NAssignment::codeGen(CodeGenContext& context) {
-	if (context.locals().find(lhs.name) == context.locals().end()) {
-		std::cerr << "undeclared variable " << lhs.name << std::endl;
-		return NULL;
-	}
-	return new llvm::StoreInst(rhs.codeGen(context), context.locals()[lhs.name], false, context.currentBlock());
-}
-
 llvm::Value* NLetExpression::codeGen(CodeGenContext& context) {
-	llvm::AllocaInst *alloc = context.builder->CreateAlloca(
+	llvm::AllocaInst* alloc = context.builder->CreateAlloca(
 			llvmType(t), nullptr,
 			id.name.c_str());
 	context.locals()[id.name] = alloc;
 
 	if(assign != nullptr) {
-		NAssignment assn(id, *assign);
-		assn.codeGen(context);
+		context.builder->CreateStore(
+				assign->codeGen(context),
+				context.locals()[id.name]);
 		return eval->codeGen(context);
 	} else {
 		return alloc;
