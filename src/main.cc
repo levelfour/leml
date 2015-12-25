@@ -34,8 +34,7 @@ int main() {
 			std::cerr << e.what() << std::endl;
 			exit(EXIT_FAILURE);
 		}
-
-		std::cout << *t << std::endl;
+		t = deref(t);
 
 		// initialize LLVM context
 		CodeGenContext context;

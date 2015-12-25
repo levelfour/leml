@@ -192,8 +192,49 @@ LemlType *infer(NExpression* expr, TypeEnv env) {
 	return nullptr;
 }
 
+// dereference `Var` in type
+LemlType* deref(LemlType* type) {
+#ifdef LEML_DEBUG
+	assert(type != nullptr);
+#endif
+
+	switch(type->tag) {
+		case Fun:
+		{
+			std::vector<LemlType*> typeArgs;
+			for(auto* t: type->array) {
+				typeArgs.push_back(deref(t));
+			}
+			type->data = deref(type->data);
+			type->array = typeArgs;
+			break;
+		}
+		case Tuple:
+		{
+			std::vector<LemlType*> types;
+			for(auto* t: type->array) {
+				types.push_back(deref(t));
+			}
+			type->array = types;
+			break;
+		}
+		case Array:
+			type->data = deref(type->data);
+			break;
+		case Var:
+			if(type->data == nullptr) {
+				std::cerr << "uninstantiated type variable detected; assuming int" << std::endl;
+				type = typeInt;
+			} else {
+				type = deref(type->data);
+			}
+			break;
+	}
+	return type;
+}
+
 // LemlType* -> llvm::Type*
-static llvm::Type* llvmType(LemlType* type) {
+llvm::Type* llvmType(LemlType* type) {
 	typeAssersion(type->tag);
 	switch(type->tag) {
 		case Unit:

@@ -1,6 +1,7 @@
 #include "codeGen.hh"
 #include "syntax.hh"
 #include "parser.hh"
+#include "infer.hh"
 
 /*
  * the definition of CodeGenContext class
@@ -98,20 +99,6 @@ void CodeGenContext::addCoreFunctions(llvm::Function *fn) {
 /*
  * LLVM IR generation part
  */
-// Returns an LLVM type based on the identifier
-static llvm::Type *typeOf(const NIdentifier& type) 
-{
-	/*
-	if (type.name.compare("int") == 0) {
-		return llvm::Type::getInt32Ty(llvm::getGlobalContext());
-	}
-	else if (type.name.compare("double") == 0) {
-		return llvm::Type::getDoubleTy(llvm::getGlobalContext());
-	}
-	return llvm::Type::getVoidTy(llvm::getGlobalContext());
-	*/
-	return llvm::Type::getInt32Ty(llvm::getGlobalContext());
-}
 
 llvm::Value* NInteger::codeGen(CodeGenContext& context) {
 	return llvm::ConstantInt::get(
@@ -282,8 +269,12 @@ llvm::Value* NLetRecExpression::codeGen(CodeGenContext& context) {
 	for(auto _: args) {
 		argtypes.push_back(llvm::Type::getInt32Ty(llvm::getGlobalContext()));
 	}
+	// t->data: type of this function
+	// t->data->data: wrapper of ret value type
+	// t->data->data->data: ret value type
+	auto* typeRet = t->data->data->data;
 	llvm::FunctionType* ftype = llvm::FunctionType::get(
-			llvm::Type::getInt32Ty(llvm::getGlobalContext()),
+			llvmType(typeRet),
 			makeArrayRef(argtypes), false);
 	llvm::Function* fn = llvm::Function::Create(
 			ftype, llvm::GlobalValue::InternalLinkage,

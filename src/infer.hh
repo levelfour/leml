@@ -16,7 +16,8 @@ typedef std::map<std::string, LemlType*> TypeEnv;
 static bool occur(LemlType* r1, LemlType* t);
 void unify(LemlType* t1, LemlType* t2);
 LemlType* infer(NExpression* expr, TypeEnv env);
-static llvm::Type* llvmType(LemlType* type);
+LemlType* deref(LemlType* type);
+llvm::Type* llvmType(LemlType* type);
 
 class UnificationError: public std::invalid_argument {
 public:
