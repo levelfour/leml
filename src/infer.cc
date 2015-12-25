@@ -269,6 +269,6 @@ llvm::Type* llvmType(LemlType* type) {
 		case Array:
 			return llvm::PointerType::getUnqual(llvmType(type->data));
 		case Var:
-			throw "undecidable type";
+			return llvmType(deref(type));
 	}
 }

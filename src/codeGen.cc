@@ -251,7 +251,9 @@ llvm::Value* NAssignment::codeGen(CodeGenContext& context) {
 }
 
 llvm::Value* NLetExpression::codeGen(CodeGenContext& context) {
-	llvm::AllocaInst *alloc = new llvm::AllocaInst(llvm::Type::getInt32Ty(llvm::getGlobalContext()), id.name.c_str(), context.currentBlock());
+	llvm::AllocaInst *alloc = context.builder->CreateAlloca(
+			llvmType(t), nullptr,
+			id.name.c_str());
 	context.locals()[id.name] = alloc;
 
 	if(assign != nullptr) {
