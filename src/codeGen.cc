@@ -265,14 +265,15 @@ llvm::Value* NLetExpression::codeGen(CodeGenContext& context) {
 
 llvm::Value* NLetRecExpression::codeGen(CodeGenContext& context) {
 	// build function prototype
+	t = deref(t);
 	std::vector<llvm::Type*> argtypes;
-	for(auto _: args) {
-		argtypes.push_back(llvm::Type::getInt32Ty(llvm::getGlobalContext()));
+	for(auto ty: t->array) {
+		argtypes.push_back(llvmType(ty));
 	}
 	// t->data: type of this function
 	// t->data->data: wrapper of ret value type
 	// t->data->data->data: ret value type
-	auto* typeRet = t->data->data->data;
+	auto* typeRet = t->data;
 	llvm::FunctionType* ftype = llvm::FunctionType::get(
 			llvmType(typeRet),
 			makeArrayRef(argtypes), false);
