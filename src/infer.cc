@@ -186,6 +186,18 @@ LemlType *infer(NExpression* expr, TypeEnv env) {
 	} else if(typeid(*expr) == typeid(NArrayExpression)) {
 		NArrayExpression* e = dynamic_cast<NArrayExpression*>(expr);
 		return new LemlType({Array, infer(&e->data, env), {}});
+	} else if(typeid(*expr) == typeid(NArrayGetExpression)) {
+		NArrayGetExpression* e = dynamic_cast<NArrayGetExpression*>(expr);
+		auto* t = newty();
+		unify(new LemlType({Array, t, {}}), infer(&e->array, env));
+		unify(typeInt, infer(&e->index, env));
+		return t;
+	} else if(typeid(*expr) == typeid(NArrayPutExpression)) {
+		NArrayPutExpression* e = dynamic_cast<NArrayPutExpression*>(expr);
+		auto* t = infer(&e->exp, env);
+		unify(new LemlType({Array, t, {}}), infer(&e->array, env));
+		unify(typeInt, infer(&e->index, env));
+		return typeUnit;
 	}
 
 	// failure
@@ -237,8 +249,6 @@ LemlType* deref(LemlType* type) {
 llvm::Type* llvmType(LemlType* type) {
 	typeAssersion(type->tag);
 	switch(type->tag) {
-		case Unit:
-			return llvm::Type::getVoidTy(llvm::getGlobalContext());
 		case Bool:
 			return reinterpret_cast<llvm::Type*>(llvm::Type::getInt1Ty(llvm::getGlobalContext()));
 		case Int:
@@ -271,4 +281,5 @@ llvm::Type* llvmType(LemlType* type) {
 		case Var:
 			return llvmType(deref(type));
 	}
+	return nullptr;
 }

@@ -230,4 +230,21 @@ public:
 	virtual llvm::Value* codeGen(CodeGenContext& context);
 };
 
+class NArrayGetExpression: public NExpression {
+public:
+	NIdentifier& array;
+	NInteger& index;
+	NArrayGetExpression(NIdentifier& array, NInteger& index): array(array), index(index) {}
+	virtual llvm::Value* codeGen(CodeGenContext& context);
+};
+
+class NArrayPutExpression: public NExpression {
+public:
+	NIdentifier& array;
+	NInteger& index;
+	NExpression& exp;
+	NArrayPutExpression(NIdentifier& array, NInteger& index, NExpression& exp): array(array), index(index), exp(exp) {}
+	virtual llvm::Value* codeGen(CodeGenContext& context);
+};
+
 #endif // __SYNTAX_HPP__

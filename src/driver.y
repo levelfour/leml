@@ -14,14 +14,15 @@ NExpression *program;
 %error-verbose
 
 %union {
-	NExpression *syntax;
-	NIdentifier *id;
-	NCompExpression *comp_expr;
-	NIfExpression *if_expr;
-	NFundefExpression *fundef;
-	std::vector<NLetExpression*> *varlist;
-	std::vector<NExpression*> *explist;
-	std::string *token;
+	NExpression* syntax;
+	NIdentifier* id;
+	NInteger* intval;
+	NCompExpression* comp_expr;
+	NIfExpression* if_expr;
+	NFundefExpression* fundef;
+	std::vector<NLetExpression*>* varlist;
+	std::vector<NExpression*>* explist;
+	std::string* token;
 	int op;
 }
 
@@ -92,10 +93,8 @@ simple_exp:
     { $$ = new NFloat(atof($1->c_str())); }
 | TIDENT
     { $$ = new NIdentifier(*$1); }
-/*
 | simple_exp TDOT TLPAREN exp TRPAREN
-    { Syntax.Get($1, $4) };
-*/
+    { $$ = new NArrayGetExpression(*$<id>1, *$<intval>4); }
 
 id_decl: TIDENT { $$ = new NIdentifier(*$1); }
 
@@ -161,9 +160,9 @@ exp:
     { Syntax.Tuple($1) }
 | LET LPAREN pat RPAREN EQUAL exp IN exp
     { Syntax.LetTuple($3, $6, $8) }
-| simple_exp DOT LPAREN exp RPAREN LESS_MINUS exp
-    { Syntax.Put($1, $4, $7) }
 */
+| simple_exp TDOT TLPAREN exp TRPAREN TLESS_MINUS exp
+    { $$ = new NArrayPutExpression(*$<id>1, *$<intval>4, *$7); }
 | exp TSEMICOLON exp
     { $$ = new NLetExpression(*(new NIdentifier("_")), $1, $3); }
 | exp TSEMICOLON

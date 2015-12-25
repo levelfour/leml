@@ -242,18 +242,28 @@ llvm::Value* NIfExpression::codeGen(CodeGenContext& context) {
 }
 
 llvm::Value* NLetExpression::codeGen(CodeGenContext& context) {
-	llvm::AllocaInst* alloc = context.builder->CreateAlloca(
-			llvmType(t), nullptr,
-			id.name.c_str());
-	context.locals()[id.name] = alloc;
-
-	if(assign != nullptr) {
-		context.builder->CreateStore(
-				assign->codeGen(context),
-				context.locals()[id.name]);
-		return eval->codeGen(context);
+	auto type = llvmType(t);
+	if(type != nullptr) {
+		llvm::AllocaInst* alloc = context.builder->CreateAlloca(
+				type, nullptr,
+				id.name.c_str());
+		context.locals()[id.name] = alloc;
+	
+		if(assign != nullptr) {
+			context.builder->CreateStore(
+					assign->codeGen(context),
+					context.locals()[id.name]);
+			return eval->codeGen(context);
+		} else {
+			return alloc;
+		}
 	} else {
-		return alloc;
+#ifdef LEML_DEBUG
+	assert(assign != nullptr);
+#endif
+
+		assign->codeGen(context);
+		return eval->codeGen(context);
 	}
 }
 
@@ -325,5 +335,40 @@ llvm::Value* NCallExpression::codeGen(CodeGenContext& context) {
 llvm::Value* NArrayExpression::codeGen(CodeGenContext& context) {
 	llvm::Value* arrayLength = length.codeGen(context);
 	llvm::Value* valData = data.codeGen(context);
-	return context.builder->CreateAlloca(llvm::Type::getInt32Ty(llvm::getGlobalContext()), arrayLength);
+	auto typeData = infer(&data, TypeEnv());
+	auto array = context.builder->CreateAlloca(
+			llvmType(typeData), arrayLength);
+	// TODO: array initialization
+	auto index = llvm::ConstantInt::get(llvm::Type::getInt32Ty(llvm::getGlobalContext()), 0);
+	auto ptr = llvm::GetElementPtrInst::Create(
+			array, llvm::ArrayRef<llvm::Value*>(index),
+			"", context.currentBlock());
+	context.builder->CreateStore(valData, ptr);
+	return array;
+}
+
+llvm::Value* NArrayGetExpression::codeGen(CodeGenContext& context) {
+	auto array_inst = context.locals()[array.name];
+#ifdef LEML_DEBUG
+	assert(array_inst != nullptr);
+#endif
+
+	auto arr = context.builder->CreateLoad(array_inst);
+	auto ptr = llvm::GetElementPtrInst::Create(
+			arr, llvm::ArrayRef<llvm::Value*>(index.codeGen(context)),
+			"", context.currentBlock());
+	return context.builder->CreateLoad(ptr);
+}
+
+llvm::Value* NArrayPutExpression::codeGen(CodeGenContext& context) {
+	auto array_inst = context.locals()[array.name];
+#ifdef LEML_DEBUG
+	assert(array_inst != nullptr);
+#endif
+
+	auto arr = context.builder->CreateLoad(array_inst);
+	auto ptr = llvm::GetElementPtrInst::Create(
+			arr, llvm::ArrayRef<llvm::Value*>(index.codeGen(context)),
+			"", context.currentBlock());
+	return context.builder->CreateStore(exp.codeGen(context), ptr);
 }
