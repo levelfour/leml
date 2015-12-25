@@ -270,9 +270,6 @@ llvm::Value* NLetRecExpression::codeGen(CodeGenContext& context) {
 	for(auto ty: t->array) {
 		argtypes.push_back(llvmType(ty));
 	}
-	// t->data: type of this function
-	// t->data->data: wrapper of ret value type
-	// t->data->data->data: ret value type
 	auto* typeRet = t->data;
 	llvm::FunctionType* ftype = llvm::FunctionType::get(
 			llvmType(typeRet),
