@@ -42,10 +42,7 @@ public:
 class NExpression: public Node {
 public:
 	virtual llvm::Value* codeGen(CodeGenContext& context) { return nullptr; }
-	virtual std::ostream& print(std::ostream& os) const {
-		os << "exp";
-		return os;
-	}
+	virtual std::ostream& print(std::ostream& os) const;
 };
 
 class NUnit: public NExpression {};
@@ -55,10 +52,7 @@ public:
 	bool value;
 	NBoolean(bool val): value(val) {}
 	virtual llvm::Value* codeGen(CodeGenContext& context);
-	virtual std::ostream& print(std::ostream& os) const {
-		os << value;
-		return os;
-	}
+	virtual std::ostream& print(std::ostream& os) const;
 };
 
 class NInteger: public NExpression {
@@ -66,10 +60,7 @@ public:
 	int value;
 	NInteger(int val): value(val) {}
 	virtual llvm::Value* codeGen(CodeGenContext& context);
-	virtual std::ostream& print(std::ostream& os) const {
-		os << value;
-		return os;
-	}
+	virtual std::ostream& print(std::ostream& os) const;
 };
 
 class NFloat: public NExpression {
@@ -77,10 +68,7 @@ public:
 	double value;
 	NFloat(double val): value(val) {}
 	virtual llvm::Value* codeGen(CodeGenContext& context);
-	virtual std::ostream& print(std::ostream& os) const {
-		os << value;
-		return os;
-	}
+	virtual std::ostream& print(std::ostream& os) const;
 };
 
 class NIdentifier: public NExpression {
@@ -88,10 +76,7 @@ public:
 	std::string name;
 	NIdentifier(std::string s): name(s) {}
 	virtual llvm::Value* codeGen(CodeGenContext& context);
-	virtual std::ostream& print(std::ostream& os) const {
-		os << name;
-		return os;
-	}
+	virtual std::ostream& print(std::ostream& os) const;
 };
 
 class NUnaryExpression: public NExpression {
@@ -100,10 +85,7 @@ public:
 	NExpression& expr;
 	NUnaryExpression(int op, NExpression &expr): op(op), expr(expr) {}
 	virtual llvm::Value* codeGen(CodeGenContext& context);
-	virtual std::ostream& print(std::ostream& os) const {
-		os << op << "("; expr.print(os); os << ")";
-		return os;
-	}
+	virtual std::ostream& print(std::ostream& os) const;
 };
 
 class NBinaryExpression: public NExpression {
@@ -113,10 +95,7 @@ public:
 	NExpression& rhs;
 	NBinaryExpression(int op, NExpression &expr1, NExpression &expr2): op(op), lhs(expr1), rhs(expr2) {}
 	virtual llvm::Value* codeGen(CodeGenContext& context);
-	virtual std::ostream& print(std::ostream& os) const {
-		os << op << "("; lhs.print(os); os << ","; rhs.print(os); os << ")";
-		return os;
-	}
+	virtual std::ostream& print(std::ostream& os) const;
 };
 
 class NCompExpression: public NExpression {
@@ -126,10 +105,7 @@ public:
 	NExpression& rhs;
 	NCompExpression(int op, NExpression &expr1, NExpression &expr2): op(op), lhs(expr1), rhs(expr2) {}
 	virtual llvm::Value* codeGen(CodeGenContext& context);
-	virtual std::ostream& print(std::ostream& os) const {
-		os << op << "("; lhs.print(os); os << ","; rhs.print(os); os << ")";
-		return os;
-	}
+	virtual std::ostream& print(std::ostream& os) const;
 };
 
 class NIfExpression: public NExpression {
@@ -140,11 +116,7 @@ public:
 	NIfExpression(NExpression &cond, NExpression &expr1, NExpression &expr2):
 		cond(cond), true_exp(expr1), false_exp(expr2) {}
 	virtual llvm::Value* codeGen(CodeGenContext& context);
-	virtual std::ostream& print(std::ostream& os) const {
-		os << "if ("; cond.print(os); os << ",";
-		true_exp.print(os); os << ","; false_exp.print(os); os << ")";
-		return os;
-	}
+	virtual std::ostream& print(std::ostream& os) const;
 };
 
 class NLetExpression: public NExpression {
@@ -158,14 +130,7 @@ public:
 	NLetExpression(NIdentifier& s, NExpression* assign, NExpression* eval):
 		id(s), t(newty()), assign(assign), eval(eval) {}
 	virtual llvm::Value* codeGen(CodeGenContext& context);
-	virtual std::ostream& print(std::ostream& os) const {
-		os << "let " << id;
-		if(assign != nullptr) {
-			os << " = " << *assign;
-		}
-		os << std::endl;
-		return os;
-	}
+	virtual std::ostream& print(std::ostream& os) const;
 };
 
 class NFundefExpression: public NExpression {
@@ -176,10 +141,7 @@ public:
 	NFundefExpression(NIdentifier& id, std::vector<NLetExpression*> args, NExpression& block):
 		id(id), args(args), block(block) {}
 	virtual llvm::Value* codeGen(CodeGenContext& context);
-	virtual std::ostream& print(std::ostream& os) const {
-		os << block;
-		return os;
-	}
+	virtual std::ostream& print(std::ostream& os) const;
 };
 
 class NLetRecExpression: public NExpression {
@@ -192,14 +154,7 @@ public:
 	NLetRecExpression(NIdentifier& id, std::vector<NLetExpression*> args, NExpression& body, NExpression& expr):
 		id(id), t(newty()), args(args), body(body), eval(expr) {}
 	virtual llvm::Value* codeGen(CodeGenContext& context);
-	virtual std::ostream& print(std::ostream& os) const {
-		os << "let rec " << id.name;
-		for(auto arg: args) {
-			os << " " << arg->id.name;
-		}
-		os << " = \n" << body << std::endl << "in " << eval;
-		return os;
-	}
+	virtual std::ostream& print(std::ostream& os) const;
 };
 
 class NCallExpression: public NExpression {
@@ -209,13 +164,7 @@ public:
 	NCallExpression(NExpression& fun, std::vector<NExpression*> *args):
 		fun(fun), args(args) {}
 	virtual llvm::Value* codeGen(CodeGenContext& context);
-	virtual std::ostream& print(std::ostream& os) const {
-		os << "(" << fun << ")";
-		for(auto arg: *args) {
-			os << " " << *arg;
-		}
-		return os;
-	}
+	virtual std::ostream& print(std::ostream& os) const;
 };
 
 class NArrayExpression: public NExpression {
@@ -228,6 +177,7 @@ public:
 	}
 	virtual ~NArrayExpression() { delete array; }
 	virtual llvm::Value* codeGen(CodeGenContext& context);
+	virtual std::ostream& print(std::ostream& os) const;
 };
 
 class NArrayGetExpression: public NExpression {
@@ -236,6 +186,7 @@ public:
 	NInteger& index;
 	NArrayGetExpression(NIdentifier& array, NInteger& index): array(array), index(index) {}
 	virtual llvm::Value* codeGen(CodeGenContext& context);
+	virtual std::ostream& print(std::ostream& os) const;
 };
 
 class NArrayPutExpression: public NExpression {
@@ -245,6 +196,7 @@ public:
 	NExpression& exp;
 	NArrayPutExpression(NIdentifier& array, NInteger& index, NExpression& exp): array(array), index(index), exp(exp) {}
 	virtual llvm::Value* codeGen(CodeGenContext& context);
+	virtual std::ostream& print(std::ostream& os) const;
 };
 
 class NTupleExpression: public NExpression {
@@ -252,6 +204,7 @@ public:
 	std::vector<NExpression*> elems;
 	NTupleExpression(std::vector<NExpression*> elems): elems(elems) {}
 	virtual llvm::Value* codeGen(CodeGenContext& context);
+	virtual std::ostream& print(std::ostream& os) const;
 };
 
 class NLetTupleExpression: public NExpression {
@@ -261,6 +214,7 @@ public:
 	NExpression& eval;
 	NLetTupleExpression(std::vector<NLetExpression*> ids, NExpression& exp, NExpression& eval): ids(ids), exp(exp), eval(eval) {}
 	virtual llvm::Value* codeGen(CodeGenContext& context);
+	virtual std::ostream& print(std::ostream& os) const;
 };
 
 #endif // __SYNTAX_HPP__
