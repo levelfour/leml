@@ -87,6 +87,10 @@ void unify(LemlType* t1, LemlType* t2) {
 	}
 }
 
+LemlType* infer(NExpression* expr) {
+	return infer(expr, TypeEnv());
+}
+
 LemlType *infer(NExpression* expr, TypeEnv env) {
 	assert(expr != nullptr);
 
@@ -198,6 +202,28 @@ LemlType *infer(NExpression* expr, TypeEnv env) {
 		unify(new LemlType({Array, t, {}}), infer(&e->array, env));
 		unify(typeInt, infer(&e->index, env));
 		return typeUnit;
+	} else if(typeid(*expr) == typeid(NTupleExpression)) {
+		NTupleExpression* e = dynamic_cast<NTupleExpression*>(expr);
+		std::vector<LemlType*> types;
+		for(auto elem: e->elems) {
+			types.push_back(infer(elem, env));
+		}
+		return new LemlType({Tuple, nullptr, types});
+	} else if(typeid(*expr) == typeid(NLetTupleExpression)) {
+		NLetTupleExpression* e = dynamic_cast<NLetTupleExpression*>(expr);
+		std::vector<LemlType*> types;
+		for(auto elem: e->ids) {
+			types.push_back(elem->t);
+		}
+
+		auto ty = new LemlType({Tuple, nullptr, types});
+		unify(ty, infer(&e->exp, env));
+
+		for(auto elem: e->ids) {
+			env[elem->id.name] = elem->t;
+		}
+
+		return infer(&e->eval, env);
 	}
 
 	// failure
@@ -272,9 +298,10 @@ llvm::Type* llvmType(LemlType* type) {
 			for(auto ty: type->array) {
 				types.push_back(llvmType(ty));
 			}
-			return llvm::StructType::get(
+			auto typeStruct = llvm::StructType::get(
 					llvm::getGlobalContext(),
 					llvm::makeArrayRef(types));
+			return llvm::PointerType::getUnqual(typeStruct);
 		}
 		case Array:
 			return llvm::PointerType::getUnqual(llvmType(type->data));

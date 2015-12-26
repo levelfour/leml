@@ -26,9 +26,15 @@ LemlType::operator std::string() const {
 		}
 		case Tuple:
 		{
-			std::string tystr = "";
-			for(auto ty: array) {
-				tystr += (static_cast<std::string>(*ty) + std::string(" -> "));
+			std::string tystr = "(";
+			for(unsigned long i = 0; i < array.size(); i++) {
+				auto ty = array[i];
+				tystr += static_cast<std::string>(*ty);
+				if(i < array.size() - 1) {
+					tystr += ", ";
+				} else {
+					tystr += ")";
+				}
 			}
 			return tystr;
 		}

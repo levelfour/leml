@@ -247,4 +247,20 @@ public:
 	virtual llvm::Value* codeGen(CodeGenContext& context);
 };
 
+class NTupleExpression: public NExpression {
+public:
+	std::vector<NExpression*> elems;
+	NTupleExpression(std::vector<NExpression*> elems): elems(elems) {}
+	virtual llvm::Value* codeGen(CodeGenContext& context);
+};
+
+class NLetTupleExpression: public NExpression {
+public:
+	std::vector<NLetExpression*> ids;
+	NExpression& exp;
+	NExpression& eval;
+	NLetTupleExpression(std::vector<NLetExpression*> ids, NExpression& exp, NExpression& eval): ids(ids), exp(exp), eval(eval) {}
+	virtual llvm::Value* codeGen(CodeGenContext& context);
+};
+
 #endif // __SYNTAX_HPP__

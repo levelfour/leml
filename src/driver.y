@@ -5,7 +5,7 @@
 #include "syntax.hh"
 
 extern int yylex();
-void yyerror(const char *s) { printf("ERROR: %s\n", s); }
+void yyerror(const char *s) { fprintf(stderr, "ERROR: %s\n", s); }
 
 NExpression *program;
 %}
@@ -72,8 +72,8 @@ NExpression *program;
 %type <syntax> exp simple_exp program
 %type <fundef> fundef
 %type <id> id_decl
-%type <varlist> formal_args
-%type <explist> actual_args
+%type <varlist> formal_args pat
+%type <explist> actual_args elems
 %start program
 
 %%
@@ -155,12 +155,10 @@ exp:
 | exp actual_args
     %prec prec_app
     { $$ = new NCallExpression(*$1, $2); }
-	/*
 | elems
-    { Syntax.Tuple($1) }
-| LET LPAREN pat RPAREN EQUAL exp IN exp
-    { Syntax.LetTuple($3, $6, $8) }
-*/
+    { $$ = new NTupleExpression(*$1); }
+| TLET TLPAREN pat TRPAREN TEQUAL exp TIN exp
+    { $$ = new NLetTupleExpression(*$3, *$6, *$8); }
 | simple_exp TDOT TLPAREN exp TRPAREN TLESS_MINUS exp
     { $$ = new NArrayPutExpression(*$<id>1, *$<intval>4, *$7); }
 | exp TSEMICOLON exp
@@ -191,18 +189,20 @@ actual_args:
     %prec prec_app
 	{ $1->push_back($2); }
 
-/*
 elems:
-| elems COMMA exp
-    { ($1 @ [$3]) }
-| exp COMMA exp
-    { [$1; $3] }
+  elems TCOMMA exp
+    { $1->push_back($3); }
+| exp TCOMMA exp
+    { $$ = new std::vector<NExpression*>{$1, $3}; }
 
 pat:
-| pat COMMA IDENT
-    { ($1 @ [addtyp $3]) }
-| IDENT COMMA IDENT
-    { [addtyp $1; addtyp $3] }
-*/
+  pat TCOMMA id_decl
+    { $$->push_back(new NLetExpression(*$3)); }
+| id_decl TCOMMA id_decl
+    {
+	  $$ = new std::vector<NLetExpression*>{
+	      new NLetExpression(*$1),
+		  new NLetExpression(*$3)};
+	}
 
 %%

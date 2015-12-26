@@ -250,9 +250,11 @@ llvm::Value* NLetExpression::codeGen(CodeGenContext& context) {
 		context.locals()[id.name] = alloc;
 	
 		if(assign != nullptr) {
+			// type of alloc must be a pointer to the type of valAssign
+			auto valAssign = assign->codeGen(context);
 			context.builder->CreateStore(
-					assign->codeGen(context),
-					context.locals()[id.name]);
+					valAssign,
+					alloc);
 			return eval->codeGen(context);
 		} else {
 			return alloc;
@@ -361,14 +363,84 @@ llvm::Value* NArrayGetExpression::codeGen(CodeGenContext& context) {
 }
 
 llvm::Value* NArrayPutExpression::codeGen(CodeGenContext& context) {
-	auto array_inst = context.locals()[array.name];
+	// get the allocation code of array
+	auto array_alloc = context.locals()[array.name];
 #ifdef LEML_DEBUG
-	assert(array_inst != nullptr);
+	assert(array_alloc != nullptr);
 #endif
 
-	auto arr = context.builder->CreateLoad(array_inst);
+	// get the instance of array
+	auto arr = context.builder->CreateLoad(array_alloc);
 	auto ptr = llvm::GetElementPtrInst::Create(
 			arr, llvm::ArrayRef<llvm::Value*>(index.codeGen(context)),
 			"", context.currentBlock());
 	return context.builder->CreateStore(exp.codeGen(context), ptr);
+}
+
+llvm::Value* NTupleExpression::codeGen(CodeGenContext& context) {
+	// build tuple type as struct
+	std::vector<llvm::Type*> types;
+	for(auto elem: elems) {
+		types.push_back(llvmType(infer(elem)));
+	}
+	auto type = llvm::StructType::get(
+			llvm::getGlobalContext(),
+			llvm::makeArrayRef(types));
+
+	llvm::AllocaInst* alloc = context.builder->CreateAlloca(type, nullptr);
+
+	auto zero = llvm::ConstantInt::get(llvm::Type::getInt32Ty(llvm::getGlobalContext()), 0);
+	for(unsigned long i = 0; i < elems.size(); i++) {
+		NInteger index = NInteger(i);
+		auto elem = elems[i];
+		// get a pointer to each element
+		auto ptr = llvm::GetElementPtrInst::Create(
+				alloc,
+				llvm::ArrayRef<llvm::Value*>({zero, index.codeGen(context)}),
+				"", context.currentBlock());
+
+		// store each element
+		context.builder->CreateStore(elem->codeGen(context), ptr);
+	}
+
+	return alloc;
+}
+
+llvm::Value* NLetTupleExpression::codeGen(CodeGenContext& context) {
+	NIdentifier* id = dynamic_cast<NIdentifier*>(&exp);
+#ifdef LEML_DEBUG
+	// assume let rec definition-exp to be an id
+	assert(id != nullptr);
+#endif
+
+	// get the allocation code of tuple
+	auto tuple_alloc = context.locals()[id->name];
+#ifdef LEML_DEBUG
+	assert(tuple_alloc != nullptr);
+#endif
+
+	// get the instance of tuple
+	auto tuple = context.builder->CreateLoad(tuple_alloc);
+
+	auto zero = llvm::ConstantInt::get(llvm::Type::getInt32Ty(llvm::getGlobalContext()), 0);
+	for(unsigned long i = 0; i < ids.size(); i++) {
+		NInteger index = NInteger(i);
+		auto var = ids[i];
+		// get a pointer to each element
+		auto ptr = llvm::GetElementPtrInst::Create(
+				tuple,
+				llvm::ArrayRef<llvm::Value*>({zero, index.codeGen(context)}),
+				"", context.currentBlock());
+		auto val = context.builder->CreateLoad(ptr);
+
+		// allocate each decomposed element
+		llvm::AllocaInst* alloc = context.builder->CreateAlloca(
+				val->getType(), nullptr,
+				var->id.name.c_str());
+		context.locals()[var->id.name] = alloc;
+		context.builder->CreateStore(val, alloc);
+	}
+
+	// eval
+	return eval.codeGen(context);
 }
