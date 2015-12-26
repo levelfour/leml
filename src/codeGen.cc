@@ -350,12 +350,12 @@ llvm::Value* NArrayExpression::codeGen(CodeGenContext& context) {
 }
 
 llvm::Value* NArrayGetExpression::codeGen(CodeGenContext& context) {
-	auto array_inst = context.locals()[array.name];
+	auto array_alloc = context.locals()[array.name];
 #ifdef LEML_DEBUG
-	assert(array_inst != nullptr);
+	assert(array_alloc != nullptr);
 #endif
 
-	auto arr = context.builder->CreateLoad(array_inst);
+	auto arr = context.builder->CreateLoad(array_alloc);
 	auto ptr = llvm::GetElementPtrInst::Create(
 			arr, llvm::ArrayRef<llvm::Value*>(index.codeGen(context)),
 			"", context.currentBlock());
