@@ -4,7 +4,8 @@ PROGRAM=leml
 
 default:
 	@make -C src
-	ln -s src/$(PROGRAM) $(PROGRAM)
+	ln -sf src/$(PROGRAM) $(PROGRAM)
 
 clean:
 	@make -C src clean
+	rm -f $(PROGRAM)

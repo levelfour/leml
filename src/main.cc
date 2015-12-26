@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
 		}
 
 		if(o.get("jit") != "") {
-			JITExecution(context, o.get("jit") != "");
+			JITExecution(context, o.get("v") != "");
 		} else {
 			IREmission(context, o.get("o"));
 		}
