@@ -20,7 +20,8 @@ OBJS= main.o \
 	  syntax.o \
 	  codeGen.o \
 	  type.o \
-	  infer.o
+	  infer.o \
+	  cmdopt.o
 LEXTAB=lexer.cc
 YACCTAB=parser.cc
 YACCFILES=parser.hh

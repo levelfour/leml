@@ -44,9 +44,8 @@ void CodeGenContext::popBlock() {
 }
 
 // Compile the AST into a module
-void CodeGenContext::generateCode(NExpression& root, LemlType* type)
-{
-	std::cout << "Generating code...\n";
+void CodeGenContext::generateCode(NExpression& root, LemlType* type, bool verbose) {
+	if(verbose) std::cout << "Generating code...\n";
 
 	// Create the top level interpreter function to call as entry
 	llvm::ArrayRef<llvm::Type*> argTypes;
@@ -67,15 +66,12 @@ void CodeGenContext::generateCode(NExpression& root, LemlType* type)
 	builder->CreateRet(valRet);
 	popBlock();
 
-	// Print the bytecode in a human-readable format 
-	// to see if our program compiled properly
-	std::cout << "Code is generated.\n";
-	module->dump();
+	if(verbose) std::cout << "Code is generated.\n";
 }
 
 // Executes the AST by running the main function
-int CodeGenContext::runCode() {
-	std::cout << "Running code...\n";
+int CodeGenContext::runCode(bool verbose) {
+	if(verbose) std::cout << "Running code...\n";
 
 	// build JIT engine
 	llvm::ExecutionEngine *ee =
@@ -87,7 +83,7 @@ int CodeGenContext::runCode() {
 	int (*fpMain)() = (int (*)())ee->getFunctionAddress("main");
 	auto valRet = fpMain();
 
-	std::cout << "Code was run.\n";
+	if(verbose) std::cout << "Code was run.\n";
 	return valRet;
 }
 

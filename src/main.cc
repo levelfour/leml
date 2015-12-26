@@ -1,4 +1,11 @@
 #include <iostream>
+#include <fstream>
+#include <string>
+#include <map>
+
+#include <llvm/IR/IRPrintingPasses.h>
+
+#include "cmdopt.hh"
 #include "syntax.hh"
 #include "infer.hh"
 #include "codeGen.hh"
@@ -6,8 +13,21 @@
 extern NExpression *program;
 extern int yyparse();
 extern int yydebug;
+extern FILE* yyin;
 
-int main() {
+void JITExecution(CodeGenContext& context, bool verbose = false);
+void IREmission(CodeGenContext& context, std::string filename);
+
+int main(int argc, char** argv) {
+
+	// option parser
+	OptionParser o(argc, argv);
+	std::map<std::string, int> spec;
+	spec["jit"] = 0; // JIT
+	spec["o"]   = 1; // output file name
+	spec["v"]   = 0; // verbose
+	o.set(spec);
+	o.build();
 
 	// initialization of LLVM
 	LLVMInitializeNativeTarget();
@@ -19,22 +39,17 @@ int main() {
 	yydebug = 1;
 #endif
 
+	// open file
+	if(o.get("default") != "") {
+		FILE* ifs = fopen(o.get("default").c_str(), "r");
+		yyin = ifs;
+	}
+
 	// lexer/parser
 	if(yyparse() == 0) {
 
 		// type inference / check
-		LemlType* t;
-		try {
-			t = infer(program, TypeEnv());
-			if(t == nullptr) {
-				std::cerr << "type check failure" << std::endl;
-				exit(EXIT_FAILURE);
-			}
-		} catch(UnificationError e) {
-			std::cerr << e.what() << std::endl;
-			exit(EXIT_FAILURE);
-		}
-		t = deref(t);
+		LemlType* t = check(program);
 
 		// initialize LLVM context
 		CodeGenContext context;
@@ -43,18 +58,44 @@ int main() {
 //		context.addCoreFunctions(fn_print_int);
 
 		// generate LLVM IR
-		context.generateCode(*program, t);
-		std::cout << *program << std::endl;
+		context.generateCode(*program, t, o.get("v") != "");
 
-		// run on LLVM JIT
-		auto valRet = context.runCode();
-		std::cout << "return value = " << valRet
-				  << ", type = " << *t << std::endl;
+		if(o.get("v") != "") {
+			std::cout << *program << std::endl;
+		}
+
+		if(o.get("jit") != "") {
+			JITExecution(context, o.get("jit") != "");
+		} else {
+			IREmission(context, o.get("o"));
+		}
 	}
 
 	return 0;
 }
 
+void JITExecution(CodeGenContext& context, bool verbose) {
+	// run on LLVM JIT
+	auto valRet = context.runCode(verbose);
+	if(verbose) {
+		std::cout << "return value = ";
+	}
+	std::cout << valRet << std::endl;
+}
+
+void IREmission(CodeGenContext& context, std::string filename) {
+	if(filename == "") {
+		// "-" means stdout
+		filename = "-";
+	}
+
+	std::error_code ec;
+	llvm::raw_ostream* out = new llvm::raw_fd_ostream(filename.c_str(), ec, llvm::sys::fs::F_None);
+
+	llvm::PassManager<llvm::Module> pm;
+	pm.addPass(llvm::PrintModulePass(*out));
+	pm.run(*context.module);
+}
 
 llvm::Function* createPrintfFunction(CodeGenContext& context) {
     std::vector<llvm::Type*> printf_arg_types;

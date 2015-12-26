@@ -310,3 +310,20 @@ llvm::Type* llvmType(LemlType* type) {
 	}
 	return nullptr;
 }
+
+LemlType* check(NExpression* program) {
+	LemlType* t;
+
+	try {
+		t = infer(program);
+		if(t == nullptr) {
+			std::cerr << "type check failure" << std::endl;
+			exit(EXIT_FAILURE);
+		}
+	} catch(UnificationError e) {
+		std::cerr << e.what() << std::endl;
+		exit(EXIT_FAILURE);
+	}
+
+	return deref(t);
+}

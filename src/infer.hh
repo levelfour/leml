@@ -19,6 +19,7 @@ LemlType* infer(NExpression* expr);
 LemlType* infer(NExpression* expr, TypeEnv env);
 LemlType* deref(LemlType* type);
 llvm::Type* llvmType(LemlType* type);
+LemlType* check(NExpression* program);
 
 class UnificationError: public std::invalid_argument {
 public:

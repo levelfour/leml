@@ -36,8 +36,8 @@ public:
 	CodeGenContext();
 	virtual ~CodeGenContext();
 
-	void generateCode(NExpression& root, LemlType* type);
-	int runCode();
+	void generateCode(NExpression& root, LemlType* type, bool verbose = false);
+	int runCode(bool verbose = false);
 	std::map<std::string, llvm::Value*>& locals();
 	llvm::BasicBlock *currentBlock();
 	void pushBlock(llvm::BasicBlock *block);
