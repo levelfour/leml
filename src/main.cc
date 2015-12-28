@@ -92,8 +92,8 @@ void IREmission(CodeGenContext& context, std::string filename) {
 	std::error_code ec;
 	llvm::raw_ostream* out = new llvm::raw_fd_ostream(filename.c_str(), ec, llvm::sys::fs::F_None);
 
-	llvm::PassManager<llvm::Module> pm;
-	pm.addPass(llvm::PrintModulePass(*out));
+	llvm::PassManager pm;
+	pm.add(llvm::createPrintModulePass(*out));
 	pm.run(*context.module);
 }
 

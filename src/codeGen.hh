@@ -5,16 +5,20 @@
 #include <stack>
 #include <string>
 #include <cassert>
+#include <llvm/PassManager.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Value.h>
 #include <llvm/IR/LLVMContext.h>
-#include <llvm/IR/PassManager.h>
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/IRbuilder.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/GenericValue.h>
 #include <llvm/ExecutionEngine/MCJIT.h>
+#include <llvm/Support/raw_ostream.h>
+#include <llvm/Transforms/Scalar.h>
+#include <llvm/Analysis/Passes.h>
+
 #include "type.hh"
 
 class NExpression;
@@ -33,6 +37,7 @@ class CodeGenContext {
 public:
 	llvm::Module *module;
 	llvm::IRBuilder<> *builder;
+	llvm::FunctionPassManager* fpm;
 	CodeGenContext();
 	virtual ~CodeGenContext();
 

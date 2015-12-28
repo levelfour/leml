@@ -8,11 +8,17 @@
  */
 
 CodeGenContext::CodeGenContext() {
-	// create llvm::Module for each program source
 	// TODO: replace "main" with source code name
 	module = new llvm::Module("main", llvm::getGlobalContext());
 
 	builder = new llvm::IRBuilder<>(llvm::getGlobalContext());
+
+	// initialize pass manager
+	static llvm::FunctionPassManager _fpm(module);
+	_fpm.add(llvm::createPromoteMemoryToRegisterPass());
+	_fpm.doInitialization();
+
+	fpm = &_fpm;
 }
 
 CodeGenContext::~CodeGenContext() {
@@ -65,6 +71,8 @@ void CodeGenContext::generateCode(NExpression& root, LemlType* type, bool verbos
 	llvm::Value* valRet = root.codeGen(*this); // emit bytecode for the toplevel block
 	builder->CreateRet(valRet);
 	popBlock();
+
+	fpm->run(*fnMain);
 
 	if(verbose) std::cout << "Code is generated.\n";
 }
@@ -303,6 +311,8 @@ llvm::Value* NLetRecExpression::codeGen(CodeGenContext& context) {
 	context.builder->CreateRet(valRet);
 
 	context.popBlock();
+
+	context.fpm->run(*fn);
 
 	return eval.codeGen(context);
 }
