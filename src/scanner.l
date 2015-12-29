@@ -11,10 +11,14 @@
 
 %option noyywrap
 
+%x ML_COMMENT
+
 %%
 [ \t]+
 [\n\r]
-"(*"    /*{ return TCOMMENT); }*/
+"(*"    { BEGIN(ML_COMMENT); }
+<ML_COMMENT>"*)" { BEGIN(INITIAL); }
+<ML_COMMENT>. {}
 "("     { return TOKEN(TLPAREN); }
 ")"     { return TOKEN(TRPAREN); }
 true    { SAVE_TOKEN; return TBOOL; }
