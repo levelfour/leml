@@ -25,11 +25,10 @@ printf " --------------------- || ----------\n"
 for resval in test/*.result; do
 	testcase=${resval%.result};
 	if [ "$(./leml -jit $testcase.ml | diff $resval -)" = "" ]; then
-		result="passed";
+		printf "  %-20s ||  \e[34mpassed\e[0m\n" $testcase
 	else
-		result="failed";
+		printf "  %-20s ||  \e[31mfailed\e[0m\n" $testcase
 	fi;
-	printf "  %-20s ||  %s\n" $testcase $result
 done
 
 printf "\n"
