@@ -70,7 +70,7 @@ void CodeGenContext::generateCode(NExpression& root, std::unique_ptr<LemlType> t
 }
 
 // Executes the AST by running the main function
-int CodeGenContext::runCode(bool verbose) {
+void CodeGenContext::runCode(bool verbose) {
 	if(verbose) std::cout << "Running code...\n";
 
 	// build JIT engine
@@ -84,7 +84,16 @@ int CodeGenContext::runCode(bool verbose) {
 	auto valRet = fpMain();
 
 	if(verbose) std::cout << "Code was run.\n";
-	return valRet;
+
+	resultValue.d = valRet;
+}
+
+int CodeGenContext::getIntResult() {
+	return resultValue.d;
+}
+
+float CodeGenContext::getFloatResult() {
+	return resultValue.f;
 }
 
 void CodeGenContext::addCoreFunctions(llvm::Function *fn) {

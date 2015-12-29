@@ -16,7 +16,7 @@ extern int yyparse();
 extern int yydebug;
 extern FILE* yyin;
 
-void JITExecution(CodeGenContext& context, std::string filename, bool verbose = false);
+void JITExecution(CodeGenContext& context, std::string filename, std::string type, bool verbose = false);
 void IREmission(CodeGenContext& context, std::string filename);
 
 int main(int argc, char** argv) {
@@ -24,9 +24,10 @@ int main(int argc, char** argv) {
 	// option parser
 	OptionParser o(argc, argv);
 	std::map<std::string, int> spec;
-	spec["jit"] = 0; // JIT
-	spec["o"]   = 1; // output file name
-	spec["v"]   = 0; // verbose
+	spec["jit"]  = 0; // JIT
+	spec["o"]    = 1; // output file name
+	spec["v"]    = 0; // verbose
+	spec["type"] = 1; // result value type
 	o.set(spec);
 	o.build();
 
@@ -66,7 +67,7 @@ int main(int argc, char** argv) {
 		}
 
 		if(o.get("jit") != "") {
-			JITExecution(context, o.get("o"), o.get("v") != "");
+			JITExecution(context, o.get("o"), o.get("type"), o.get("v") != "");
 		} else {
 			IREmission(context, o.get("o"));
 		}
@@ -75,14 +76,19 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
-void JITExecution(CodeGenContext& context, std::string filename, bool verbose) {
+void JITExecution(CodeGenContext& context, std::string filename, std::string type, bool verbose) {
 	// run on LLVM JIT
 	std::stringstream ss;
-	auto valRet = context.runCode(verbose);
+	context.runCode(verbose);
 	if(verbose) {
 		ss << "return value = ";
 	}
-	ss << valRet << std::endl;
+
+	if(type == "float") {
+		ss << context.getFloatResult() << std::endl;
+	} else {
+		ss << context.getIntResult() << std::endl;
+	}
 
 	if(filename != "") {
 		std::fstream fs;

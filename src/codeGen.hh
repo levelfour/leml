@@ -31,9 +31,15 @@ public:
 };
 
 class CodeGenContext {
+	union composite {
+		int d;
+		float f;
+	};
+
 	std::stack<std::unique_ptr<CodeGenBlock>> blocks;
 	llvm::Function* fnMain;
 	llvm::Type* typeRet;
+	composite resultValue;
 
 public:
 	std::unique_ptr<llvm::Module> module;
@@ -43,7 +49,9 @@ public:
 	virtual ~CodeGenContext();
 
 	void generateCode(NExpression& root, std::unique_ptr<LemlType> type, bool verbose = false);
-	int runCode(bool verbose = false);
+	void runCode(bool verbose = false);
+	int getIntResult();
+	float getFloatResult();
 	std::map<std::string, llvm::Value*>& locals();
 	llvm::BasicBlock *currentBlock();
 	void pushBlock(llvm::BasicBlock *block);
