@@ -27,21 +27,22 @@ class CodeGenBlock {
 public:
 	llvm::BasicBlock *block;
 	std::map<std::string, llvm::Value*> locals;
+	CodeGenBlock(llvm::BasicBlock* block): block(block) {}
 };
 
 class CodeGenContext {
-	std::stack<CodeGenBlock *> blocks;
-	llvm::Function *fnMain;
+	std::stack<std::unique_ptr<CodeGenBlock>> blocks;
+	llvm::Function* fnMain;
 	llvm::Type* typeRet;
 
 public:
-	llvm::Module *module;
-	llvm::IRBuilder<> *builder;
-	llvm::FunctionPassManager* fpm;
+	std::unique_ptr<llvm::Module> module;
+	std::unique_ptr<llvm::IRBuilder<>> builder;
+	std::unique_ptr<llvm::FunctionPassManager> fpm;
 	CodeGenContext();
 	virtual ~CodeGenContext();
 
-	void generateCode(NExpression& root, LemlType* type, bool verbose = false);
+	void generateCode(NExpression& root, std::unique_ptr<LemlType> type, bool verbose = false);
 	int runCode(bool verbose = false);
 	std::map<std::string, llvm::Value*>& locals();
 	llvm::BasicBlock *currentBlock();

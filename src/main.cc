@@ -49,7 +49,7 @@ int main(int argc, char** argv) {
 	if(yyparse() == 0) {
 
 		// type inference / check
-		LemlType* t = check(program);
+		std::unique_ptr<LemlType> t(check(program));
 
 		// initialize LLVM context
 		CodeGenContext context;
@@ -58,7 +58,7 @@ int main(int argc, char** argv) {
 //		context.addCoreFunctions(fn_print_int);
 
 		// generate LLVM IR
-		context.generateCode(*program, t, o.get("v") != "");
+		context.generateCode(*program, std::move(t), o.get("v") != "");
 
 		if(o.get("v") != "") {
 			std::cout << *program << std::endl;
@@ -70,6 +70,8 @@ int main(int argc, char** argv) {
 			IREmission(context, o.get("o"));
 		}
 	}
+
+	while(1);
 
 	return 0;
 }
@@ -108,7 +110,7 @@ llvm::Function* createPrintfFunction(CodeGenContext& context) {
     llvm::Function *func = llvm::Function::Create(
                 printf_type, llvm::Function::ExternalLinkage,
                 llvm::Twine("printf"),
-                context.module
+                context.module.get()
            );
     func->setCallingConv(llvm::CallingConv::C);
     return func;
@@ -125,7 +127,7 @@ llvm::Function* createPrintIntFunction(CodeGenContext& context, llvm::Function* 
 	llvm::Function* func = llvm::Function::Create(
 			fn_type, llvm::Function::InternalLinkage,
 			llvm::Twine("print_int"),
-			context.module
+			context.module.get()
 			);
 
 	llvm::BasicBlock* bblock = llvm::BasicBlock::Create(llvm::getGlobalContext(), "entry", func, 0);

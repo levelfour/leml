@@ -9,22 +9,17 @@
 
 CodeGenContext::CodeGenContext() {
 	// TODO: replace "main" with source code name
-	module = new llvm::Module("main", llvm::getGlobalContext());
+	module = llvm::make_unique<llvm::Module>("main", llvm::getGlobalContext());
 
-	builder = new llvm::IRBuilder<>(llvm::getGlobalContext());
+	builder = llvm::make_unique<llvm::IRBuilder<>>(llvm::getGlobalContext());
 
 	// initialize pass manager
-	static llvm::FunctionPassManager _fpm(module);
-	_fpm.add(llvm::createPromoteMemoryToRegisterPass());
-	_fpm.doInitialization();
-
-	fpm = &_fpm;
+	fpm = llvm::make_unique<llvm::FunctionPassManager>(module.get());
+	fpm->add(llvm::createPromoteMemoryToRegisterPass());
+	fpm->doInitialization();
 }
 
-CodeGenContext::~CodeGenContext() {
-	delete module;
-	delete builder;
-}
+CodeGenContext::~CodeGenContext() {}
 
 std::map<std::string, llvm::Value*>& CodeGenContext::locals() {
 	return blocks.top()->locals;
@@ -35,33 +30,30 @@ llvm::BasicBlock *CodeGenContext::currentBlock() {
 }
 
 void CodeGenContext::pushBlock(llvm::BasicBlock *block) {
-	blocks.push(new CodeGenBlock());
-	blocks.top()->block = block;
+	blocks.push(llvm::make_unique<CodeGenBlock>(block));
 	builder->SetInsertPoint(block);
 }
 
 void CodeGenContext::popBlock() {
-	CodeGenBlock *top = blocks.top();
 	blocks.pop();
-	delete top;
 	if(blocks.size() > 0) {
 		builder->SetInsertPoint(blocks.top()->block);
 	}
 }
 
 // Compile the AST into a module
-void CodeGenContext::generateCode(NExpression& root, LemlType* type, bool verbose) {
+void CodeGenContext::generateCode(NExpression& root, std::unique_ptr<LemlType> type, bool verbose) {
 	if(verbose) std::cout << "Generating code...\n";
 
 	// Create the top level interpreter function to call as entry
 	llvm::ArrayRef<llvm::Type*> argTypes;
-	typeRet = llvmType(type);
+	typeRet = llvmType(type.get());
 	llvm::FunctionType *ftype = llvm::FunctionType::get(
 			typeRet, argTypes, false);
 	fnMain = llvm::Function::Create(
 			ftype,
 			llvm::GlobalValue::InternalLinkage,
-			"main", module);
+			"main", module.get());
 	llvm::BasicBlock *bblock = llvm::BasicBlock::Create(
 			llvm::getGlobalContext(),
 			"entry", fnMain, 0);
@@ -83,7 +75,7 @@ int CodeGenContext::runCode(bool verbose) {
 
 	// build JIT engine
 	llvm::ExecutionEngine *ee =
-		llvm::EngineBuilder(std::unique_ptr<llvm::Module>(module))
+		llvm::EngineBuilder(std::unique_ptr<llvm::Module>(module.get()))
 		.create();
 
 	// get main function and execute
@@ -286,7 +278,7 @@ llvm::Value* NLetRecExpression::codeGen(CodeGenContext& context) {
 			makeArrayRef(argtypes), false);
 	llvm::Function* fn = llvm::Function::Create(
 			ftype, llvm::GlobalValue::InternalLinkage,
-			id.name.c_str(), context.module);
+			id.name.c_str(), context.module.get());
 	llvm::BasicBlock* bblock = llvm::BasicBlock::Create(
 			llvm::getGlobalContext(), "entry", fn, 0);
 
