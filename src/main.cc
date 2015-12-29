@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 #include <fstream>
 #include <string>
 #include <map>
@@ -15,7 +16,7 @@ extern int yyparse();
 extern int yydebug;
 extern FILE* yyin;
 
-void JITExecution(CodeGenContext& context, bool verbose = false);
+void JITExecution(CodeGenContext& context, std::string filename, bool verbose = false);
 void IREmission(CodeGenContext& context, std::string filename);
 
 int main(int argc, char** argv) {
@@ -65,24 +66,31 @@ int main(int argc, char** argv) {
 		}
 
 		if(o.get("jit") != "") {
-			JITExecution(context, o.get("v") != "");
+			JITExecution(context, o.get("o"), o.get("v") != "");
 		} else {
 			IREmission(context, o.get("o"));
 		}
 	}
 
-	while(1);
-
 	return 0;
 }
 
-void JITExecution(CodeGenContext& context, bool verbose) {
+void JITExecution(CodeGenContext& context, std::string filename, bool verbose) {
 	// run on LLVM JIT
+	std::stringstream ss;
 	auto valRet = context.runCode(verbose);
 	if(verbose) {
-		std::cout << "return value = ";
+		ss << "return value = ";
 	}
-	std::cout << valRet << std::endl;
+	ss << valRet << std::endl;
+
+	if(filename != "") {
+		std::fstream fs;
+		fs.open(filename, std::fstream::out);
+		fs << ss.str();
+	} else {
+		std::cout << ss.str();
+	}
 }
 
 void IREmission(CodeGenContext& context, std::string filename) {
