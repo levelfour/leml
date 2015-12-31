@@ -6,7 +6,7 @@
 #include "InstPrinter/AquilaInstPrinter.h"
 #include "MCTargetDesc/AquilaMCTargetDesc.h"
 #include "llvm/DerivedTypes.h"
-#include "llvm/Function.h"
+#include "llvm/IR/Function.h"
 #include "llvm/GlobalVariable.h"
 #include "llvm/Intrinsics.h"
 #include "llvm/CallingConv.h"

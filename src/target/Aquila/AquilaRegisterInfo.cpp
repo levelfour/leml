@@ -2,9 +2,9 @@
 
 #include "AquilaRegisterInfo.h"
 #include "Aquila.h"
-#include "llvm/Constants.h"
-#include "llvm/Type.h"
-#include "llvm/Function.h"
+#include "llvm/IR/Constants.h"
+#include "llvm/IR/Type.h"
+#include "llvm/IR/Function.h"
 #include "llvm/CodeGen/ValueTypes.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/MachineFunction.h"
@@ -19,7 +19,7 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/ADT/BitVector.h"
 #include "llvm/ADT/STLExtras.h"
-#include "llvm/DebugInfo.h"
+#include "llvm/IR/DebugInfo.h"
 
 #include "MCTargetDesc/AquilaMCTargetDesc.h"
 
@@ -30,7 +30,7 @@ using namespace llvm;
 
 AquilaRegisterInfo::
 AquilaRegisterInfo(const TargetInstrInfo &tii)
-	: AquilaGenRegisterInfo(Aquila::RA), TII(tii) { }
+	: AquilaGenRegisterInfo(Aquila::R4), TII(tii) { }
 
 	//===----------------------------------------------------------------------===//
 	// Callee Saved Registers methods
@@ -91,7 +91,7 @@ eliminateFrameIndex(MachineBasicBlock::iterator II, int SPAdj,
 	uint64_t stackSize = MF.getFrameInfo()->getStackSize();
 	int64_t spOffset = MF.getFrameInfo()->getObjectOffset(FrameIndex);
 	int64_t Offset = spOffset + stackSize + MI.getOperand(opIndex+1).getImm();
-	unsigned FrameReg = Aquila::SP;
+	unsigned FrameReg = Aquila::R7;
 
 	DEBUG(errs() 
 			<< "\nFunction : " << MF.getFunction()->getName() << "\n"

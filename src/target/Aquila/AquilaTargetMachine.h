@@ -7,7 +7,7 @@
 #include "AquilaSelectionDAGInfo.h"
 #include "AquilaRegisterInfo.h"
 #include "AquilaSubtarget.h"
-#include "llvm/DataLayout.h"
+#include "llvm/IR/DataLayout.h"
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/Target/TargetFrameLowering.h"
 #include "llvm/Support/Debug.h"

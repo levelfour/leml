@@ -19,5 +19,5 @@
 type = Library
 name = AquilaDisassembler
 parent = Aquila
-required_libraries = MC Support SampleInfo
+required_libraries = MC Support AquilaInfo
 add_to_library_groups = Aquila

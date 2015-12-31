@@ -115,6 +115,35 @@ def AquilaGenericItineraries : ProcessorItineraries<[ALU], [], [
 	InstrItinData<IICPseudo, [InstrStage<1, [ALU]>]>
 ]>;
 
+
+// load/storeで利用するオペランド.20bit
+// 19-16: CPURegs Operand(base)
+// 15-0 : 符号付き16bit整数(offset)
+// printMethod: base(offset) 形式で出力
+// EncoderMethod: bit列から2つの値を取得
+def mem : Operand<i32> {
+	let PrintMethod = "printMemOperand";
+	let MIOperandInfo = (ops CPURegs, i16imm);
+	let EncoderMethod = "getMemEncoding";
+}
+
+// 即値ロード用のオペランド. 20bit
+// 19-0: 符号付き20bit整数
+// EncoderMethod: bit列から符号付き20bit整数を取得
+def movetarget : Operand<i32> {
+	let EncoderMethod = "getMoveTargetOpValue";
+}
+
+def calltarget  : Operand<iPTR> {
+	let EncoderMethod = "getCallTargetOpValue";
+}
+
+// 符号付き20bit整数
+// 定数(ISD::Constant)で20bitで表現可能なもの
+def immSExt20  : PatLeaf<(imm), [{ return isInt<20>(N->getSExtValue()); }]>;
+
+def addr : ComplexPattern<iPTR, 2, "SelectAddr", [], []>;
+
 // Instruction Format
 class Format<bits<3> val> {
 	bits<3> Value = val;
@@ -150,7 +179,7 @@ class AquilaInst<dag outs, dag ins, string asmstr, list<dag> pattern, InstrItinC
 }
 
 // X-Format
-class AquilaInstXForm<bits<6> op, dag ous, dag ins, string asmstr, list<dag> pattern, InstrItinClass itin> : SampleInst<outs, ins, asmstr, pattern, itin, XForm> {
+class AquilaInstXForm<bits<6> op, dag outs, dag ins, string asmstr, list<dag> pattern, InstrItinClass itin> : AquilaInst<outs, ins, asmstr, pattern, itin, XForm> {
 	bits<5> rd;
 	bits<5> rs;
 	bits<5> rt;
@@ -164,7 +193,7 @@ class AquilaInstXForm<bits<6> op, dag ous, dag ins, string asmstr, list<dag> pat
 }
 
 // B-Format
-class AquilaInstXForm<bits<6> op, dag ous, dag ins, string asmstr, list<dag> pattern, InstrItinClass itin> : SampleInst<outs, ins, asmstr, pattern, itin, BForm> {
+class AquilaInstBForm<bits<6> op, dag outs, dag ins, string asmstr, list<dag> pattern, InstrItinClass itin> : AquilaInst<outs, ins, asmstr, pattern, itin, BForm> {
 	bits<5> rd;
 	bits<5> rs;
 	bits<16> imm;
@@ -176,7 +205,7 @@ class AquilaInstXForm<bits<6> op, dag ous, dag ins, string asmstr, list<dag> pat
 }
 
 // R-Format
-class AquilaInstXForm<bits<6> op, dag ous, dag ins, string asmstr, list<dag> pattern, InstrItinClass itin> : SampleInst<outs, ins, asmstr, pattern, itin, RForm> {
+class AquilaInstRForm<bits<6> op, dag outs, dag ins, string asmstr, list<dag> pattern, InstrItinClass itin> : AquilaInst<outs, ins, asmstr, pattern, itin, RForm> {
 	bits<5> rd;
 	bits<5> rs;
 	bits<5> rt;
@@ -190,7 +219,7 @@ class AquilaInstXForm<bits<6> op, dag ous, dag ins, string asmstr, list<dag> pat
 }
 
 // I-Format
-class AquilaInstXForm<bits<6> op, dag ous, dag ins, string asmstr, list<dag> pattern, InstrItinClass itin> : SampleInst<outs, ins, asmstr, pattern, itin, IForm> {
+class AquilaInstIForm<bits<6> op, dag outs, dag ins, string asmstr, list<dag> pattern, InstrItinClass itin> : AquilaInst<outs, ins, asmstr, pattern, itin, IForm> {
 	bits<5> rd;
 	bits<5> rs;
 	bits<16> imm;
@@ -204,19 +233,119 @@ class AquilaInstXForm<bits<6> op, dag ous, dag ins, string asmstr, list<dag> pat
 // Pseudo-Instruction
 class AquilaPseudo<dag outs, dag ins, string asmstr, list<dag> pattern> : AquilaInst<outs, ins, asmstr, pattern, IICPseudo, Pseudo> {
 	let isCodeGenOnly = 1;
-	let isPsuedo = 1;
+	let isPseudo = 1;
 }
+
+// SDTypeProfileはSDNodeの必要条件を定義する。
+// 第一引数: 結果Node数
+// 第二引数: オペランドNode数
+// 第三引数: 制約条件(SDTypeConstraint)
+
+// SDTCisInt<N>: N番目のオペランドはInt型
+// SDTCisVT<N, VT>: N番目のオペランドはVT型
+
+// SDNodeは新しいSDNodeを定義する。
+// 第一引数: opcode
+// 第二引数: 制約条件(SDTypeProfile)
+// 第三引数: SDNodeProperty
+
+// SDNodeProperty
+// SDNPCommutative : // 可換
+// SDNPAssociative : // 結合法則
+// SDNPHasChain    : // R/W chain operand and result
+// SDNPOutGlue     : // Write a flag result
+// SDNPInGlue      : // Read a flag operand
+// SDNPOptInGlue   : // Optionally read a flag operand
+// SDNPMayStore    : // May write to memory, sets 'mayStore'.
+// SDNPMayLoad     : // May read memory, sets 'mayLoad'.
+// SDNPSideEffect  : // Sets 'HasUnmodelledSideEffects'.
+// SDNPMemOperand  : // Touches memory, has assoc MemOperand
+// SDNPVariadic    : // 可変引数を持つ
+// SDNPWantRoot    : // ComplexPattern gets the root of match
+// SDNPWantParent  : // ComplexPattern gets the parent
+
+def SDT_AquilaRet          : SDTypeProfile<0, 1, [SDTCisInt<0>]>;
+def AquilaRet : SDNode<"AquilaISD::Ret", SDT_AquilaRet, 
+	[SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
+
+def SDT_AquilaCall      : SDTypeProfile<0, 1, [SDTCisVT<0, iPTR>]>;
+
+def AquilaCall : SDNode<"AquilaISD::Call",SDT_AquilaCall,
+	[SDNPHasChain, SDNPOutGlue, SDNPOptInGlue,
+	SDNPVariadic]>;
+
+def SDT_AquilaCallSeqStart : SDCallSeqStart<[SDTCisVT<0, i32>]>;
+def SDT_AquilaCallSeqEnd   : SDCallSeqEnd<[SDTCisVT<0, i32>, SDTCisVT<1, i32>]>;
+
+def callseq_start : SDNode<"ISD::CALLSEQ_START", SDT_AquilaCallSeqStart,
+	[SDNPHasChain, SDNPSideEffect, SDNPOutGlue]>;
+def callseq_end   : SDNode<"ISD::CALLSEQ_END", SDT_AquilaCallSeqEnd,
+	[SDNPHasChain, SDNPSideEffect,
+	SDNPOptInGlue, SDNPOutGlue]>;
 
 // Instruction Specific Format
 class ArithLogicInst<bits<6> op, string asmstr, SDNode OpNode, InstrItinClass itin, RegisterClass RC>
-	: AquilaInstXForm<op, (outs RC:$rd), (ins RC:%rs,, RC:$rt),
+	: AquilaInstXForm<op, (outs RC:$rd), (ins RC:$rs, RC:$rt),
 	 !strconcat(asmstr, "\t$rd, $rs, $rt"),
 	 [(set RC:$rd, (OpNode RC:$rs, RC:$rt))], itin> {
 }
 
+// Load/Store common form
+// DecoderMethod: objdumpなどでバイナリから値をデコードする
+class FMem<bits<6> op, dag outs, dag ins, string asmstr, list<dag> pattern, InstrItinClass itin>
+: AquilaInstIForm<op, outs, ins, asmstr, pattern, itin> {
+	bits<16> addr;
+	let Inst{15-0}  = addr;
+	let DecoderMethod = "DecodeMem";
+}
+
+// Load
+let canFoldAsLoad = 1 in
+class LoadM<bits<6> op, string asmstr, RegisterClass RC>:
+FMem<op, (outs RC:$rd), (ins mem:$addr),
+	!strconcat(asmstr, "\t$rd, $addr"),
+	[(set RC:$rd, (load addr:$addr))], IICLoad>;
+
+// Store
+class StoreM<bits<6> op, string asmstr, RegisterClass RC>:
+FMem<op, (outs), (ins RC:$rd, mem:$addr),
+	!strconcat(asmstr, "\t$rd, $addr"),
+	[(store RC:$rd, addr:$addr)], IICStore>;
+
+// Return
+class RetInst<bits<6> op, string asmstr>:
+AquilaInstIForm<op, (outs), (ins CPURegs:$rd),
+	!strconcat(asmstr, "\t$rd"), [(AquilaRet CPURegs:$rd)], IICBranch> {
+		let isBranch=1;
+		let isTerminator=1;
+		let isBarrier=1;
+		let isReturn=1;
+	}
+
+// Load Immediate
+// DecoderMethod: 即値ロード用のデコード
+class LoadI<bits<6> op, string asmstr>:
+AquilaInstIForm<op, (outs CPURegs:$rd), (ins movetarget:$imm),
+	!strconcat(asmstr, "\t$rd, $imm"), [(set CPURegs:$rd, immSExt20:$imm)], IICLoad> {
+		let DecoderMethod = "DecodeMoveTarget";
+	}
+
+class Call<bits<6> op, string asmstr>:
+AquilaInstIForm<op, (outs), (ins calltarget:$imm, variable_ops),
+	!strconcat(asmstr, "\t$imm"), [(AquilaCall imm:$imm)],
+	IICBranch> {
+		let isCall=1;
+		let DecoderMethod = "DecodeCallTarget";
+	}
+
 // Aquila Instruction Definition
-def ADD : ArithLogicInst<0x00, "add", IICAlu, CPURegs>;
-def SUB : ArithLogicInst<0x01, "sub", IICAlu, CPURegs>;
+def LOAD  : LoadM<0x00, "load", CPURegs>;
+def STORE : StoreM<0x01, "store", CPURegs>;
+def MOVE  : LoadI<0x02, "move">;
+//def CALL  : Call<0x03, "call">;
+//def RET   : RetInst<0x04, "ret">;
+def ADD   : ArithLogicInst<0x05, "add", add, IICAlu, CPURegs>;
+def SUB   : ArithLogicInst<0x06, "sub", sub, IICAlu, CPURegs>;
 
 // Calling Convention
 def CC_Aquila : CallingConv<[
@@ -227,17 +356,19 @@ def CC_Aquila : CallingConv<[
 	CCIfType<[f32], CCAssignToReg<[
 		F4, F5, F6, F7, F8, F9, F10, F11, F12,
 		F13, F14, F15, F16, F17, F18, F19]>>,
+	CCIfType<[i32], CCAssignToStack<4, 4>>,
+	CCIfType<[f32], CCAssignToStack<4, 4>>
 ]>;
 
 def RetCC_Aquila : CallingConv<[
 	// Return Value
-	CCIfType<[i32], CCAssignToReg[R3]>>,
-	CCIfType<[f32], CCAssignToReg[F3]>>,
+	CCIfType<[i32], CCAssignToReg<[R3]>>,
+	CCIfType<[f32], CCAssignToReg<[F3]>>
 ]>;
 
 // Callee-Save
 def CSR_SingleFloatOnly : CalleeSavedRegs<(add
-	"R4",
+	R4,
 	(sequence "R%u", 31, 20),
 	(sequence "F%u", 31, 20))>;
 
@@ -255,5 +386,3 @@ def Aquila : Target {
 	let InstructionSet = AquilaInstrInfo;
 	let AssemblyWriters = [AquilaAsmWriter];
 }
-
-
