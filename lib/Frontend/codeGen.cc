@@ -104,6 +104,13 @@ void CodeGenContext::addCoreFunctions(llvm::Function *fn) {
  * LLVM IR generation part
  */
 
+llvm::Value* NUnit::codeGen(CodeGenContext& context) {
+	return llvm::ConstantInt::get(
+			llvm::Type::getInt32Ty(llvm::getGlobalContext()),
+			0,
+			true);
+}
+
 llvm::Value* NInteger::codeGen(CodeGenContext& context) {
 	return llvm::ConstantInt::get(
 			llvm::Type::getInt32Ty(llvm::getGlobalContext()),

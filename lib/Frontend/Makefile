@@ -9,7 +9,7 @@ LLVMCONFIG=llvm-config
 # options
 WARNING_OPTIONS=-Wall -Wno-deprecated-register -Wno-unused-function -Wno-unneeded-internal-declaration -Wno-switch
 CXXFLAGS=-std=c++11 -ferror-limit=3 `$(LLVMCONFIG) --cxxflags` $(WARNING_OPTIONS)
-DEBUG_FLAGS=-g -O0 -ggdb -DYYDEBUG=1 -DLEML_DEBUG=1
+DEBUG_FLAGS=-g -O0 -ggdb -DLEML_DEBUG=1 #-DYYDEBUG=1 
 LDFLAGS=`$(LLVMCONFIG) --ldflags` -lncurses -lz
 LIBS=`$(LLVMCONFIG) --libs all`
 

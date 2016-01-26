@@ -10,6 +10,11 @@ std::ostream& NExpression::print(std::ostream& os) const {
 	return os;
 }
 
+std::ostream& NUnit::print(std::ostream& os) const {
+	os << "()";
+	return os;
+}
+
 std::ostream& NBoolean::print(std::ostream& os) const {
 	os << value;
 	return os;

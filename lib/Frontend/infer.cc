@@ -275,6 +275,8 @@ LemlType* deref(LemlType* type) {
 llvm::Type* llvmType(LemlType* type) {
 	typeAssersion(type->tag);
 	switch(type->tag) {
+		case Unit:
+			return reinterpret_cast<llvm::Type*>(llvm::Type::getInt32Ty(llvm::getGlobalContext()));
 		case Bool:
 			return reinterpret_cast<llvm::Type*>(llvm::Type::getInt1Ty(llvm::getGlobalContext()));
 		case Int:

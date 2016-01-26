@@ -45,7 +45,11 @@ public:
 	virtual std::ostream& print(std::ostream& os) const;
 };
 
-class NUnit: public NExpression {};
+class NUnit: public NExpression {
+public:
+	virtual llvm::Value* codeGen(CodeGenContext& context);
+	virtual std::ostream& print(std::ostream& os) const;
+};
 
 class NBoolean: public NExpression {
 public:
