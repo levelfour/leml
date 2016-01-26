@@ -3,13 +3,13 @@ PROGRAM=leml
 .PHONY: default, debug, clean
 
 default:
-	@make -C src
-	ln -sf src/$(PROGRAM) $(PROGRAM)
+	@make -C lib
+	ln -sf lib/$(PROGRAM) $(PROGRAM)
 
 debug:
-	@make -C src debug
-	ln -sf src/$(PROGRAM) $(PROGRAM)
+	@make -C lib debug
+	ln -sf lib/$(PROGRAM) $(PROGRAM)
 
 clean:
-	@make -C src clean
+	@make -C lib clean
 	rm -f $(PROGRAM)
