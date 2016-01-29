@@ -60,6 +60,7 @@ int main(int argc, char** argv) {
 			env["fabs"] = new LemlType({Fun, typeFloat, {typeFloat}});
 			env["abs_float"] = new LemlType({Fun, typeFloat, {typeFloat}});
 			env["truncate"] = new LemlType({Fun, typeInt, {typeFloat}});
+			env["floor"] = new LemlType({Fun, typeFloat, {typeFloat}});
 			env["sin"] = new LemlType({Fun, typeFloat, {typeFloat}});
 			env["cos"] = new LemlType({Fun, typeFloat, {typeFloat}});
 			env["sqrt"] = new LemlType({Fun, typeFloat, {typeFloat}});

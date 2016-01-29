@@ -13,9 +13,7 @@ void print_newline() {
 	printf("\n");
 }
 
-double fabs(double f) {
-	return fabs(f);
-}
+double fabs(double f);
 
 double abs_float(double f) {
 	return fabs(f);
@@ -31,8 +29,12 @@ double cos(double f);
 
 double sqrt(double f);
 
-int int_of_float(float f) {
-	return floor(f);
+int int_of_float(double f) {
+	if(f >= 0) {
+		return floor(f);
+	} else {
+		return -floor(-f);
+	}
 }
 
 double float_of_int(int i) {
