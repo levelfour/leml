@@ -16,6 +16,7 @@ extern int yyparse();
 extern int yydebug;
 extern FILE* yyin;
 
+void InitEnv(TypeEnv& env);
 void JITExecution(CodeGenContext& context, std::string filename, std::string type, bool verbose = false);
 void IREmission(CodeGenContext& context, std::string filename);
 
@@ -54,18 +55,7 @@ int main(int argc, char** argv) {
 		// type inference / check
 		TypeEnv env;
 		if(o.get("nostdlib") == "") {
-			env["print_int"] = new LemlType({Fun, typeUnit, {typeInt}});
-			env["print_float"] = new LemlType({Fun, typeUnit, {typeFloat}});
-			env["print_newline"] = new LemlType({Fun, typeUnit, {typeUnit}});
-			env["fabs"] = new LemlType({Fun, typeFloat, {typeFloat}});
-			env["abs_float"] = new LemlType({Fun, typeFloat, {typeFloat}});
-			env["truncate"] = new LemlType({Fun, typeInt, {typeFloat}});
-			env["floor"] = new LemlType({Fun, typeFloat, {typeFloat}});
-			env["sin"] = new LemlType({Fun, typeFloat, {typeFloat}});
-			env["cos"] = new LemlType({Fun, typeFloat, {typeFloat}});
-			env["sqrt"] = new LemlType({Fun, typeFloat, {typeFloat}});
-			env["int_of_float"] = new LemlType({Fun, typeInt, {typeFloat}});
-			env["float_of_int"] = new LemlType({Fun, typeFloat, {typeInt}});
+			InitEnv(env);
 		}
 		std::unique_ptr<LemlType> t(check(program, env));
 
@@ -98,6 +88,21 @@ int main(int argc, char** argv) {
 	}
 
 	return 0;
+}
+
+void InitEnv(TypeEnv& env) {
+	env["print_int"] = new LemlType({Fun, typeUnit, {typeInt}});
+	env["print_float"] = new LemlType({Fun, typeUnit, {typeFloat}});
+	env["print_newline"] = new LemlType({Fun, typeUnit, {typeUnit}});
+	env["fabs"] = new LemlType({Fun, typeFloat, {typeFloat}});
+	env["abs_float"] = new LemlType({Fun, typeFloat, {typeFloat}});
+	env["truncate"] = new LemlType({Fun, typeInt, {typeFloat}});
+	env["floor"] = new LemlType({Fun, typeFloat, {typeFloat}});
+	env["sin"] = new LemlType({Fun, typeFloat, {typeFloat}});
+	env["cos"] = new LemlType({Fun, typeFloat, {typeFloat}});
+	env["sqrt"] = new LemlType({Fun, typeFloat, {typeFloat}});
+	env["int_of_float"] = new LemlType({Fun, typeInt, {typeFloat}});
+	env["float_of_int"] = new LemlType({Fun, typeFloat, {typeInt}});
 }
 
 void JITExecution(CodeGenContext& context, std::string filename, std::string type, bool verbose) {
