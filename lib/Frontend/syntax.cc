@@ -77,7 +77,7 @@ std::ostream& NFundefExpression::print(std::ostream& os) const {
 }
 
 std::ostream& NLetRecExpression::print(std::ostream& os) const {
-	os << "let rec " << proto << 
+	os << "let rec " << *proto << 
 		  " = \n" << body << std::endl << "in " << eval;
 	return os;
 }

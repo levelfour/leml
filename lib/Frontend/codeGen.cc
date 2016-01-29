@@ -64,7 +64,7 @@ void CodeGenContext::setEnv(TypeEnv env) {
 }
 
 // Compile the AST into a module
-bool CodeGenContext::generateCode(NExpression& root, std::unique_ptr<LemlType> type, bool verbose) {
+bool CodeGenContext::generateCode(NExpression& root, std::unique_ptr<LemlType> type, bool nostdlib, bool verbose) {
 	if(verbose) std::cout << "Generating code...\n";
 
 	// Create the top level interpreter function to call as entry
@@ -87,7 +87,7 @@ bool CodeGenContext::generateCode(NExpression& root, std::unique_ptr<LemlType> t
 	popBlock();
 
 	// link built-in module
-	if(!linkModule(module.get(), builtinIRFileName)) {
+	if(!nostdlib && !linkModule(module.get(), builtinIRFileName)) {
 		std::cerr << "error: external library link failure" << std::endl;
 		return false;
 	}

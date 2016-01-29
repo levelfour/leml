@@ -28,6 +28,7 @@ int main(int argc, char** argv) {
 	spec["o"]    = 1; // output file name
 	spec["v"]    = 0; // verbose
 	spec["type"] = 1; // result value type
+	spec["nostdlib"] = 0;
 	o.set(spec);
 	o.build();
 
@@ -52,18 +53,24 @@ int main(int argc, char** argv) {
 
 		// type inference / check
 		TypeEnv env;
-		env["print_int"] = new LemlType({Fun, typeUnit, {typeInt}});
-		env["print_float"] = new LemlType({Fun, typeUnit, {typeFloat}});
-
+		if(o.get("nostdlib") == "") {
+			env["print_int"] = new LemlType({Fun, typeUnit, {typeInt}});
+			env["print_float"] = new LemlType({Fun, typeUnit, {typeFloat}});
+		}
 		std::unique_ptr<LemlType> t(check(program, env));
 
 		// initialize LLVM context
 		CodeGenContext context;
-		context.setBuiltInIR(BUILTIN_LIB);
-		context.setEnv(env);
+		if(o.get("nostdlib") == "") {
+			context.setBuiltInIR(BUILTIN_LIB);
+			context.setEnv(env);
+		}
 
 		// generate LLVM IR
-		if(context.generateCode(*program, std::move(t), o.get("v") != "")) {
+		if(context.generateCode(
+					*program, std::move(t),
+					o.get("nostdlib") != "",
+					o.get("v") != "")) {
 
 			if(o.get("v") != "") {
 				std::cout <<
