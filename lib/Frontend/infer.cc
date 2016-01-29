@@ -75,12 +75,13 @@ void unify(LemlType* t1, LemlType* t2) {
 		unify(t1, t2->data);
 	} else if(t1->tag == Var && t1->data == nullptr) {
 		if(occur(t1->data, t2)) {
-			std::cout << "throw " << *t1 << std::endl;
 			throw UnificationError(t1, t2);
 		}
 		t1->data = t2;
 	} else if(t2->tag == Var && t2->data == nullptr) {
-		if(occur(t2->data, t1)) throw UnificationError(t1, t2);
+		if(occur(t2->data, t1)) {
+			throw UnificationError(t1, t2);
+		}
 		t2->data = t1;
 	} else {
 		throw UnificationError(t1, t2);

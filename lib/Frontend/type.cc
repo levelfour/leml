@@ -11,7 +11,7 @@ LemlType* newty() {
 
 LemlType::operator std::string() const {
 	switch(tag) {
-		case Unit:  return "()";
+		case Unit:  return "unit";
 		case Bool:  return "bool";
 		case Int:   return "int";
 		case Float: return "float";

@@ -338,7 +338,11 @@ llvm::Value* NCallExpression::codeGen(CodeGenContext& context) {
 	NIdentifier* id = dynamic_cast<NIdentifier*>(&fun);
 	assert(id != nullptr); // TODO: higher-order function
 	llvm::Function *fn = context.module->getFunction(id->name.c_str());
-	assert(fn != nullptr);
+
+	if(fn == nullptr) {
+		std::cerr << "error: unknown reference to function `" << id->name.c_str() << "`" << std::endl;
+		return nullptr;
+	}
 
 	// generate code of arguments
 	std::vector<llvm::Value*> argValues;
