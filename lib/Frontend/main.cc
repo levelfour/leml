@@ -56,6 +56,7 @@ int main(int argc, char** argv) {
 		if(o.get("nostdlib") == "") {
 			env["print_int"] = new LemlType({Fun, typeUnit, {typeInt}});
 			env["print_float"] = new LemlType({Fun, typeUnit, {typeFloat}});
+			env["truncate"] = new LemlType({Fun, typeInt, {typeFloat}});
 		}
 		std::unique_ptr<LemlType> t(check(program, env));
 

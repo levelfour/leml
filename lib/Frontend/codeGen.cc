@@ -191,7 +191,7 @@ llvm::Value* NUnaryExpression::codeGen(CodeGenContext& context) {
 		case LFNeg:
 		{
 			return context.builder->CreateFSub(
-				llvm::ConstantInt::get(llvm::Type::getDoubleTy(llvm::getGlobalContext()), 0),
+				llvm::ConstantFP::get(llvm::Type::getDoubleTy(llvm::getGlobalContext()), 0),
 				expr.codeGen(context));
 		}
 		default: return nullptr;
