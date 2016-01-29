@@ -64,6 +64,9 @@ void CodeGenContext::generateCode(NExpression& root, std::unique_ptr<LemlType> t
 	builder->CreateRet(valRet);
 	popBlock();
 
+	// link built-in module
+	linkModule(module.get(), builtinIRFileName);
+
 	fpm->run(*fnMain);
 
 	if(verbose) std::cout << "Code is generated.\n";
@@ -96,8 +99,20 @@ float CodeGenContext::getFloatResult() {
 	return resultValue.f;
 }
 
-void CodeGenContext::addCoreFunctions(llvm::Function *fn) {
+bool CodeGenContext::linkModule(llvm::Module *dest, std::string filename) {
+	llvm::SMDiagnostic err;
+	// load module
+	std::unique_ptr<llvm::Module> linkMod(llvm::parseIRFile(filename, err, llvm::getGlobalContext()));
+	if(!linkMod) {
+		return false;
+	}
 
+	// link module
+	if(llvm::Linker::LinkModules(dest, linkMod.get())) {
+		return false;
+	}
+
+	return true;
 }
 
 /*
@@ -294,7 +309,7 @@ llvm::Value* NLetRecExpression::codeGen(CodeGenContext& context) {
 			makeArrayRef(argtypes), false);
 	llvm::Function* fn = llvm::Function::Create(
 			ftype, llvm::GlobalValue::InternalLinkage,
-			id.name.c_str(), context.module.get());
+			proto->id.name.c_str(), context.module.get());
 	llvm::BasicBlock* bblock = llvm::BasicBlock::Create(
 			llvm::getGlobalContext(), "entry", fn, 0);
 
@@ -305,7 +320,7 @@ llvm::Value* NLetRecExpression::codeGen(CodeGenContext& context) {
 	// build arguments instances
 	auto argValues = fn->arg_begin();
 	llvm::Value* argValue = nullptr;
-	for(auto arg: args) {
+	for(auto arg: proto->args) {
 		arg->codeGen(context);
 		argValue = argValues++;
 		argValue->setName(arg->id.name);

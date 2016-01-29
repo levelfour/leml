@@ -89,7 +89,10 @@ void unify(LemlType* t1, LemlType* t2) {
 }
 
 LemlType* infer(NExpression* expr) {
-	return infer(expr, TypeEnv());
+	TypeEnv env;
+	env["print_int"] = new LemlType({Fun, typeUnit, {typeInt}});
+	env["print_float"] = new LemlType({Fun, typeUnit, {typeFloat}});
+	return infer(expr, env);
 }
 
 LemlType *infer(NExpression* expr, TypeEnv env) {
@@ -170,10 +173,10 @@ LemlType *infer(NExpression* expr, TypeEnv env) {
 		}
 	} else if(typeid(*expr) == typeid(NLetRecExpression)) {
 		NLetRecExpression* e = dynamic_cast<NLetRecExpression*>(expr);
-		env[e->id.name] = e->t;
+		env[e->proto->id.name] = e->t;
 		TypeEnv envBody = env;
 		std::vector<LemlType*> typeArgs;
-		for(auto arg: e->args) {
+		for(auto arg: e->proto->args) {
 			envBody[arg->id.name] = arg->t;
 			typeArgs.push_back(arg->t);
 		}

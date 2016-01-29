@@ -68,16 +68,17 @@ std::ostream& NLetExpression::print(std::ostream& os) const {
 }
 
 std::ostream& NFundefExpression::print(std::ostream& os) const {
-	os << block;
+	os << id.name;
+	for(auto arg: args) {
+		os << " " << arg->id.name;
+	}
+
 	return os;
 }
 
 std::ostream& NLetRecExpression::print(std::ostream& os) const {
-	os << "let rec " << id.name;
-	for(auto arg: args) {
-		os << " " << arg->id.name;
-	}
-	os << " = \n" << body << std::endl << "in " << eval;
+	os << "let rec " << proto << 
+		  " = \n" << body << std::endl << "in " << eval;
 	return os;
 }
 

@@ -12,6 +12,9 @@
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/IRbuilder.h>
+#include <llvm/IRReader/IRReader.h>
+#include <llvm/Linker/Linker.h>
+#include <llvm/Support/SourceMgr.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/GenericValue.h>
 #include <llvm/ExecutionEngine/MCJIT.h>
@@ -36,6 +39,7 @@ class CodeGenContext {
 		float f;
 	};
 
+	std::string builtinIRFileName = "__builtins.ll";
 	std::stack<std::unique_ptr<CodeGenBlock>> blocks;
 	llvm::Function* fnMain;
 	llvm::Type* typeRet;
@@ -56,8 +60,7 @@ public:
 	llvm::BasicBlock *currentBlock();
 	void pushBlock(llvm::BasicBlock *block);
 	void popBlock();
-
-	void addCoreFunctions(llvm::Function *fn);
+	bool linkModule(llvm::Module *dest, std::string filename);
 };
 
 #endif // __CODE_GEN_HH__

@@ -149,9 +149,9 @@ exp:
 | TLET id_decl TEQUAL exp TIN exp
     %prec prec_let
     { $$ = new NLetExpression(*$2, $4, $6); }
-| TLET TREC fundef TIN exp
+| TLET TREC fundef TEQUAL exp TIN exp
     %prec prec_let
-    { $$ = new NLetRecExpression($3->id, $3->args, $3->block, *$5); }
+    { $$ = new NLetRecExpression($3, *$5, *$7); }
 | exp actual_args
     %prec prec_app
     { $$ = new NCallExpression(*$1, $2); }
@@ -172,8 +172,8 @@ exp:
     { std::cerr << "parser error\n"; assert(false); }
 
 fundef:
-  id_decl formal_args TEQUAL exp
-    { $$ = new NFundefExpression(*$1, *$2, *$4 ); }
+  id_decl formal_args
+    { $$ = new NFundefExpression(*$1, *$2); }
 
 formal_args:
   id_decl

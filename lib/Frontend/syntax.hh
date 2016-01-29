@@ -141,22 +141,21 @@ class NFundefExpression: public NExpression {
 public:
 	NIdentifier& id;
 	std::vector<NLetExpression*> args;
-	NExpression& block;
-	NFundefExpression(NIdentifier& id, std::vector<NLetExpression*> args, NExpression& block):
-		id(id), args(args), block(block) {}
+	LemlType* t;
+	NFundefExpression(NIdentifier& id, std::vector<NLetExpression*> args):
+		id(id), args(args) {}
 	virtual llvm::Value* codeGen(CodeGenContext& context);
 	virtual std::ostream& print(std::ostream& os) const;
 };
 
 class NLetRecExpression: public NExpression {
 public:
-	NIdentifier& id;
+	NFundefExpression *proto;
 	LemlType* t;
-	std::vector<NLetExpression*> args;
 	NExpression& body;
 	NExpression& eval;
-	NLetRecExpression(NIdentifier& id, std::vector<NLetExpression*> args, NExpression& body, NExpression& expr):
-		id(id), t(newty()), args(args), body(body), eval(expr) {}
+	NLetRecExpression(NFundefExpression *proto, NExpression& body, NExpression& expr):
+		proto(proto), t(newty()), body(body), eval(expr) {}
 	virtual llvm::Value* codeGen(CodeGenContext& context);
 	virtual std::ostream& print(std::ostream& os) const;
 };
