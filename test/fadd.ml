@@ -1,3 +1,3 @@
 let rec add x y =
   x +. y in
-(add 1.05 1.85)
+print_float (add 1.05 1.85)
