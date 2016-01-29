@@ -31,5 +31,10 @@ to build.
 * `-jit` run the program on jit instead of emit code
 * `-o [filename]` specify input file name
 * `-v` verbose output
+* `-nostdlib` does not link built-in library automatically
 
 If `leml` is executed with no options, `leml` takes `stdin` as input and emit LLVM IR to `stdout`.
+
+### built-in library
+
+Built-in libraries are located in `lib/External`. By default, there is `\_\_builtins.c`, and this includes built-in functions needed to run raytracer.
