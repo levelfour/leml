@@ -9,6 +9,10 @@ void print_float(double f) {
 	printf("%.10lf", f);
 }
 
+void print_newline() {
+	printf("\n");
+}
+
 double fabs(double f) {
 	return fabs(f);
 }
