@@ -3,6 +3,10 @@
 LEML=./leml
 EPS=0.0000000001
 
+function abs() {
+	echo $(echo $1 | awk ' { if($1>=0) { print $1} else {print $1*-1 }}')
+}
+
 if [ ! -f LEML ]; then
 	echo "Error: type \`make\` to build leml first"
 	exit 1
@@ -25,7 +29,8 @@ printf " --------------------- || ----------\n"
 
 for resval in test/*.result; do
 	testcase=${resval%.result};
-	if [ $(echo "$(./leml -jit $testcase.ml) - $(cat $resval) < $EPS" | bc) == 1 ]; then
+	diff=$(echo "$(./leml -jit $testcase.ml) - $(cat $resval)" | bc);
+	if [ $(echo "$(abs $diff) < $EPS" | bc) == 1 ]; then
 		printf "  %-20s ||  \e[34mpassed\e[0m\n" $testcase
 	else
 		printf "  %-20s ||  \e[31mfailed\e[0m\n" $testcase
