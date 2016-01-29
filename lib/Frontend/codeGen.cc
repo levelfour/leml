@@ -325,17 +325,8 @@ llvm::Value* NLetExpression::codeGen(CodeGenContext& context) {
 llvm::Value* NLetRecExpression::codeGen(CodeGenContext& context) {
 	// build function prototype
 	t = deref(t);
-	std::vector<llvm::Type*> argtypes;
-	for(auto ty: t->array) {
-		argtypes.push_back(llvmType(ty));
-	}
-	auto* typeRet = t->data;
-	llvm::FunctionType* ftype = llvm::FunctionType::get(
-			llvmType(typeRet),
-			makeArrayRef(argtypes), false);
-	llvm::Function* fn = llvm::Function::Create(
-			ftype, llvm::GlobalValue::ExternalLinkage,
-			proto->id.name.c_str(), context.module.get());
+	proto->t = t;
+	llvm::Function* fn = reinterpret_cast<llvm::Function*>(proto->codeGen(context));
 	llvm::BasicBlock* bblock = llvm::BasicBlock::Create(
 			llvm::getGlobalContext(), "entry", fn, 0);
 
@@ -367,11 +358,21 @@ llvm::Value* NLetRecExpression::codeGen(CodeGenContext& context) {
 }
 
 llvm::Value* NFundefExpression::codeGen(CodeGenContext& context) {
-#ifdef LEML_DEBUG
-	// do not call NFundefExpression::codeGen
-	assert(false);
-#endif
-	return nullptr;
+	// infer function type
+	std::vector<llvm::Type*> argtypes;
+	for(auto ty: t->array) {
+		argtypes.push_back(llvmType(ty));
+	}
+	auto* typeRet = t->data;
+	llvm::FunctionType* ftype = llvm::FunctionType::get(
+			llvmType(typeRet),
+			makeArrayRef(argtypes), false);
+	
+	// create function
+	llvm::Function* fn = llvm::Function::Create(
+			ftype, llvm::GlobalValue::ExternalLinkage,
+			id.name.c_str(), context.module.get());
+	return fn;
 }
 
 llvm::Value* NCallExpression::codeGen(CodeGenContext& context) {
