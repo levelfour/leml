@@ -56,7 +56,14 @@ int main(int argc, char** argv) {
 		if(o.get("nostdlib") == "") {
 			env["print_int"] = new LemlType({Fun, typeUnit, {typeInt}});
 			env["print_float"] = new LemlType({Fun, typeUnit, {typeFloat}});
+			env["fabs"] = new LemlType({Fun, typeFloat, {typeFloat}});
+			env["abs_float"] = new LemlType({Fun, typeFloat, {typeFloat}});
 			env["truncate"] = new LemlType({Fun, typeInt, {typeFloat}});
+			env["sin"] = new LemlType({Fun, typeFloat, {typeFloat}});
+			env["cos"] = new LemlType({Fun, typeFloat, {typeFloat}});
+			env["sqrt"] = new LemlType({Fun, typeFloat, {typeFloat}});
+			env["int_of_float"] = new LemlType({Fun, typeInt, {typeFloat}});
+			env["float_of_int"] = new LemlType({Fun, typeFloat, {typeInt}});
 		}
 		std::unique_ptr<LemlType> t(check(program, env));
 

@@ -1,6 +1,7 @@
 #!/bin/bash
 
 LEML=./leml
+EPS=0.0000000001
 
 if [ ! -f LEML ]; then
 	echo "Error: type \`make\` to build leml first"
@@ -24,7 +25,7 @@ printf " --------------------- || ----------\n"
 
 for resval in test/*.result; do
 	testcase=${resval%.result};
-	if [ $(echo "$(./leml -jit $testcase.ml) - $(cat $resval)" | bc) = 0 ]; then
+	if [ $(echo "$(./leml -jit $testcase.ml) - $(cat $resval) < $EPS" | bc) == 1 ]; then
 		printf "  %-20s ||  \e[34mpassed\e[0m\n" $testcase
 	else
 		printf "  %-20s ||  \e[31mfailed\e[0m\n" $testcase

@@ -1,1 +1,1 @@
-sqrt 2.0
+print_float (sqrt 2.0)
