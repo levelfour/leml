@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <map>
 
 enum LemlTypeTag {
 	Unit,
@@ -40,5 +41,7 @@ extern LemlType* const typeUnit;
 extern LemlType* const typeBool;
 extern LemlType* const typeInt;
 extern LemlType* const typeFloat;
+
+typedef std::map<std::string, LemlType*> TypeEnv;
 
 #endif //__TYPE_HH__

@@ -51,22 +51,32 @@ int main(int argc, char** argv) {
 	if(yyparse() == 0) {
 
 		// type inference / check
-		std::unique_ptr<LemlType> t(check(program));
+		TypeEnv env;
+		env["print_int"] = new LemlType({Fun, typeUnit, {typeInt}});
+		env["print_float"] = new LemlType({Fun, typeUnit, {typeFloat}});
+
+		std::unique_ptr<LemlType> t(check(program, env));
 
 		// initialize LLVM context
 		CodeGenContext context;
+		context.setBuiltInIR(BUILTIN_LIB);
+		context.setEnv(env);
 
 		// generate LLVM IR
-		context.generateCode(*program, std::move(t), o.get("v") != "");
+		if(context.generateCode(*program, std::move(t), o.get("v") != "")) {
 
-		if(o.get("v") != "") {
-			std::cout << *program << std::endl;
-		}
+			if(o.get("v") != "") {
+				std::cout <<
+					"-*-*-*-*-*-*-*-*-*-" << std::endl <<
+					*program << std::endl <<
+					"-*-*-*-*-*-*-*-*-*-" << std::endl;
+			}
 
-		if(o.get("jit") != "") {
-			JITExecution(context, o.get("o"), o.get("type"), o.get("v") != "");
-		} else {
-			IREmission(context, o.get("o"));
+			if(o.get("jit") != "") {
+				JITExecution(context, o.get("o"), o.get("type"), o.get("v") != "");
+			} else {
+				IREmission(context, o.get("o"));
+			}
 		}
 	}
 
@@ -79,12 +89,11 @@ void JITExecution(CodeGenContext& context, std::string filename, std::string typ
 	context.runCode(verbose);
 	if(verbose) {
 		ss << "return value = ";
-	}
-
-	if(type == "float") {
-		ss << context.getFloatResult() << std::endl;
-	} else {
-		ss << context.getIntResult() << std::endl;
+		if(type == "float") {
+			ss << context.getFloatResult() << std::endl;
+		} else {
+			ss << context.getIntResult() << std::endl;
+		}
 	}
 
 	if(filename != "") {

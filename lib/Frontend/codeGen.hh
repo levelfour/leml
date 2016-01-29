@@ -52,7 +52,9 @@ public:
 	CodeGenContext();
 	virtual ~CodeGenContext();
 
-	void generateCode(NExpression& root, std::unique_ptr<LemlType> type, bool verbose = false);
+	void setEnv(TypeEnv env);
+	void setBuiltInIR(std::string filename);
+	bool generateCode(NExpression& root, std::unique_ptr<LemlType> type, bool verbose = false);
 	void runCode(bool verbose = false);
 	int getIntResult();
 	float getFloatResult();

@@ -41,8 +41,30 @@ void CodeGenContext::popBlock() {
 	}
 }
 
+void CodeGenContext::setBuiltInIR(std::string filename) {
+	builtinIRFileName = filename;
+}
+
+void CodeGenContext::setEnv(TypeEnv env) {
+	for(auto& kv: env) {
+		std::vector<llvm::Type*> argtypes;
+		for(auto ty: kv.second->array) {
+			argtypes.push_back(llvmType(ty));
+		}
+		llvm::FunctionType *ft = llvm::FunctionType::get(
+				llvmType(kv.second->data),     // return value type
+				llvm::makeArrayRef(argtypes),  // arg types
+				false);
+		llvm::Function::Create(
+				ft,
+				llvm::GlobalValue::ExternalLinkage, 
+				kv.first, // function name
+				module.get());
+	}
+}
+
 // Compile the AST into a module
-void CodeGenContext::generateCode(NExpression& root, std::unique_ptr<LemlType> type, bool verbose) {
+bool CodeGenContext::generateCode(NExpression& root, std::unique_ptr<LemlType> type, bool verbose) {
 	if(verbose) std::cout << "Generating code...\n";
 
 	// Create the top level interpreter function to call as entry
@@ -52,7 +74,7 @@ void CodeGenContext::generateCode(NExpression& root, std::unique_ptr<LemlType> t
 			typeRet, argTypes, false);
 	fnMain = llvm::Function::Create(
 			ftype,
-			llvm::GlobalValue::InternalLinkage,
+			llvm::GlobalValue::ExternalLinkage,
 			"main", module.get());
 	llvm::BasicBlock *bblock = llvm::BasicBlock::Create(
 			llvm::getGlobalContext(),
@@ -65,11 +87,15 @@ void CodeGenContext::generateCode(NExpression& root, std::unique_ptr<LemlType> t
 	popBlock();
 
 	// link built-in module
-	linkModule(module.get(), builtinIRFileName);
+	if(!linkModule(module.get(), builtinIRFileName)) {
+		std::cerr << "error: external library link failure" << std::endl;
+		return false;
+	}
 
 	fpm->run(*fnMain);
 
 	if(verbose) std::cout << "Code is generated.\n";
+	return true;
 }
 
 // Executes the AST by running the main function
@@ -308,7 +334,7 @@ llvm::Value* NLetRecExpression::codeGen(CodeGenContext& context) {
 			llvmType(typeRet),
 			makeArrayRef(argtypes), false);
 	llvm::Function* fn = llvm::Function::Create(
-			ftype, llvm::GlobalValue::InternalLinkage,
+			ftype, llvm::GlobalValue::ExternalLinkage,
 			proto->id.name.c_str(), context.module.get());
 	llvm::BasicBlock* bblock = llvm::BasicBlock::Create(
 			llvm::getGlobalContext(), "entry", fn, 0);

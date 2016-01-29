@@ -4,5 +4,5 @@ let rec h _ = 789 in
 
 let x = f () in
 let y = g () in
-((if h () = 0 then x - y else y - x) + x + y)
+print_int ((if h () = 0 then x - y else y - x) + x + y)
 (* then節ではxがr0でyがr1に、else節ではyがr0でxがr1にある *)

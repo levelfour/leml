@@ -11,15 +11,13 @@
 #include "syntax.hh"
 #include "type.hh"
 
-typedef std::map<std::string, LemlType*> TypeEnv;
-
 static bool occur(LemlType* r1, LemlType* t);
 void unify(LemlType* t1, LemlType* t2);
 LemlType* infer(NExpression* expr);
 LemlType* infer(NExpression* expr, TypeEnv env);
 LemlType* deref(LemlType* type);
 llvm::Type* llvmType(LemlType* type);
-LemlType* check(NExpression* program);
+LemlType* check(NExpression* program, TypeEnv env = TypeEnv());
 
 class UnificationError: public std::invalid_argument {
 public:

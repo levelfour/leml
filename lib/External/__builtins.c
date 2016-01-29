@@ -4,6 +4,6 @@ void print_int(int i) {
 	printf("%d\n", i);
 }
 
-void print_float(float f) {
-	printf("%f\n", f);
+void print_float(double f) {
+	printf("%lf\n", f);
 }

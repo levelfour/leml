@@ -90,8 +90,6 @@ void unify(LemlType* t1, LemlType* t2) {
 
 LemlType* infer(NExpression* expr) {
 	TypeEnv env;
-	env["print_int"] = new LemlType({Fun, typeUnit, {typeInt}});
-	env["print_float"] = new LemlType({Fun, typeUnit, {typeFloat}});
 	return infer(expr, env);
 }
 
@@ -317,11 +315,11 @@ llvm::Type* llvmType(LemlType* type) {
 	return nullptr;
 }
 
-LemlType* check(NExpression* program) {
+LemlType* check(NExpression* program, TypeEnv env) {
 	LemlType* t;
 
 	try {
-		t = infer(program);
+		t = infer(program, env);
 		if(t == nullptr) {
 			std::cerr << "type check failure" << std::endl;
 			exit(EXIT_FAILURE);
