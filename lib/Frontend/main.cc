@@ -10,6 +10,7 @@
 #include "syntax.hh"
 #include "infer.hh"
 #include "codeGen.hh"
+#include "lift.hh"
 
 extern NExpression *program;
 extern int yyparse();
@@ -58,6 +59,9 @@ int main(int argc, char** argv) {
 			InitEnv(env);
 		}
 		std::unique_ptr<LemlType> t(check(program, env));
+
+		// lambda lifting to eliminate closure
+		lambdaLifting(env, program);
 
 		// initialize LLVM context
 		CodeGenContext context;

@@ -28,8 +28,26 @@ enum Operation {
 };
 
 class CodeGenContext;
+
+class Node;
 class NExpression;
+class NUnit;
+class NBoolean;
+class NInteger;
+class NFloat;
+class NIdentifier;
+class NUnaryExpression;
+class NBinaryExpression;
+class NCompExpression;
+class NIfExpression;
 class NLetExpression;
+class NFundefExpression;
+class NLetRecExpression;
+class NArrayExpression;
+class NArrayGetExpression;
+class NArrayPutExpression;
+class NTupleExpression;
+class NLetTupleExpression;
 
 std::ostream& operator<<(std::ostream& os, const NExpression& expr);
 
