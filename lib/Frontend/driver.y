@@ -168,8 +168,6 @@ exp:
 | TARRAY_CREATE simple_exp simple_exp
     %prec prec_app
     { $$ = new NArrayExpression(*$2, *$3); }
-| error
-    { std::cerr << "parser error\n"; assert(false); }
 
 fundef:
   id_decl formal_args
