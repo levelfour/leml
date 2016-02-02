@@ -224,22 +224,43 @@ llvm::Value* NBinaryExpression::codeGen(CodeGenContext& context) {
 
 llvm::Value* NCompExpression::codeGen(CodeGenContext& context) {
 	llvm::CmpInst::Predicate pred;
+	llvm::Value* valCmp;
 
-	switch(op) {
-		case LEq:  pred = llvm::CmpInst::ICMP_EQ;  break;
-		case LNeq: pred = llvm::CmpInst::ICMP_NE;  break;
-		case LLT:  pred = llvm::CmpInst::ICMP_SLT; break;
-		case LLE:  pred = llvm::CmpInst::ICMP_SLE; break;
-		case LGT:  pred = llvm::CmpInst::ICMP_SGT; break;
-		case LGE:  pred = llvm::CmpInst::ICMP_SGE; break;
-		default:             return nullptr;
+	if(t == typeInt) {
+		switch(op) {
+			case LEq:  pred = llvm::CmpInst::ICMP_EQ;  break;
+			case LNeq: pred = llvm::CmpInst::ICMP_NE;  break;
+			case LLT:  pred = llvm::CmpInst::ICMP_SLT; break;
+			case LLE:  pred = llvm::CmpInst::ICMP_SLE; break;
+			case LGT:  pred = llvm::CmpInst::ICMP_SGT; break;
+			case LGE:  pred = llvm::CmpInst::ICMP_SGE; break;
+			default:             return nullptr;
+		}
+
+		valCmp = context.builder->CreateICmp(
+				pred,
+				lhs.codeGen(context),
+				rhs.codeGen(context),
+				"cmp");
+	} else if(t == typeFloat) {
+		switch(op) {
+			case LEq:  pred = llvm::FCmpInst::FCMP_OEQ;  break;
+			case LNeq: pred = llvm::FCmpInst::FCMP_ONE;  break;
+			case LLT:  pred = llvm::FCmpInst::FCMP_OLT; break;
+			case LLE:  pred = llvm::FCmpInst::FCMP_OLE; break;
+			case LGT:  pred = llvm::FCmpInst::FCMP_OGT; break;
+			case LGE:  pred = llvm::FCmpInst::FCMP_OGE; break;
+			default:             return nullptr;
+		}
+
+		valCmp = context.builder->CreateFCmp(
+				pred,
+				lhs.codeGen(context),
+				rhs.codeGen(context),
+				"fcmp");
+	} else {
+		assert(false);
 	}
-
-	llvm::Value* valCmp = context.builder->CreateICmp(
-			pred,
-			lhs.codeGen(context),
-			rhs.codeGen(context),
-			"cmp");
 
 	// convert comparing result (i1) to i32
 	return context.builder->CreateZExtOrBitCast(

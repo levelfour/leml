@@ -144,7 +144,10 @@ LemlType *infer(NExpression* expr, TypeEnv env) {
 			case LLE:
 			case LGT:
 			case LGE:
-				unify(infer(&e->lhs, env), infer(&e->rhs, env));
+				auto t1 = infer(&e->lhs, env);
+				auto t2 = infer(&e->rhs, env);
+				unify(t1, t2);
+				e->t = t1;
 				return typeBool;
 		}
 	} else if(typeid(*expr) == typeid(NIfExpression)) {
@@ -327,6 +330,7 @@ void derefAll(NExpression *exp) {
 		NCompExpression *e = reinterpret_cast<NCompExpression*>(exp);
 		derefAll(&e->lhs);
 		derefAll(&e->rhs);
+		deref(e->t);
 	} else if(typeid(*exp) == typeid(NIfExpression)) {
 		NIfExpression *e = reinterpret_cast<NIfExpression*>(exp);
 		derefAll(&e->cond);

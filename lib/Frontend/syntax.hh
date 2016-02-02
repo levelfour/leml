@@ -125,6 +125,7 @@ public:
 	int op;
 	NExpression& lhs;
 	NExpression& rhs;
+	LemlType *t;
 	NCompExpression(int op, NExpression &expr1, NExpression &expr2): op(op), lhs(expr1), rhs(expr2) {}
 	virtual llvm::Value* codeGen(CodeGenContext& context);
 	virtual std::ostream& print(std::ostream& os) const;
