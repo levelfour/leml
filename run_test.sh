@@ -4,7 +4,13 @@ LEML=./leml
 EPS=0.0000000001
 
 function abs() {
-	echo $(echo $1 | awk ' { if($1>=0) { print $1} else {print $1*-1 }}')
+	echo $(echo $1 | awk '{
+		if($1>=0) {
+			print $1
+		} else {
+			printf("%f",$1*-1)
+		}
+	}')
 }
 
 if [ ! -f LEML ]; then
@@ -30,7 +36,8 @@ printf " --------------------- || ----------\n"
 for resval in test/*.result; do
 	testcase=${resval%.result};
 	diff=$(echo "$(./leml -jit $testcase.ml) - $(cat $resval)" | bc);
-	if [ $(echo "$(abs $diff) < $EPS" | bc) == 1 ]; then
+	cmpres=$(echo "$(abs $diff) < $EPS" | bc | sed '/^\s*$/d');
+	if [ $cmpres == 1 ]; then
 		printf "  %-20s ||  \e[34mpassed\e[0m\n" $testcase
 	else
 		printf "  %-20s ||  \e[31mfailed\e[0m\n" $testcase

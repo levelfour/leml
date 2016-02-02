@@ -259,6 +259,9 @@ llvm::Value* NCompExpression::codeGen(CodeGenContext& context) {
 				rhs.codeGen(context),
 				"fcmp");
 	} else {
+#ifdef LEML_DEBUG
+		std::cerr << *t << std::endl;
+#endif
 		assert(false);
 	}
 
@@ -309,9 +312,11 @@ llvm::Value* NIfExpression::codeGen(CodeGenContext& context) {
 	// emit if-continue-block
 	fn->getBasicBlockList().push_back(blkCont);
 	context.builder->SetInsertPoint(blkCont);
+#ifdef LEML_DEBUG
+	assert(valThen->getType() == valElse->getType());
+#endif
 	llvm::PHINode* pn = context.builder->CreatePHI(
-			llvm::Type::getInt32Ty(llvm::getGlobalContext()),
-			2, "if.tmp");
+			valThen->getType(), 2, "if.tmp");
 	pn->addIncoming(valThen, blkThen);
 	pn->addIncoming(valElse, blkElse);
 

@@ -330,7 +330,7 @@ void derefAll(NExpression *exp) {
 		NCompExpression *e = reinterpret_cast<NCompExpression*>(exp);
 		derefAll(&e->lhs);
 		derefAll(&e->rhs);
-		deref(e->t);
+		e->t = deref(e->t);
 	} else if(typeid(*exp) == typeid(NIfExpression)) {
 		NIfExpression *e = reinterpret_cast<NIfExpression*>(exp);
 		derefAll(&e->cond);

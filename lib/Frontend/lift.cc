@@ -41,9 +41,9 @@ void extendArgs(NIdentifier func, std::vector<NExpression*> args, NExpression *e
 			extendArgs(func, args, arg);
 		}
 		// TODO: higher-order function
-		NIdentifier funid = *reinterpret_cast<NIdentifier*>(&e->fun);
-		if(funid.name == func.name) {
-			(*e->args).insert(e->args->end(), args.begin(), args.end());
+		NIdentifier *funid = reinterpret_cast<NIdentifier*>(&e->fun);
+		if(funid && funid->name == func.name) {
+			e->args->insert(e->args->end(), args.begin(), args.end());
 		}
 	} else if(typeid(*exp) == typeid(NArrayPutExpression)) {
 		NArrayPutExpression *e = reinterpret_cast<NArrayPutExpression*>(exp);
@@ -65,7 +65,7 @@ void extendArgs(NIdentifier func, std::vector<NExpression*> args, NExpression *e
 	}
 }
 
-void freeVariables(std::set<std::string>& fvs, TypeEnv extEnv, TypeEnv& env, NExpression* exp) {
+void freeVariables(std::set<std::string>& fvs, TypeEnv& extEnv, TypeEnv& env, NExpression* exp) {
 	if(typeid(*exp) == typeid(NUnit)) {
 		return;
 	} else if(typeid(*exp) == typeid(NBoolean)) {
@@ -111,6 +111,9 @@ void freeVariables(std::set<std::string>& fvs, TypeEnv extEnv, TypeEnv& env, NEx
 			std::cout << "scan freevars in function `" << e->proto->id.name << "`\n";
 		}
 
+		// add function to extEnv (function is not to be regarded as free variable)
+		extEnv[e->proto->id.name] = e->t;
+
 		// bound function and args to environment
 		TypeEnv newEnv;
 		newEnv[e->proto->id.name] = e->t;
@@ -143,6 +146,7 @@ void freeVariables(std::set<std::string>& fvs, TypeEnv extEnv, TypeEnv& env, NEx
 		}
 
 		// add new args to function calls in let rec eval recursively
+		extendArgs(proto->id, args, &e->body);
 		extendArgs(proto->id, args, &e->eval);
 
 		// continue lambda lifting in let rec eval using former environment

@@ -1,7 +1,7 @@
 (*
- * 調和振動の微分方程式
+ * $BD4OB?6F0$NHyJ,J}Dx<0(B
  *   mr'' = -kr
- * をRunge-Kutta法で解き、t=10.0における変位を求める
+ * $B$r(BRunge-Kutta$BK!$G2r$-!"(Bt=10.0$B$K$*$1$kJQ0L$r5a$a$k(B
  *)
 let dt = 0.01 in
 let m = 20.0 in
@@ -23,4 +23,4 @@ let rec solve t r v k1 k2 k3 k4 l1 l2 l3 l4 =
   let v' = v +. 1.0/.6.0 *. (l1' +. 2.0*.l2' +. 2.0*.l3' +. l4') in
   if 10.0 < t' then r'
   else solve t' r' v' k1' k2' k3' k4' l1' l2' l3' l4'
-in (solve 0.0 0.0 1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0)
+in print_float (solve 0.0 0.0 1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0)
