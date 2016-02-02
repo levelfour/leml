@@ -339,8 +339,10 @@ void derefAll(NExpression *exp) {
 	} else if(typeid(*exp) == typeid(NLetExpression)) {
 		NLetExpression *e = reinterpret_cast<NLetExpression*>(exp);
 		e->t = deref(e->t);
-		derefAll(e->assign);
-		derefAll(e->eval);
+		if(e->assign && e->eval) {
+			derefAll(e->assign);
+			derefAll(e->eval);
+		}
 	} else if(typeid(*exp) == typeid(NLetRecExpression)) {
 		NLetRecExpression *e = reinterpret_cast<NLetRecExpression*>(exp);
 		e->t = deref(e->t);
