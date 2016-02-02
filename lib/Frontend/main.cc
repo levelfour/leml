@@ -22,7 +22,7 @@ bool verbose  = false;
 bool nostdlib = false;
 
 void InitEnv(TypeEnv& env);
-void JITExecution(CodeGenContext& context, std::string filename, std::string type, bool verbose = false);
+void JITExecution(CodeGenContext& context, std::string filename, std::string type);
 void IREmission(CodeGenContext& context, std::string filename);
 
 int main(int argc, char** argv) {
@@ -80,8 +80,7 @@ int main(int argc, char** argv) {
 		// generate LLVM IR
 		if(context.generateCode(
 					*program, std::move(t),
-					nostdlib,
-					o.get("v") != "")) {
+					nostdlib)) {
 
 			if(o.get("v") != "") {
 				std::cout <<
@@ -91,7 +90,7 @@ int main(int argc, char** argv) {
 			}
 
 			if(o.get("jit") != "") {
-				JITExecution(context, o.get("o"), o.get("type"), o.get("v") != "");
+				JITExecution(context, o.get("o"), o.get("type"));
 			} else {
 				IREmission(context, o.get("o"));
 			}
@@ -116,10 +115,10 @@ void InitEnv(TypeEnv& env) {
 	env["float_of_int"] = new LemlType({Fun, typeFloat, {typeInt}});
 }
 
-void JITExecution(CodeGenContext& context, std::string filename, std::string type, bool verbose) {
+void JITExecution(CodeGenContext& context, std::string filename, std::string type) {
 	// run on LLVM JIT
 	std::stringstream ss;
-	context.runCode(verbose);
+	context.runCode();
 	if(verbose) {
 		ss << "return value = ";
 		if(type == "float") {

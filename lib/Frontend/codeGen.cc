@@ -66,8 +66,8 @@ void CodeGenContext::setEnv(TypeEnv env) {
 }
 
 // Compile the AST into a module
-bool CodeGenContext::generateCode(NExpression& root, std::unique_ptr<LemlType> type, bool nostdlib, bool verbose) {
-	if(verbose) std::cout << "Generating code...\n";
+bool CodeGenContext::generateCode(NExpression& root, std::unique_ptr<LemlType> type, bool nostdlib) {
+	if(verbose) std::cerr << "Generating code...\n";
 
 	// Create the top level interpreter function to call as entry
 	llvm::ArrayRef<llvm::Type*> argTypes;
@@ -96,13 +96,13 @@ bool CodeGenContext::generateCode(NExpression& root, std::unique_ptr<LemlType> t
 
 	fpm->run(*fnMain);
 
-	if(verbose) std::cout << "Code is generated.\n";
+	if(verbose) std::cerr << "Code is generated.\n";
 	return true;
 }
 
 // Executes the AST by running the main function
-void CodeGenContext::runCode(bool verbose) {
-	if(verbose) std::cout << "Running code...\n";
+void CodeGenContext::runCode() {
+	if(verbose) std::cerr << "Running code...\n";
 
 	// build JIT engine
 	llvm::ExecutionEngine *ee =
@@ -114,7 +114,7 @@ void CodeGenContext::runCode(bool verbose) {
 	int (*fpMain)() = (int (*)())ee->getFunctionAddress("main");
 	auto valRet = fpMain();
 
-	if(verbose) std::cout << "Code was run.\n";
+	if(verbose) std::cerr << "Code was run.\n";
 
 	resultValue.d = valRet;
 }
@@ -355,7 +355,7 @@ llvm::Value* NLetRecExpression::codeGen(CodeGenContext& context) {
 	// build function prototype
 	proto->t = t;
 	if(verbose) {
-		std::cout << proto->id.name << ": " << *t << std::endl;
+		std::cerr << proto->id.name << ": " << *t << std::endl;
 	}
 	llvm::Function* fn = reinterpret_cast<llvm::Function*>(proto->codeGen(context));
 	llvm::BasicBlock* bblock = llvm::BasicBlock::Create(

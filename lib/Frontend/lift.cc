@@ -107,7 +107,7 @@ void freeVariables(std::set<std::string>& fvs, TypeEnv& extEnv, TypeEnv& env, NE
 	} else if(typeid(*exp) == typeid(NLetRecExpression)) {
 		NLetRecExpression *e = reinterpret_cast<NLetRecExpression*>(exp);
 		if(verbose) {
-			std::cout << "scan freevars in function `" << e->proto->id.name << "`\n";
+			std::cerr << "scan freevars in function `" << e->proto->id.name << "`\n";
 		}
 
 		// add function to extEnv (function is not to be regarded as free variable)
@@ -140,7 +140,7 @@ void freeVariables(std::set<std::string>& fvs, TypeEnv& extEnv, TypeEnv& env, NE
 			proto->args.push_back(bind);
 			e->t->array.push_back(argtype);
 			if(verbose) {
-				std::cout << " * " << arg->name << ": " << *argtype << std::endl;
+				std::cerr << " * " << arg->name << ": " << *argtype << std::endl;
 			}
 		}
 
