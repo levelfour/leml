@@ -36,30 +36,95 @@ std::ostream& NIdentifier::print(std::ostream& os) const {
 }
 
 std::ostream& NUnaryExpression::print(std::ostream& os) const {
-	os << op << "("; expr.print(os); os << ")";
+	switch(op) {
+		case LNeg:  os << "-";  break;
+		case LFNeg: os << "-."; break;
+	}
+	if( typeid(expr) == typeid(NInteger) ||
+		typeid(expr) == typeid(NFloat) ||
+		typeid(expr) == typeid(NBoolean) ||
+		typeid(expr) == typeid(NUnit) ||
+		typeid(expr) == typeid(NIdentifier)) {
+		expr.print(os);
+	} else {
+		os << "("; expr.print(os); os << ")";
+	}
 	return os;
 }
 
 std::ostream& NBinaryExpression::print(std::ostream& os) const {
-	os << op << "("; lhs.print(os); os << ","; rhs.print(os); os << ")";
+	if( typeid(lhs) == typeid(NInteger) ||
+		typeid(lhs) == typeid(NFloat) ||
+		typeid(lhs) == typeid(NBoolean) ||
+		typeid(lhs) == typeid(NUnit) ||
+		typeid(lhs) == typeid(NIdentifier)) {
+		lhs.print(os);
+	} else {
+		os << "("; lhs.print(os); os << ")";
+	}
+	switch(op) {
+		case LAdd:  os << "+";  break;
+		case LSub:  os << "-";  break;
+		case LMul:  os << "*";  break;
+		case LDiv:  os << "/";  break;
+		case LFAdd: os << "+."; break;
+		case LFSub: os << "-."; break;
+		case LFMul: os << "*."; break;
+		case LFDiv: os << "/."; break;
+	}
+	if( typeid(rhs) == typeid(NInteger) ||
+		typeid(rhs) == typeid(NFloat) ||
+		typeid(rhs) == typeid(NBoolean) ||
+		typeid(rhs) == typeid(NUnit) ||
+		typeid(rhs) == typeid(NIdentifier)) {
+		rhs.print(os);
+	} else {
+		os << "("; rhs.print(os); os << ")";
+	}
 	return os;
 }
 
 std::ostream& NCompExpression::print(std::ostream& os) const {
-	os << op << "("; lhs.print(os); os << ","; rhs.print(os); os << ")";
+	if( typeid(lhs) == typeid(NInteger) ||
+		typeid(lhs) == typeid(NFloat) ||
+		typeid(lhs) == typeid(NBoolean) ||
+		typeid(lhs) == typeid(NUnit) ||
+		typeid(lhs) == typeid(NIdentifier)) {
+		lhs.print(os);
+	} else {
+		os << "("; lhs.print(os); os << ")";
+	}
+	switch(op) {
+		case LEq:  os << "=";  break;
+		case LNeq: os << "<>"; break;
+		case LLT:  os << "<";  break;
+		case LLE:  os << "<="; break;
+		case LGT:  os << ">";  break;
+		case LGE:  os << ">="; break;
+	}
+	if( typeid(rhs) == typeid(NInteger) ||
+		typeid(rhs) == typeid(NFloat) ||
+		typeid(rhs) == typeid(NBoolean) ||
+		typeid(rhs) == typeid(NUnit) ||
+		typeid(rhs) == typeid(NIdentifier)) {
+		rhs.print(os);
+	} else {
+		os << "("; rhs.print(os); os << ")";
+	}
 	return os;
 }
 
 std::ostream& NIfExpression::print(std::ostream& os) const {
-	os << "if ("; cond.print(os); os << ",";
-	true_exp.print(os); os << ","; false_exp.print(os); os << ")";
+	os << "if "; cond.print(os); os << " then "; true_exp.print(os);
+	os << std::endl << "else ";
+	false_exp.print(os);
 	return os;
 }
 
 std::ostream& NLetExpression::print(std::ostream& os) const {
 	if(assign != nullptr) {
-		os << "let " << id << ":" << *t;
-		os << " = " << *assign << " in " << std::endl;
+		os << "let (" << id << ":" << *t;
+		os << ") = " << *assign << " in " << std::endl;
 		os << *eval;
 	} else {
 		os << id << ":" << *t;
@@ -70,7 +135,7 @@ std::ostream& NLetExpression::print(std::ostream& os) const {
 std::ostream& NFundefExpression::print(std::ostream& os) const {
 	os << id.name;
 	for(auto arg: args) {
-		os << " " << arg->id.name << ":" << *arg->t;
+		os << " (" << arg->id.name << ":" << *arg->t << ")";
 	}
 
 	return os;
@@ -83,10 +148,23 @@ std::ostream& NLetRecExpression::print(std::ostream& os) const {
 }
 
 std::ostream& NCallExpression::print(std::ostream& os) const {
-	os << "(" << fun << ")";
-	for(auto arg: *args) {
-		os << " " << *arg;
+	if(typeid(fun) == typeid(NIdentifier)) {
+		os << "(" << fun;
+	} else {
+		os << "((" << fun << ")";
 	}
+	for(auto arg: *args) {
+		if( typeid(*arg) == typeid(NInteger) ||
+			typeid(*arg) == typeid(NFloat) ||
+			typeid(*arg) == typeid(NBoolean) ||
+			typeid(*arg) == typeid(NUnit) ||
+			typeid(*arg) == typeid(NIdentifier)) {
+			os << " " << *arg;
+		} else {
+			os << " (" << *arg << ")";
+		}
+	}
+	os << ")";
 	return os;
 }
 

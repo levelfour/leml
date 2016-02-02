@@ -64,7 +64,12 @@ void extendArgs(NIdentifier func, std::vector<NExpression*> args, NExpression *e
 	}
 }
 
-void freeVariables(std::set<std::string>& fvs, TypeEnv& extEnv, TypeEnv& env, NExpression* exp) {
+void freeVariables(NExpression* exp, std::set<std::string>& fvs, TypeEnv& extEnv, TypeEnv& localEnv, TypeEnv localBound = TypeEnv()) {
+	TypeEnv env = localEnv;
+	if(typeid(*exp) != typeid(NLetRecExpression) && !localBound.empty()) {
+		env = localBound;
+	}
+
 	if(typeid(*exp) == typeid(NUnit)) {
 		return;
 	} else if(typeid(*exp) == typeid(NBoolean)) {
@@ -75,54 +80,56 @@ void freeVariables(std::set<std::string>& fvs, TypeEnv& extEnv, TypeEnv& env, NE
 		return;
 	} else if(typeid(*exp) == typeid(NUnaryExpression)) {
 		NUnaryExpression *e = reinterpret_cast<NUnaryExpression*>(exp);
-		freeVariables(fvs, extEnv, env, &e->expr);
+		freeVariables(&e->expr, fvs, extEnv, env);
 	} else if(typeid(*exp) == typeid(NBinaryExpression)) {
 		NBinaryExpression *e = reinterpret_cast<NBinaryExpression*>(exp);
-		freeVariables(fvs, extEnv, env, &e->lhs);
-		freeVariables(fvs, extEnv, env, &e->rhs);
+		freeVariables(&e->lhs, fvs, extEnv, env);
+		freeVariables(&e->rhs, fvs, extEnv, env);
 	} else if(typeid(*exp) == typeid(NCompExpression)) {
 		NCompExpression *e = reinterpret_cast<NCompExpression*>(exp);
-		freeVariables(fvs, extEnv, env, &e->lhs);
-		freeVariables(fvs, extEnv, env, &e->rhs);
+		freeVariables(&e->lhs, fvs, extEnv, env);
+		freeVariables(&e->rhs, fvs, extEnv, env);
 	} else if(typeid(*exp) == typeid(NIfExpression)) {
 		NIfExpression *e = reinterpret_cast<NIfExpression*>(exp);
-		freeVariables(fvs, extEnv, env, &e->true_exp);
-		freeVariables(fvs, extEnv, env, &e->false_exp);
-		freeVariables(fvs, extEnv, env, &e->cond);
+		freeVariables(&e->true_exp, fvs, extEnv, env);
+		freeVariables(&e->false_exp, fvs, extEnv, env);
+		freeVariables(&e->cond, fvs, extEnv, env);
 	} else if(typeid(*exp) == typeid(NLetExpression)) {
 		NLetExpression *e = reinterpret_cast<NLetExpression*>(exp);
 		TypeEnv newEnv = env;
 		if(e->assign && e->eval) {
-			env[e->id.name] = e->t;
-			freeVariables(fvs, extEnv, env, e->eval);
+			newEnv[e->id.name] = e->t;
+			freeVariables(e->eval, fvs, extEnv, newEnv);
 			fvs.erase(e->id.name);
-			freeVariables(fvs, extEnv, env, e->assign);
+			freeVariables(e->assign, fvs, extEnv, newEnv);
 		}
 	} else if(typeid(*exp) == typeid(NIdentifier)) {
 		NIdentifier *e = reinterpret_cast<NIdentifier*>(exp);
 		if(extEnv.find(e->name) == extEnv.end() && env.find(e->name) == env.end()) {
-			// not found
+			// not found => add as a new free variable
 			fvs.insert(e->name);
 		}
 	} else if(typeid(*exp) == typeid(NLetRecExpression)) {
 		NLetRecExpression *e = reinterpret_cast<NLetRecExpression*>(exp);
-		if(verbose) {
-			std::cerr << "scan freevars in function `" << e->proto->id.name << "`\n";
-		}
 
 		// add function to extEnv (function is not to be regarded as free variable)
 		extEnv[e->proto->id.name] = e->t;
 
 		// bound function and args to environment
-		TypeEnv newEnv;
-		newEnv[e->proto->id.name] = e->t;
+		TypeEnv bound = localBound;
+		bound[e->proto->id.name] = e->t;
 		for(auto arg: e->proto->args) {
-			newEnv[arg->id.name] = arg->t;
+			bound[arg->id.name] = arg->t;
 		}
 
 		// search free variables in let rec body (independently from former environment)
 		std::set<std::string> clsFvs;
-		freeVariables(clsFvs, extEnv, newEnv, &e->body);
+		freeVariables(&e->body, clsFvs, extEnv, env, bound);
+		fvs.insert(clsFvs.begin(), clsFvs.end());
+
+		if(verbose) {
+			std::cerr << "scan freevars in function `" << e->proto->id.name << "`\n";
+		}
 
 		// add fvs to args
 		NFundefExpression *proto = e->proto;
@@ -133,6 +140,9 @@ void freeVariables(std::set<std::string>& fvs, TypeEnv& extEnv, TypeEnv& env, NE
 			// free variable must be defined in the outer environment
 			LemlType *argtype = env[fv];
 #ifdef LEML_DEBUG
+			if(argtype == nullptr) {
+				std::cerr << "error: reference `" << fv << "` is not defined" << std::endl;
+			}
 			assert(argtype != nullptr);
 #endif
 			args.push_back(arg);
@@ -149,40 +159,40 @@ void freeVariables(std::set<std::string>& fvs, TypeEnv& extEnv, TypeEnv& env, NE
 		extendArgs(proto->id, args, &e->eval);
 
 		// continue lambda lifting in let rec eval using former environment
-		newEnv = env;
+		TypeEnv newEnv = localEnv;
 		newEnv[e->proto->id.name] = e->t;
-		freeVariables(fvs, extEnv, newEnv, &e->eval);
+		freeVariables(&e->eval, fvs, extEnv, newEnv, localBound);
 		fvs.erase(e->proto->id.name);
 	} else if(typeid(*exp) == typeid(NCallExpression)) {
 		NCallExpression *e = reinterpret_cast<NCallExpression*>(exp);
 		for(auto arg: *e->args) {
-			freeVariables(fvs, extEnv, env, arg);
+			freeVariables(arg, fvs, extEnv, env);
 		}
 		// TODO: check higher-order function
-		freeVariables(fvs, extEnv, env, &e->fun);
+		freeVariables(&e->fun, fvs, extEnv, env);
 	} else if(typeid(*exp) == typeid(NArrayExpression)) {
 		return;
 	} else if(typeid(*exp) == typeid(NArrayGetExpression)) {
 		NArrayGetExpression *e = reinterpret_cast<NArrayGetExpression*>(exp);
-		freeVariables(fvs, extEnv, env, &e->array);
-		freeVariables(fvs, extEnv, env, &e->index);
+		freeVariables(&e->array, fvs, extEnv, env);
+		freeVariables(&e->index, fvs, extEnv, env);
 	} else if(typeid(*exp) == typeid(NArrayPutExpression)) {
 		NArrayPutExpression *e = reinterpret_cast<NArrayPutExpression*>(exp);
-		freeVariables(fvs, extEnv, env, &e->array);
-		freeVariables(fvs, extEnv, env, &e->index);
-		freeVariables(fvs, extEnv, env, &e->exp);
+		freeVariables(&e->array, fvs, extEnv, env);
+		freeVariables(&e->index, fvs, extEnv, env);
+		freeVariables(&e->exp, fvs, extEnv, env);
 	} else if(typeid(*exp) == typeid(NTupleExpression)) {
 		NTupleExpression *e = reinterpret_cast<NTupleExpression*>(exp);
 		for(auto elem: e->elems) {
-			freeVariables(fvs, extEnv, env, elem);
+			freeVariables(elem, fvs, extEnv, env);
 		}
 	} else if(typeid(*exp) == typeid(NLetTupleExpression)) {
 		NLetTupleExpression *e = reinterpret_cast<NLetTupleExpression*>(exp);
-		freeVariables(fvs, extEnv, env, &e->eval);
+		freeVariables(&e->eval, fvs, extEnv, env);
 		for(auto let: e->ids) {
 			fvs.erase(let->id.name);
 		}
-		freeVariables(fvs, extEnv, env, &e->exp);
+		freeVariables(&e->exp, fvs, extEnv, env);
 	}
 }
 
@@ -194,7 +204,7 @@ bool lambdaLifting(TypeEnv extEnv, NExpression *program) {
 	std::set<std::string> fvs;
 
 	// the instance of lambda lifting
-	freeVariables(fvs, extEnv, localEnv, program);
+	freeVariables(program, fvs, extEnv, localEnv);
 
 	return true;
 }
