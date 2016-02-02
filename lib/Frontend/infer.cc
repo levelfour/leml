@@ -315,6 +315,68 @@ llvm::Type* llvmType(LemlType* type) {
 	return nullptr;
 }
 
+void derefAll(NExpression *exp) {
+	if(typeid(*exp) == typeid(NUnaryExpression)) {
+		NUnaryExpression *e = reinterpret_cast<NUnaryExpression*>(exp);
+		derefAll(&e->expr);
+	} else if(typeid(*exp) == typeid(NBinaryExpression)) {
+		NBinaryExpression *e = reinterpret_cast<NBinaryExpression*>(exp);
+		derefAll(&e->lhs);
+		derefAll(&e->rhs);
+	} else if(typeid(*exp) == typeid(NCompExpression)) {
+		NCompExpression *e = reinterpret_cast<NCompExpression*>(exp);
+		derefAll(&e->lhs);
+		derefAll(&e->rhs);
+	} else if(typeid(*exp) == typeid(NIfExpression)) {
+		NIfExpression *e = reinterpret_cast<NIfExpression*>(exp);
+		derefAll(&e->cond);
+		derefAll(&e->true_exp);
+		derefAll(&e->false_exp);
+	} else if(typeid(*exp) == typeid(NLetExpression)) {
+		NLetExpression *e = reinterpret_cast<NLetExpression*>(exp);
+		e->t = deref(e->t);
+		derefAll(e->assign);
+		derefAll(e->eval);
+	} else if(typeid(*exp) == typeid(NLetRecExpression)) {
+		NLetRecExpression *e = reinterpret_cast<NLetRecExpression*>(exp);
+		e->t = deref(e->t);
+		derefAll(&e->body);
+		derefAll(&e->eval);
+	} else if(typeid(*exp) == typeid(NCallExpression)) {
+		NCallExpression *e = reinterpret_cast<NCallExpression*>(exp);
+		derefAll(&e->fun);
+		for(auto arg: *e->args) {
+			derefAll(arg);
+		}
+	} else if(typeid(*exp) == typeid(NArrayExpression)) {
+		NArrayExpression *e = reinterpret_cast<NArrayExpression*>(exp);
+		derefAll(&e->length);
+		derefAll(&e->data);
+		for(auto elem: *e->array) {
+			derefAll(elem);
+		}
+	} else if(typeid(*exp) == typeid(NArrayGetExpression)) {
+		NArrayGetExpression *e = reinterpret_cast<NArrayGetExpression*>(exp);
+		derefAll(&e->array);
+	} else if(typeid(*exp) == typeid(NArrayPutExpression)) {
+		NArrayPutExpression *e = reinterpret_cast<NArrayPutExpression*>(exp);
+		derefAll(&e->array);
+		derefAll(&e->exp);
+	} else if(typeid(*exp) == typeid(NTupleExpression)) {
+		NTupleExpression *e = reinterpret_cast<NTupleExpression*>(exp);
+		for(auto elem: e->elems) {
+			derefAll(elem);
+		}
+	} else if(typeid(*exp) == typeid(NLetTupleExpression)) {
+		NLetTupleExpression *e = reinterpret_cast<NLetTupleExpression*>(exp);
+		for(auto let: e->ids) {
+			derefAll(let);
+		}
+		derefAll(&e->exp);
+		derefAll(&e->eval);
+	}
+}
+
 LemlType* check(NExpression* program, TypeEnv env) {
 	LemlType* t;
 
@@ -329,5 +391,8 @@ LemlType* check(NExpression* program, TypeEnv env) {
 		exit(EXIT_FAILURE);
 	}
 
-	return deref(t);
+	// dereference all `var` in program
+	derefAll(program);
+
+	return t;
 }

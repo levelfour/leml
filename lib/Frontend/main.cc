@@ -6,6 +6,7 @@
 
 #include <llvm/IR/IRPrintingPasses.h>
 
+#include "leml.hh"
 #include "cmdopt.hh"
 #include "syntax.hh"
 #include "infer.hh"
@@ -16,6 +17,9 @@ extern NExpression *program;
 extern int yyparse();
 extern int yydebug;
 extern FILE* yyin;
+
+bool verbose  = false;
+bool nostdlib = false;
 
 void InitEnv(TypeEnv& env);
 void JITExecution(CodeGenContext& context, std::string filename, std::string type, bool verbose = false);
@@ -33,6 +37,9 @@ int main(int argc, char** argv) {
 	spec["nostdlib"] = 0;
 	o.set(spec);
 	o.build();
+
+	if(o.get("v") != "")        { verbose = true; }
+	if(o.get("nostdlib") != "") { nostdlib = true; }
 
 	// initialization of LLVM
 	LLVMInitializeNativeTarget();
@@ -55,7 +62,7 @@ int main(int argc, char** argv) {
 
 		// type inference / check
 		TypeEnv env;
-		if(o.get("nostdlib") == "") {
+		if(!nostdlib) {
 			InitEnv(env);
 		}
 		std::unique_ptr<LemlType> t(check(program, env));
@@ -65,7 +72,7 @@ int main(int argc, char** argv) {
 
 		// initialize LLVM context
 		CodeGenContext context;
-		if(o.get("nostdlib") == "") {
+		if(!nostdlib) {
 			context.setBuiltInIR(BUILTIN_LIB);
 			context.setEnv(env);
 		}
@@ -73,7 +80,7 @@ int main(int argc, char** argv) {
 		// generate LLVM IR
 		if(context.generateCode(
 					*program, std::move(t),
-					o.get("nostdlib") != "",
+					nostdlib,
 					o.get("v") != "")) {
 
 			if(o.get("v") != "") {

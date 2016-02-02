@@ -17,11 +17,12 @@ LemlType::operator std::string() const {
 		case Float: return "float";
 		case Fun:
 		{
-			std::string tystr = "";
+			std::string tystr = "(";
 			for(auto ty: array) {
 				tystr += (static_cast<std::string>(*ty) + std::string(" -> "));
 			}
 			tystr += static_cast<std::string>(*data);
+			tystr += ")";
 			return tystr;
 		}
 		case Tuple:

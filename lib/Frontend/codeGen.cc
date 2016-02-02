@@ -1,3 +1,5 @@
+#include <cstdlib>
+#include "leml.hh"
 #include "codeGen.hh"
 #include "syntax.hh"
 #include "parser.hh"
@@ -174,9 +176,10 @@ llvm::Value* NFloat::codeGen(CodeGenContext& context) {
 
 llvm::Value* NIdentifier::codeGen(CodeGenContext& context) {
 	llvm::Value* ptr = context.locals()[name];
-#ifdef LEML_DEBUG
-	assert(ptr != nullptr);
-#endif
+	if(!ptr) {
+		std::cerr << "error: undefined reference `" << name << "`" << std::endl;
+		std::exit(EXIT_FAILURE);
+	}
 	return context.builder->CreateLoad(ptr, name);
 }
 
@@ -324,8 +327,10 @@ llvm::Value* NLetExpression::codeGen(CodeGenContext& context) {
 
 llvm::Value* NLetRecExpression::codeGen(CodeGenContext& context) {
 	// build function prototype
-	t = deref(t);
 	proto->t = t;
+	if(verbose) {
+		std::cout << proto->id.name << ": " << *t << std::endl;
+	}
 	llvm::Function* fn = reinterpret_cast<llvm::Function*>(proto->codeGen(context));
 	llvm::BasicBlock* bblock = llvm::BasicBlock::Create(
 			llvm::getGlobalContext(), "entry", fn, 0);
@@ -389,7 +394,8 @@ llvm::Value* NCallExpression::codeGen(CodeGenContext& context) {
 	// generate code of arguments
 	std::vector<llvm::Value*> argValues;
 	for(auto arg: *args) {
-		argValues.push_back(arg->codeGen(context));
+		auto v = arg->codeGen(context);
+		argValues.push_back(v);
 	}
 	return context.builder->CreateCall(fn, argValues);
 }
