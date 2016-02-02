@@ -2,7 +2,6 @@
 #include <string>
 #include <set>
 #include "leml.hh"
-#include "infer.hh"
 #include "lift.hh"
 
 void extendArgs(NIdentifier func, std::vector<NExpression*> args, NExpression *exp) {

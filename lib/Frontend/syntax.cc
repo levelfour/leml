@@ -58,11 +58,11 @@ std::ostream& NIfExpression::print(std::ostream& os) const {
 
 std::ostream& NLetExpression::print(std::ostream& os) const {
 	if(assign != nullptr) {
-		os << "let " << id;
+		os << "let " << id << ":" << *t;
 		os << " = " << *assign << " in " << std::endl;
 		os << *eval;
 	} else {
-		os << id;
+		os << id << ":" << *t;
 	}
 	return os;
 }
@@ -70,7 +70,7 @@ std::ostream& NLetExpression::print(std::ostream& os) const {
 std::ostream& NFundefExpression::print(std::ostream& os) const {
 	os << id.name;
 	for(auto arg: args) {
-		os << " " << arg->id.name;
+		os << " " << arg->id.name << ":" << *arg->t;
 	}
 
 	return os;

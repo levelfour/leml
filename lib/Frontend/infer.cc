@@ -387,6 +387,8 @@ LemlType* check(NExpression* program, TypeEnv env) {
 	LemlType* t;
 
 	try {
+		// TODO: why infer needs twice?
+		t = infer(program, env);
 		t = infer(program, env);
 		if(t == nullptr) {
 			std::cerr << "type check failure" << std::endl;
@@ -398,7 +400,9 @@ LemlType* check(NExpression* program, TypeEnv env) {
 	}
 
 	// dereference all `var` in program
+	t = deref(t);
 	derefAll(program);
+
 
 	return t;
 }
