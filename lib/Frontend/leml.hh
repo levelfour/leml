@@ -4,5 +4,7 @@
 #define cdbg cerr
 
 extern bool verbose;
+extern bool nostdlib;
+extern bool mem2reg;
 
 #endif // __LEML_HH__

@@ -54,7 +54,7 @@ public:
 
 	void setEnv(TypeEnv env);
 	void setBuiltInIR(std::string filename);
-	bool generateCode(NExpression& root, std::unique_ptr<LemlType> type, bool nostdlib = false);
+	bool generateCode(NExpression& root, std::unique_ptr<LemlType> type);
 	void runCode();
 	int getIntResult();
 	float getFloatResult();

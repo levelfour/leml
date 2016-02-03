@@ -20,6 +20,7 @@ extern FILE* yyin;
 
 bool verbose  = false;
 bool nostdlib = false;
+bool mem2reg = false;
 
 void InitEnv(TypeEnv& env);
 void JITExecution(CodeGenContext& context, std::string filename, std::string type);
@@ -35,11 +36,13 @@ int main(int argc, char** argv) {
 	spec["v"]    = 0; // verbose
 	spec["type"] = 1; // result value type
 	spec["nostdlib"] = 0;
+	spec["mem2reg"] = 0;
 	o.set(spec);
 	o.build();
 
 	if(o.get("v") != "")        { verbose = true; }
 	if(o.get("nostdlib") != "") { nostdlib = true; }
+	if(o.get("mem2reg") != "")  { mem2reg = true; }
 
 	// initialization of LLVM
 	LLVMInitializeNativeTarget();
@@ -79,8 +82,7 @@ int main(int argc, char** argv) {
 
 		// generate LLVM IR
 		if(context.generateCode(
-					*program, std::move(t),
-					nostdlib)) {
+					*program, std::move(t))) {
 
 			if(o.get("v") != "") {
 				std::cout <<

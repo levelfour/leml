@@ -17,7 +17,7 @@ CodeGenContext::CodeGenContext() {
 
 	// initialize pass manager
 	fpm = llvm::make_unique<llvm::FunctionPassManager>(module.get());
-	fpm->add(llvm::createPromoteMemoryToRegisterPass());
+	if(mem2reg) fpm->add(llvm::createPromoteMemoryToRegisterPass());
 	fpm->doInitialization();
 }
 
@@ -66,7 +66,7 @@ void CodeGenContext::setEnv(TypeEnv env) {
 }
 
 // Compile the AST into a module
-bool CodeGenContext::generateCode(NExpression& root, std::unique_ptr<LemlType> type, bool nostdlib) {
+bool CodeGenContext::generateCode(NExpression& root, std::unique_ptr<LemlType> type) {
 	if(verbose) std::cerr << "Generating code...\n";
 
 	// Create the top level interpreter function to call as entry
