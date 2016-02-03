@@ -1,3 +1,4 @@
+#include <fstream>
 #include "cmdopt.hh"
 
 void OptionParser::build() {
@@ -24,7 +25,11 @@ void OptionParser::build() {
 				opt[s] = argv[++i];
 			}
 		} else {
-			opt["default"] = argv[i];
+			if(std::ifstream(argv[i])) {
+				opt["default"] = argv[i];
+			} else {
+				throw FileDoesNotExist(argv[i]);
+			}
 		}
 	}
 }

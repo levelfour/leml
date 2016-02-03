@@ -145,7 +145,7 @@ void freeVariables(NExpression* exp, std::set<std::string>& fvs, TypeEnv& extEnv
 		freeVariables(&e->body, clsFvs, extEnv, catEnv, bound);
 		fvs.insert(clsFvs.begin(), clsFvs.end());
 
-		if(verbose) {
+		if(gVerbose) {
 			std::cerr << "scan freevars in function `" << e->proto->id.name << "`\n";
 		}
 
@@ -167,7 +167,7 @@ void freeVariables(NExpression* exp, std::set<std::string>& fvs, TypeEnv& extEnv
 			bind->t = argtype;
 			proto->args.push_back(bind);
 			e->t->array.push_back(argtype);
-			if(verbose) {
+			if(gVerbose) {
 				std::cerr << " * " << arg->name << ": " << *argtype << std::endl;
 			}
 		}

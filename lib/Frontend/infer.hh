@@ -28,4 +28,9 @@ public:
 				+ static_cast<std::string>(*t2)) {}
 };
 
+class VectorLengthError: public std::invalid_argument {
+public:
+	VectorLengthError(): std::invalid_argument("iteration over sequences of different length") {}
+};
+
 #endif // __INFER_HH__

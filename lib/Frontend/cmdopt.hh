@@ -20,4 +20,9 @@ public:
 	std::string get(std::string s);
 };
 
+class FileDoesNotExist: public std::invalid_argument {
+public:
+	FileDoesNotExist(std::string name): std::invalid_argument(name) {}
+};
+
 #endif //__CMDOPT_HH__

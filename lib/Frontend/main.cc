@@ -18,13 +18,14 @@ extern int yyparse();
 extern int yydebug;
 extern FILE* yyin;
 
-bool verbose  = false;
-bool nostdlib = false;
-bool mem2reg = false;
+std::string gFilename = "";
+bool gVerbose  = false;
+bool gNostdlib = false;
+bool gMem2reg = false;
 
 void InitEnv(TypeEnv& env);
-void JITExecution(CodeGenContext& context, std::string filename, std::string type);
-void IREmission(CodeGenContext& context, std::string filename);
+void JITExecution(CodeGenContext& context, std::string gFilename, std::string type);
+void IREmission(CodeGenContext& context, std::string gFilename);
 
 int main(int argc, char** argv) {
 
@@ -33,16 +34,25 @@ int main(int argc, char** argv) {
 	std::map<std::string, int> spec;
 	spec["jit"]  = 0; // JIT
 	spec["o"]    = 1; // output file name
-	spec["v"]    = 0; // verbose
+	spec["v"]    = 0; // gVerbose
 	spec["type"] = 1; // result value type
 	spec["nostdlib"] = 0;
 	spec["mem2reg"] = 0;
 	o.set(spec);
-	o.build();
+	try {
+		o.build();
+	} catch(FileDoesNotExist ex) {
+		std::cerr << "error: `" << ex.what() << "` no such file or directory" << std::endl;
+		std::exit(EXIT_FAILURE);
+	} catch(std::invalid_argument ex) {
+		std::cerr << "error: unknown option `" << ex.what() << "`" << std::endl;
+		std::exit(EXIT_FAILURE);
+	}
 
-	if(o.get("v") != "")        { verbose = true; }
-	if(o.get("nostdlib") != "") { nostdlib = true; }
-	if(o.get("mem2reg") != "")  { mem2reg = true; }
+	if(o.get("default") != "")  { gFilename = o.get("default"); }
+	if(o.get("v") != "")        { gVerbose = true; }
+	if(o.get("nostdlib") != "") { gNostdlib = true; }
+	if(o.get("mem2reg") != "")  { gMem2reg = true; }
 
 	// initialization of LLVM
 	LLVMInitializeNativeTarget();
@@ -55,8 +65,8 @@ int main(int argc, char** argv) {
 #endif
 
 	// open file
-	if(o.get("default") != "") {
-		FILE* ifs = fopen(o.get("default").c_str(), "r");
+	if(gFilename != "") {
+		FILE* ifs = fopen(gFilename.c_str(), "r");
 		yyin = ifs;
 	}
 
@@ -65,7 +75,7 @@ int main(int argc, char** argv) {
 
 		// type inference / check
 		TypeEnv env;
-		if(!nostdlib) {
+		if(!gNostdlib) {
 			InitEnv(env);
 		}
 		std::unique_ptr<LemlType> t(check(program, env));
@@ -75,7 +85,7 @@ int main(int argc, char** argv) {
 
 		// initialize LLVM context
 		CodeGenContext context;
-		if(!nostdlib) {
+		if(!gNostdlib) {
 			context.setBuiltInIR(BUILTIN_LIB);
 			context.setEnv(env);
 		}
@@ -84,7 +94,7 @@ int main(int argc, char** argv) {
 		if(context.generateCode(
 					*program, std::move(t))) {
 
-			if(o.get("v") != "") {
+			if(gVerbose) {
 				std::cout <<
 					"-*-*-*-*-*-*-*-*-*-" << std::endl <<
 					*program << std::endl <<
@@ -117,11 +127,11 @@ void InitEnv(TypeEnv& env) {
 	env["float_of_int"] = new LemlType({Fun, typeFloat, {typeInt}});
 }
 
-void JITExecution(CodeGenContext& context, std::string filename, std::string type) {
+void JITExecution(CodeGenContext& context, std::string gFilename, std::string type) {
 	// run on LLVM JIT
 	std::stringstream ss;
 	context.runCode();
-	if(verbose) {
+	if(gVerbose) {
 		ss << "return value = ";
 		if(type == "float") {
 			ss << context.getFloatResult() << std::endl;
@@ -130,23 +140,23 @@ void JITExecution(CodeGenContext& context, std::string filename, std::string typ
 		}
 	}
 
-	if(filename != "") {
+	if(gFilename != "") {
 		std::fstream fs;
-		fs.open(filename, std::fstream::out);
+		fs.open(gFilename, std::fstream::out);
 		fs << ss.str();
 	} else {
 		std::cout << ss.str();
 	}
 }
 
-void IREmission(CodeGenContext& context, std::string filename) {
-	if(filename == "") {
+void IREmission(CodeGenContext& context, std::string gFilename) {
+	if(gFilename == "") {
 		// "-" means stdout
-		filename = "-";
+		gFilename = "-";
 	}
 
 	std::error_code ec;
-	llvm::raw_ostream* out = new llvm::raw_fd_ostream(filename.c_str(), ec, llvm::sys::fs::F_None);
+	llvm::raw_ostream* out = new llvm::raw_fd_ostream(gFilename.c_str(), ec, llvm::sys::fs::F_None);
 
 	llvm::PassManager pm;
 	pm.add(llvm::createPrintModulePass(*out));

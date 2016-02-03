@@ -10,14 +10,13 @@
  */
 
 CodeGenContext::CodeGenContext() {
-	// TODO: replace "main" with source code name
-	module = llvm::make_unique<llvm::Module>("main", llvm::getGlobalContext());
+	module = llvm::make_unique<llvm::Module>(gFilename, llvm::getGlobalContext());
 
 	builder = llvm::make_unique<llvm::IRBuilder<>>(llvm::getGlobalContext());
 
 	// initialize pass manager
 	fpm = llvm::make_unique<llvm::FunctionPassManager>(module.get());
-	if(mem2reg) fpm->add(llvm::createPromoteMemoryToRegisterPass());
+	if(gMem2reg) fpm->add(llvm::createPromoteMemoryToRegisterPass());
 	fpm->doInitialization();
 }
 
@@ -67,7 +66,7 @@ void CodeGenContext::setEnv(TypeEnv env) {
 
 // Compile the AST into a module
 bool CodeGenContext::generateCode(NExpression& root, std::unique_ptr<LemlType> type) {
-	if(verbose) std::cerr << "Generating code...\n";
+	if(gVerbose) std::cerr << "Generating code...\n";
 
 	// Create the top level interpreter function to call as entry
 	llvm::ArrayRef<llvm::Type*> argTypes;
@@ -89,20 +88,20 @@ bool CodeGenContext::generateCode(NExpression& root, std::unique_ptr<LemlType> t
 	popBlock();
 
 	// link built-in module
-	if(!nostdlib && !linkModule(module.get(), builtinIRFileName)) {
+	if(!gNostdlib && !linkModule(module.get(), builtinIRFileName)) {
 		std::cerr << "error: external library link failure" << std::endl;
 		return false;
 	}
 
 	fpm->run(*fnMain);
 
-	if(verbose) std::cerr << "Code is generated.\n";
+	if(gVerbose) std::cerr << "Code is generated.\n";
 	return true;
 }
 
 // Executes the AST by running the main function
 void CodeGenContext::runCode() {
-	if(verbose) std::cerr << "Running code...\n";
+	if(gVerbose) std::cerr << "Running code...\n";
 
 	// build JIT engine
 	llvm::ExecutionEngine *ee =
@@ -114,7 +113,7 @@ void CodeGenContext::runCode() {
 	int (*fpMain)() = (int (*)())ee->getFunctionAddress("main");
 	auto valRet = fpMain();
 
-	if(verbose) std::cerr << "Code was run.\n";
+	if(gVerbose) std::cerr << "Code was run.\n";
 
 	resultValue.d = valRet;
 }
@@ -354,7 +353,7 @@ llvm::Value* NLetExpression::codeGen(CodeGenContext& context) {
 llvm::Value* NLetRecExpression::codeGen(CodeGenContext& context) {
 	// build function prototype
 	proto->t = t;
-	if(verbose) {
+	if(gVerbose) {
 		std::cerr << proto->id.name << ": " << *t << std::endl;
 	}
 	llvm::Function* fn = reinterpret_cast<llvm::Function*>(proto->codeGen(context));

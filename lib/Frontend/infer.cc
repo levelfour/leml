@@ -10,8 +10,7 @@ static void typeAssersion(LemlTypeTag tag) {
 template<class T>
 static void vectorLengthAssersion(std::vector<T> v1, std::vector<T> v2) {
 	if(v1.size() != v2.size()) {
-		// TODO: raise Exception
-		throw "iteration over sequences of different length";
+		throw VectorLengthError();
 	}
 }
 
