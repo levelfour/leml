@@ -124,7 +124,7 @@ std::ostream& NIfExpression::print(std::ostream& os) const {
 std::ostream& NLetExpression::print(std::ostream& os) const {
 	if(assign != nullptr) {
 		os << "let (" << id << ":" << *t;
-		os << ") = " << *assign << " in " << std::endl;
+		os << ") = " << *assign << std::endl << "in ";
 		os << *eval;
 	} else {
 		os << id << ":" << *t;
