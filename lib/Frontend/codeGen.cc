@@ -442,8 +442,16 @@ llvm::Value* NArrayExpression::codeGen(CodeGenContext& context) {
 
 	// array allocation
 	auto typeData = infer(&data, TypeEnv());
-	auto array = context.builder->CreateAlloca(
-			llvmType(typeData), arrayLength);
+	llvm::Type *llvmTypeData;
+	if(typeData) {
+		// if array data type can be inferred
+		llvmTypeData = llvmType(typeData);
+	} if(!typeData && typeid(data) == typeid(NIdentifier)) {
+		// try to find function
+		NIdentifier id = *reinterpret_cast<NIdentifier*>(&data);
+		llvmTypeData = context.module->getFunction(id.name.c_str())->getType();
+	}
+	auto array = context.builder->CreateAlloca(llvmTypeData, arrayLength);
 
 	// array initialization
 	auto index = context.builder->CreateAlloca(llvm::Type::getInt32Ty(llvm::getGlobalContext()));

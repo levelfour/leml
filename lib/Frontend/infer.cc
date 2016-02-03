@@ -403,6 +403,5 @@ LemlType* check(NExpression* program, TypeEnv env) {
 	t = deref(t);
 	derefAll(program);
 
-
 	return t;
 }
