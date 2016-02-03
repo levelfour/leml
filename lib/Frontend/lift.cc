@@ -53,9 +53,11 @@ void extendArgs(NExpression *exp, NIdentifier func, std::vector<NExpression*> ar
 		for(auto arg: *e->args) {
 			extendArgs(arg, func, args, extEnv, localEnv, localBound);
 		}
-		// TODO: higher-order function
 		NIdentifier *funid = reinterpret_cast<NIdentifier*>(&e->fun);
 		if(funid && funid->name == func.name) {
+			e->args->insert(e->args->end(), args.begin(), args.end());
+		} else {
+			// callee-function is higher-order function
 			e->args->insert(e->args->end(), args.begin(), args.end());
 		}
 	} else if(typeid(*exp) == typeid(NArrayPutExpression)) {
@@ -193,7 +195,6 @@ void freeVariables(NExpression* exp, std::set<std::string>& fvs, TypeEnv& extEnv
 		for(auto arg: *e->args) {
 			freeVariables(arg, fvs, extEnv, env);
 		}
-		// TODO: check higher-order function
 		freeVariables(&e->fun, fvs, extEnv, env);
 	} else if(typeid(*exp) == typeid(NArrayExpression)) {
 		return;

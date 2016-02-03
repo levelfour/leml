@@ -276,7 +276,6 @@ LemlType* deref(LemlType* type) {
 }
 
 // LemlType* -> llvm::Type*
-// TODO: move this function to type.cc
 llvm::Type* llvmType(LemlType* type) {
 	typeAssersion(type->tag);
 	switch(type->tag) {
