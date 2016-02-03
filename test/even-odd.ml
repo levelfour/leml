@@ -8,4 +8,4 @@ let rec even x =
   if x > 0 then odd (x - 1) else
   if x < 0 then odd (x + 1) else
   t in
-(even 789)
+print_int (even 789)

@@ -4,40 +4,54 @@
 #include "leml.hh"
 #include "lift.hh"
 
-void extendArgs(NIdentifier func, std::vector<NExpression*> args, NExpression *exp) {
+void freeVariables(NExpression* exp, std::set<std::string>& fvs, TypeEnv& extEnv, TypeEnv& localEnv, TypeEnv localBound = TypeEnv());
+
+void extendArgs(NExpression *exp, NIdentifier func, std::vector<NExpression*> args, TypeEnv extEnv, TypeEnv localEnv, TypeEnv localBound) {
 	if(typeid(*exp) == typeid(NUnaryExpression)) {
 		NUnaryExpression *e = reinterpret_cast<NUnaryExpression*>(exp);
-		extendArgs(func, args, &e->expr);
+		extendArgs(&e->expr, func, args, extEnv, localEnv, localBound);
 	} else if(typeid(*exp) == typeid(NBinaryExpression)) {
 		NBinaryExpression *e = reinterpret_cast<NBinaryExpression*>(exp);
-		extendArgs(func, args, &e->lhs);
-		extendArgs(func, args, &e->rhs);
+		extendArgs(&e->lhs, func, args, extEnv, localEnv, localBound);
+		extendArgs(&e->rhs, func, args, extEnv, localEnv, localBound);
 	} else if(typeid(*exp) == typeid(NCompExpression)) {
 		NCompExpression *e = reinterpret_cast<NCompExpression*>(exp);
-		extendArgs(func, args, &e->lhs);
-		extendArgs(func, args, &e->rhs);
+		extendArgs(&e->lhs, func, args, extEnv, localEnv, localBound);
+		extendArgs(&e->rhs, func, args, extEnv, localEnv, localBound);
 	} else if(typeid(*exp) == typeid(NIfExpression)) {
 		NIfExpression *e = reinterpret_cast<NIfExpression*>(exp);
-		extendArgs(func, args, &e->cond);
-		extendArgs(func, args, &e->true_exp);
-		extendArgs(func, args, &e->false_exp);
+		extendArgs(&e->cond, func, args, extEnv, localEnv, localBound);
+		extendArgs(&e->true_exp, func, args, extEnv, localEnv, localBound);
+		extendArgs(&e->false_exp, func, args, extEnv, localEnv, localBound);
 	} else if(typeid(*exp) == typeid(NLetExpression)) {
 		NLetExpression *e = reinterpret_cast<NLetExpression*>(exp);
-		extendArgs(func, args, e->assign);
+		localEnv[e->id.name] = e->t;
+		extendArgs(e->assign, func, args, extEnv, localEnv, localBound);
 		if(e->id.name != func.name) {
-			extendArgs(func, args, e->eval);
+			extendArgs(e->eval, func, args, extEnv, localEnv, localBound);
 		}
 	} else if(typeid(*exp) == typeid(NLetRecExpression)) {
 		NLetRecExpression *e = reinterpret_cast<NLetRecExpression*>(exp);
+		localEnv[e->proto->id.name] = e->t;
+		for(auto arg: e->proto->args) {
+			localEnv[arg->id.name] = arg->t;
+		}
 		if(e->proto->id.name != func.name) {
-			extendArgs(func, args, &e->body);
-			extendArgs(func, args, &e->eval);
+			extendArgs(&e->body, func, args, extEnv, localEnv, localBound);
+			extendArgs(&e->eval, func, args, extEnv, localEnv, localBound);
+			for(auto arg: args) {
+				NIdentifier *a = reinterpret_cast<NIdentifier*>(arg);
+				if(localEnv.find(a->name) == localEnv.end()) {
+					std::set<std::string> fvs;
+					freeVariables(e, fvs, extEnv, localEnv, localBound);
+				}
+			}
 		}
 	} else if(typeid(*exp) == typeid(NCallExpression)) {
 		// extend args of call expression
 		NCallExpression *e = reinterpret_cast<NCallExpression*>(exp);
 		for(auto arg: *e->args) {
-			extendArgs(func, args, arg);
+			extendArgs(arg, func, args, extEnv, localEnv, localBound);
 		}
 		// TODO: higher-order function
 		NIdentifier *funid = reinterpret_cast<NIdentifier*>(&e->fun);
@@ -46,25 +60,25 @@ void extendArgs(NIdentifier func, std::vector<NExpression*> args, NExpression *e
 		}
 	} else if(typeid(*exp) == typeid(NArrayPutExpression)) {
 		NArrayPutExpression *e = reinterpret_cast<NArrayPutExpression*>(exp);
-		extendArgs(func, args, &e->exp);
+		extendArgs(&e->exp, func, args, extEnv, localEnv, localBound);
 	} else if(typeid(*exp) == typeid(NTupleExpression)) {
 		NTupleExpression *e = reinterpret_cast<NTupleExpression*>(exp);
 		for(auto elem: e->elems) {
-			extendArgs(func, args, elem);
+			extendArgs(elem, func, args, extEnv, localEnv, localBound);
 		}
 	} else if(typeid(*exp) == typeid(NLetTupleExpression)) {
 		NLetTupleExpression *e = reinterpret_cast<NLetTupleExpression*>(exp);
-		extendArgs(func, args, &e->exp);
+		extendArgs(&e->exp, func, args, extEnv, localEnv, localBound);
 		for(auto let: e->ids) {
 			if(let->id.name == func.name) {
 				return;
 			}
 		}
-		extendArgs(func, args, &e->eval);
+		extendArgs(&e->eval, func, args, extEnv, localEnv, localBound);
 	}
 }
 
-void freeVariables(NExpression* exp, std::set<std::string>& fvs, TypeEnv& extEnv, TypeEnv& localEnv, TypeEnv localBound = TypeEnv()) {
+void freeVariables(NExpression* exp, std::set<std::string>& fvs, TypeEnv& extEnv, TypeEnv& localEnv, TypeEnv localBound) {
 	TypeEnv env = localEnv;
 	if(typeid(*exp) != typeid(NLetRecExpression) && !localBound.empty()) {
 		env = localBound;
@@ -113,18 +127,22 @@ void freeVariables(NExpression* exp, std::set<std::string>& fvs, TypeEnv& extEnv
 		NLetRecExpression *e = reinterpret_cast<NLetRecExpression*>(exp);
 
 		// add function to extEnv (function is not to be regarded as free variable)
+		// TODO: avoid confliction between function name (just renaming)
 		extEnv[e->proto->id.name] = e->t;
 
 		// bound function and args to environment
-		TypeEnv bound = localBound;
+		TypeEnv bound;
 		bound[e->proto->id.name] = e->t;
 		for(auto arg: e->proto->args) {
 			bound[arg->id.name] = arg->t;
 		}
 
+		TypeEnv catEnv = localEnv; // localEnv + localBound
+		catEnv.insert(localBound.begin(), localBound.end());
+
 		// search free variables in let rec body (independently from former environment)
 		std::set<std::string> clsFvs;
-		freeVariables(&e->body, clsFvs, extEnv, env, bound);
+		freeVariables(&e->body, clsFvs, extEnv, catEnv, bound);
 		fvs.insert(clsFvs.begin(), clsFvs.end());
 
 		if(verbose) {
@@ -138,7 +156,7 @@ void freeVariables(NExpression* exp, std::set<std::string>& fvs, TypeEnv& extEnv
 			NIdentifier *arg = new NIdentifier(fv);
 			NLetExpression *bind = new NLetExpression(*arg);
 			// free variable must be defined in the outer environment
-			LemlType *argtype = env[fv];
+			LemlType *argtype = catEnv[fv];
 #ifdef LEML_DEBUG
 			if(argtype == nullptr) {
 				std::cerr << "error: reference `" << fv << "` is not defined" << std::endl;
@@ -154,9 +172,16 @@ void freeVariables(NExpression* exp, std::set<std::string>& fvs, TypeEnv& extEnv
 			}
 		}
 
+		extEnv[e->proto->id.name] = e->t;
+
 		// add new args to function calls in let rec eval recursively
-		extendArgs(proto->id, args, &e->body);
-		extendArgs(proto->id, args, &e->eval);
+		TypeEnv newLocalEnv = env;
+		for(auto fv: clsFvs) {
+			newLocalEnv.erase(fv);
+			bound[fv] = env[fv];
+		}
+		extendArgs(&e->body, proto->id, args, extEnv, newLocalEnv, bound);
+		extendArgs(&e->eval, proto->id, args, extEnv, newLocalEnv, bound);
 
 		// continue lambda lifting in let rec eval using former environment
 		TypeEnv newEnv = localEnv;

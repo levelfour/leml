@@ -42,6 +42,10 @@ LemlType::operator std::string() const {
 		case Array:
 			return static_cast<std::string>(*data) + " array";
 		case Var:
-			return "var";
+			if(data) {
+				return static_cast<std::string>(*data);
+			} else {
+				return "var";
+			}
 	}
 }
