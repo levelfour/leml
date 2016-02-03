@@ -7,4 +7,4 @@ let rec mdb n a b =
       (2.0 *. x *. y +. b)
   in mdb_sub 0 0.0 0.0 in
 let (x, y) = (mdb 5 1.0 0.0) in
-int_of_float x
+print_int (int_of_float x)
