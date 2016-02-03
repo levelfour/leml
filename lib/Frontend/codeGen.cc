@@ -176,8 +176,13 @@ llvm::Value* NFloat::codeGen(CodeGenContext& context) {
 llvm::Value* NIdentifier::codeGen(CodeGenContext& context) {
 	llvm::Value* ptr = context.locals()[name];
 	if(!ptr) {
-		std::cerr << "error: undefined reference `" << name << "`" << std::endl;
-		std::exit(EXIT_FAILURE);
+		auto fn = context.module->getFunction(name.c_str());
+		if(!fn) {
+			std::cerr << "error: undefined reference `" << name << "`" << std::endl;
+			std::exit(EXIT_FAILURE);
+		} else {
+			return fn;
+		}
 	}
 	return context.builder->CreateLoad(ptr, name);
 }
@@ -357,6 +362,7 @@ llvm::Value* NLetRecExpression::codeGen(CodeGenContext& context) {
 		std::cerr << proto->id.name << ": " << *t << std::endl;
 	}
 	llvm::Function* fn = reinterpret_cast<llvm::Function*>(proto->codeGen(context));
+
 	llvm::BasicBlock* bblock = llvm::BasicBlock::Create(
 			llvm::getGlobalContext(), "entry", fn, 0);
 
@@ -408,8 +414,13 @@ llvm::Value* NFundefExpression::codeGen(CodeGenContext& context) {
 llvm::Value* NCallExpression::codeGen(CodeGenContext& context) {
 	// get function
 	NIdentifier* id = dynamic_cast<NIdentifier*>(&fun);
-	assert(id != nullptr); // TODO: higher-order function
-	llvm::Function *fn = context.module->getFunction(id->name.c_str());
+	llvm::Function *fn;
+	if(!id) {
+		// higher-order function
+		fn = static_cast<llvm::Function*>(fun.codeGen(context));
+	} else {
+		fn = context.module->getFunction(id->name.c_str()); 
+	}
 
 	if(fn == nullptr) {
 		std::cerr << "error: unknown reference to function `" << id->name.c_str() << "`" << std::endl;

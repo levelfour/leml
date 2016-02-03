@@ -276,6 +276,7 @@ LemlType* deref(LemlType* type) {
 }
 
 // LemlType* -> llvm::Type*
+// TODO: move this function to type.cc
 llvm::Type* llvmType(LemlType* type) {
 	typeAssersion(type->tag);
 	switch(type->tag) {
@@ -293,10 +294,10 @@ llvm::Type* llvmType(LemlType* type) {
 			for(auto ty: type->array) {
 				argtypes.push_back(llvmType(ty));
 			}
-			return llvm::FunctionType::get(
+			return llvm::PointerType::getUnqual(llvm::FunctionType::get(
 					llvmType(type->data),
 					llvm::makeArrayRef(argtypes),
-					false);
+					false));
 		}
 		case Tuple:
 		{

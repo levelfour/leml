@@ -3,4 +3,4 @@ let x = 10 in
 let rec f y =
   if y = 0 then 0 else
   x + f (y - 1) in
-(f 123)
+print_int (f 123)
