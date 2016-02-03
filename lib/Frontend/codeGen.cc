@@ -429,13 +429,59 @@ llvm::Value* NCallExpression::codeGen(CodeGenContext& context) {
 llvm::Value* NArrayExpression::codeGen(CodeGenContext& context) {
 	llvm::Value* arrayLength = length.codeGen(context);
 	llvm::Value* valData = data.codeGen(context);
+
+	// array allocation
 	auto typeData = infer(&data, TypeEnv());
 	auto array = context.builder->CreateAlloca(
 			llvmType(typeData), arrayLength);
-	// TODO: array initialization
-	auto index = llvm::ConstantInt::get(llvm::Type::getInt32Ty(llvm::getGlobalContext()), 0);
-	auto ptr = context.builder->CreateGEP(array, llvm::ArrayRef<llvm::Value*>(index));
+
+	// array initialization
+	auto index = context.builder->CreateAlloca(llvm::Type::getInt32Ty(llvm::getGlobalContext()));
+	context.builder->CreateStore(llvm::ConstantInt::get(llvm::Type::getInt32Ty(llvm::getGlobalContext()), 0), index);
+
+	llvm::Function* fn = context.builder->GetInsertBlock()->getParent();
+
+	// create three llvm::BasicBlocks and insert for-cond-clause first
+	llvm::BasicBlock* blkCond = llvm::BasicBlock::Create(
+			llvm::getGlobalContext(), "for.cond", fn);
+	llvm::BasicBlock* blkBody = llvm::BasicBlock::Create(
+			llvm::getGlobalContext(), "for.body");
+	llvm::BasicBlock* blkEnd = llvm::BasicBlock::Create(
+			llvm::getGlobalContext(), "for.end");
+
+	context.builder->CreateBr(blkCond);
+
+	// emit for-cond
+	context.builder->SetInsertPoint(blkCond);
+	auto valCond = context.builder->CreateICmp(
+			llvm::CmpInst::ICMP_SLT,
+			context.builder->CreateLoad(index),
+			arrayLength, "cmp");
+	context.builder->CreateCondBr(valCond, blkBody, blkEnd);
+	blkCond = context.builder->GetInsertBlock();
+
+	// emit for-body
+	fn->getBasicBlockList().push_back(blkBody);
+	context.builder->SetInsertPoint(blkBody);
+	// store data to array at current index
+	auto ptr = context.builder->CreateGEP(
+			array,
+			llvm::ArrayRef<llvm::Value*>(context.builder->CreateLoad(index)));
 	context.builder->CreateStore(valData, ptr);
+	// increment index
+	auto updatedIndex = context.builder->CreateBinOp(
+			llvm::Instruction::Add,
+			context.builder->CreateLoad(index),
+			llvm::ConstantInt::get(llvm::Type::getInt32Ty(llvm::getGlobalContext()), 1));
+	context.builder->CreateStore(updatedIndex, index);
+	// jump to for-cond
+	context.builder->CreateBr(blkCond);
+	blkBody = context.builder->GetInsertBlock();
+
+	// emit for-end
+	fn->getBasicBlockList().push_back(blkEnd);
+	context.builder->SetInsertPoint(blkEnd);
+
 	return array;
 }
 
