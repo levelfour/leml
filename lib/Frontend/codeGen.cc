@@ -434,9 +434,7 @@ llvm::Value* NArrayExpression::codeGen(CodeGenContext& context) {
 			llvmType(typeData), arrayLength);
 	// TODO: array initialization
 	auto index = llvm::ConstantInt::get(llvm::Type::getInt32Ty(llvm::getGlobalContext()), 0);
-	auto ptr = llvm::GetElementPtrInst::Create(
-			array, llvm::ArrayRef<llvm::Value*>(index),
-			"", context.currentBlock());
+	auto ptr = context.builder->CreateGEP(array, llvm::ArrayRef<llvm::Value*>(index));
 	context.builder->CreateStore(valData, ptr);
 	return array;
 }
@@ -448,9 +446,9 @@ llvm::Value* NArrayGetExpression::codeGen(CodeGenContext& context) {
 #endif
 
 	auto arr = context.builder->CreateLoad(array_alloc);
-	auto ptr = llvm::GetElementPtrInst::Create(
-			arr, llvm::ArrayRef<llvm::Value*>(index.codeGen(context)),
-			"", context.currentBlock());
+	auto i = index.codeGen(context);
+	auto indexList = llvm::ArrayRef<llvm::Value*>(i);
+	auto ptr = context.builder->CreateGEP(arr, indexList);
 	return context.builder->CreateLoad(ptr);
 }
 
@@ -463,9 +461,7 @@ llvm::Value* NArrayPutExpression::codeGen(CodeGenContext& context) {
 
 	// get the instance of array
 	auto arr = context.builder->CreateLoad(array_alloc);
-	auto ptr = llvm::GetElementPtrInst::Create(
-			arr, llvm::ArrayRef<llvm::Value*>(index.codeGen(context)),
-			"", context.currentBlock());
+	auto ptr = context.builder->CreateGEP(arr, llvm::ArrayRef<llvm::Value*>(index.codeGen(context)));
 	return context.builder->CreateStore(exp.codeGen(context), ptr);
 }
 
@@ -486,10 +482,9 @@ llvm::Value* NTupleExpression::codeGen(CodeGenContext& context) {
 		NInteger index = NInteger(i);
 		auto elem = elems[i];
 		// get a pointer to each element
-		auto ptr = llvm::GetElementPtrInst::Create(
+		auto ptr = context.builder->CreateGEP(
 				alloc,
-				llvm::ArrayRef<llvm::Value*>({zero, index.codeGen(context)}),
-				"", context.currentBlock());
+				llvm::ArrayRef<llvm::Value*>({zero, index.codeGen(context)}));
 
 		// store each element
 		context.builder->CreateStore(elem->codeGen(context), ptr);
@@ -519,10 +514,9 @@ llvm::Value* NLetTupleExpression::codeGen(CodeGenContext& context) {
 		NInteger index = NInteger(i);
 		auto var = ids[i];
 		// get a pointer to each element
-		auto ptr = llvm::GetElementPtrInst::Create(
+		auto ptr = context.builder->CreateGEP(
 				tuple,
-				llvm::ArrayRef<llvm::Value*>({zero, index.codeGen(context)}),
-				"", context.currentBlock());
+				llvm::ArrayRef<llvm::Value*>({zero, index.codeGen(context)}));
 		auto val = context.builder->CreateLoad(ptr);
 
 		// allocate each decomposed element
