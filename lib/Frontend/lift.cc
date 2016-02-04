@@ -65,7 +65,10 @@ void extendArgs(NExpression *exp, NIdentifier func, std::vector<NExpression*> ar
 		}
 		NIdentifier *funid = reinterpret_cast<NIdentifier*>(&e->fun);
 		if(funid && funid->name == func.name) {
-			e->args->insert(e->args->end(), args.begin(), args.end());
+			// push additional args in front of original args
+			for(auto it = args.rbegin(); it != args.rend(); it++) {
+				e->args->insert(e->args->begin(), *it);
+			}
 		} else {
 			// callee-function is higher-order function
 		}
@@ -178,10 +181,10 @@ void freeVariables(NExpression* exp, std::set<std::string>& fvs, TypeEnv& extEnv
 			}
 			assert(argtype != nullptr);
 #endif
-			args.push_back(arg);
+			args.insert(args.begin(), arg);
 			bind->t = argtype;
-			proto->args.push_back(bind);
-			e->t->array.push_back(argtype);
+			proto->args.insert(proto->args.begin(), bind);
+			e->t->array.insert(e->t->array.begin(), argtype);
 			if(gVerbose) {
 				std::cerr << " * " << arg->name << ": " << *argtype << std::endl;
 			}
