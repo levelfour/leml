@@ -50,6 +50,7 @@ void extendArgs(NExpression *exp, NIdentifier func, std::vector<NExpression*> ar
 	} else if(typeid(*exp) == typeid(NCallExpression)) {
 		// extend args of call expression
 		NCallExpression *e = reinterpret_cast<NCallExpression*>(exp);
+
 		for(auto arg: *e->args) {
 			extendArgs(arg, func, args, extEnv, localEnv, localBound);
 		}
@@ -58,7 +59,6 @@ void extendArgs(NExpression *exp, NIdentifier func, std::vector<NExpression*> ar
 			e->args->insert(e->args->end(), args.begin(), args.end());
 		} else {
 			// callee-function is higher-order function
-			e->args->insert(e->args->end(), args.begin(), args.end());
 		}
 	} else if(typeid(*exp) == typeid(NArrayPutExpression)) {
 		NArrayPutExpression *e = reinterpret_cast<NArrayPutExpression*>(exp);
@@ -155,6 +155,10 @@ void freeVariables(NExpression* exp, std::set<std::string>& fvs, TypeEnv& extEnv
 		NFundefExpression *proto = e->proto;
 		std::vector<NExpression*> args;
 		for(auto fv: clsFvs) {
+			if(bound.find(fv) != bound.end()) {
+				// if fv is contained in local bound, it's bounded
+				continue;
+			}
 			NIdentifier *arg = new NIdentifier(fv);
 			NLetExpression *bind = new NLetExpression(*arg);
 			// free variable must be defined in the outer environment

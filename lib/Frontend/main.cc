@@ -95,7 +95,7 @@ int main(int argc, char** argv) {
 					*program, std::move(t))) {
 
 			if(gVerbose) {
-				std::cout <<
+				std::cerr <<
 					"-*-*-*-*-*-*-*-*-*-" << std::endl <<
 					*program << std::endl <<
 					"-*-*-*-*-*-*-*-*-*-" << std::endl;

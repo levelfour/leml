@@ -361,7 +361,7 @@ llvm::Value* NLetRecExpression::codeGen(CodeGenContext& context) {
 	if(gVerbose) {
 		std::cerr << proto->id.name << ": " << *t << std::endl;
 	}
-	llvm::Function* fn = reinterpret_cast<llvm::Function*>(proto->codeGen(context));
+	llvm::Function* fn = static_cast<llvm::Function*>(proto->codeGen(context));
 
 	llvm::BasicBlock* bblock = llvm::BasicBlock::Create(
 			llvm::getGlobalContext(), "entry", fn, 0);
@@ -415,24 +415,27 @@ llvm::Value* NCallExpression::codeGen(CodeGenContext& context) {
 	// get function
 	NIdentifier* id = dynamic_cast<NIdentifier*>(&fun);
 	llvm::Function *fn;
-	if(!id) {
+	std::vector<llvm::Value*> argValues;
+
+	if(id) {
+		fn = context.module->getFunction(id->name.c_str()); 
+
+		if(fn == nullptr) {
+			std::cerr << "error: unknown reference to function `" << id->name.c_str() << "`" << std::endl;
+			return nullptr;
+		}
+
+	} else {
 		// higher-order function
 		fn = static_cast<llvm::Function*>(fun.codeGen(context));
-	} else {
-		fn = context.module->getFunction(id->name.c_str()); 
 	}
 
-	if(fn == nullptr) {
-		std::cerr << "error: unknown reference to function `" << id->name.c_str() << "`" << std::endl;
-		return nullptr;
-	}
-
-	// generate code of arguments
-	std::vector<llvm::Value*> argValues;
 	for(auto arg: *args) {
 		auto v = arg->codeGen(context);
 		argValues.push_back(v);
 	}
+
+	// generate code of arguments
 	return context.builder->CreateCall(fn, argValues);
 }
 

@@ -2,7 +2,7 @@
 #define __LEML_HH__
 
 #ifdef LEML_DEBUG
-#define cdbg cerr
+#define cdbg cerr << "DEBUG: "
 #endif
 
 #include <string>
