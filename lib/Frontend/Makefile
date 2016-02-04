@@ -42,7 +42,7 @@ debug: CXXFLAGS += $(DEBUG_FLAGS)
 debug: $(PROGRAM)
 
 $(PROGRAM): $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $(OBJS) $(LDFLAGS) $(LIBS)
+	$(CXX) $(CXXFLAGS) -o $@ $(OBJS) $(LDFLAGS) $(LIBS) -fexceptions
 
 $(LEXTAB): scanner.l
 	$(LEX) -o $@ $<
@@ -51,7 +51,7 @@ $(YACCTAB): driver.y
 	$(YACC) -d -o $@ $<
 
 %.o: %.cc
-	$(CXX) -c $(CXXFLAGS) -o $@ $<
+	$(CXX) -c $(CXXFLAGS) -o $@ $< -fexceptions
 
 %.ll: %.c
 	$(CC) -emit-llvm -S -O -o $@ $<

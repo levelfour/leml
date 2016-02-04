@@ -228,7 +228,7 @@ llvm::Value* NBinaryExpression::codeGen(CodeGenContext& context) {
 
 llvm::Value* NCompExpression::codeGen(CodeGenContext& context) {
 	llvm::CmpInst::Predicate pred;
-	llvm::Value* valCmp;
+	llvm::Value* valCmp = nullptr;
 
 	if(t == typeInt) {
 		switch(op) {

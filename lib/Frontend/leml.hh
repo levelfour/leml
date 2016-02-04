@@ -6,6 +6,7 @@
 #endif
 
 #include <string>
+#include <typeinfo>
 
 extern std::string gFilename;
 extern bool gVerbose;
