@@ -83,6 +83,10 @@ int main(int argc, char** argv) {
 		// lambda lifting to eliminate closure
 		lambdaLifting(env, program);
 
+		// type check again
+		// in order to guarantee the soundness of closure conversion
+		check(program, env);
+
 		// initialize LLVM context
 		CodeGenContext context;
 		if(!gNostdlib) {

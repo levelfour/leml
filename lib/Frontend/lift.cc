@@ -7,7 +7,16 @@
 void freeVariables(NExpression* exp, std::set<std::string>& fvs, TypeEnv& extEnv, TypeEnv& localEnv, TypeEnv localBound = TypeEnv());
 
 void extendArgs(NExpression *exp, NIdentifier func, std::vector<NExpression*> args, TypeEnv extEnv, TypeEnv localEnv, TypeEnv localBound) {
-	if(typeid(*exp) == typeid(NUnaryExpression)) {
+	if(args.size() == 0) return;
+
+	if(typeid(*exp) == typeid(NIdentifier)) {
+		NIdentifier *e = reinterpret_cast<NIdentifier*>(exp);
+		if(e->name == func.name) {
+			std::vector<NExpression*> *newArgs = new std::vector<NExpression*>(args);
+			NCallExpression call(func, newArgs);
+			memcpy(static_cast<void*>(exp), static_cast<void*>(&call), sizeof(NCallExpression));
+		}
+	} else if(typeid(*exp) == typeid(NUnaryExpression)) {
 		NUnaryExpression *e = reinterpret_cast<NUnaryExpression*>(exp);
 		extendArgs(&e->expr, func, args, extEnv, localEnv, localBound);
 	} else if(typeid(*exp) == typeid(NBinaryExpression)) {
