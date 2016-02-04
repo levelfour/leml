@@ -1,15 +1,16 @@
+#include <cstring>
 #include <fstream>
 #include "cmdopt.hh"
 
 void OptionParser::build() {
 	for(int i = 1; i < argc; i++) {
 		if(argv[i][0] == '-') {
-			if(strlen(argv[i]) < 2) throw std::invalid_argument("-");
+			if(std::strlen(argv[i]) < 2) throw std::invalid_argument("-");
 
 			std::string s;
 
 			if(argv[i][1] == '=') {
-				if(strlen(argv[i]) < 3) throw std::invalid_argument("--");
+				if(std::strlen(argv[i]) < 3) throw std::invalid_argument("--");
 				s = argv[i] + 2;
 			} else {
 				s = argv[i] + 1;

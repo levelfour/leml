@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <llvm/IR/Value.h>
+#include "leml.hh"
 #include "type.hh"
 
 enum Operation {

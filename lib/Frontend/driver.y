@@ -2,6 +2,8 @@
 #include <iostream>
 #include <cstdlib>
 #include <cassert>
+#include <cstring>
+#include "leml.hh"
 #include "syntax.hh"
 
 extern int yylex();
@@ -86,7 +88,7 @@ simple_exp:
 | TLPAREN TRPAREN
     { $$ = new NUnit(); }
 | TBOOL
-    { $$ = new NBoolean(!strncmp($1->c_str(), "true", 4)); }
+    { $$ = new NBoolean(!std::strncmp($1->c_str(), "true", 4)); }
 | TINT
     { $$ = new NInteger(atoi($1->c_str())); }
 | TFLOAT

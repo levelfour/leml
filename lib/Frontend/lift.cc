@@ -1,5 +1,5 @@
 #include <algorithm>
-#include <string>
+#include <cstring>
 #include <set>
 #include "leml.hh"
 #include "lift.hh"
@@ -14,7 +14,7 @@ void extendArgs(NExpression *exp, NIdentifier func, std::vector<NExpression*> ar
 		if(e->name == func.name) {
 			std::vector<NExpression*> *newArgs = new std::vector<NExpression*>(args);
 			NCallExpression call(func, newArgs);
-			memcpy(static_cast<void*>(exp), static_cast<void*>(&call), sizeof(NCallExpression));
+			std::memcpy(static_cast<void*>(exp), static_cast<void*>(&call), sizeof(NCallExpression));
 		}
 	} else if(typeid(*exp) == typeid(NUnaryExpression)) {
 		NUnaryExpression *e = reinterpret_cast<NUnaryExpression*>(exp);

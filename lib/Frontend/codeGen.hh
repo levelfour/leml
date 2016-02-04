@@ -11,7 +11,7 @@
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/Constants.h>
-#include <llvm/IR/IRbuilder.h>
+#include <llvm/IR/IRBuilder.h>
 #include <llvm/IRReader/IRReader.h>
 #include <llvm/Linker/Linker.h>
 #include <llvm/Support/SourceMgr.h>
