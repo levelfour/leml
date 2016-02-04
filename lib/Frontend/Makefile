@@ -3,9 +3,6 @@ PROGRAM=leml
 # tools
 LEX=flex
 YACC=bison
-CXX=g++
-CC=gcc
-LLVMCONFIG=llvm-config
 
 # variable
 BUILTIN_LIB=\"./lib/External/__builtins.ll\"
@@ -18,7 +15,7 @@ CXXFLAGS=-std=c++11 \
 		 -DBUILTIN_LIB=$(BUILTIN_LIB)
 DEBUG_FLAGS=-g -O0 -ggdb -DLEML_DEBUG=1 #-DYYDEBUG=1 
 LDFLAGS=`$(LLVMCONFIG) --ldflags` -lncurses -lz
-LIBS=`$(LLVMCONFIG) --libs all`
+LIBS=-ldl -lpthread `$(LLVMCONFIG) --libs all`
 
 # generated
 OBJS= main.o \
@@ -33,6 +30,8 @@ OBJS= main.o \
 LEXTAB=lexer.cc
 YACCTAB=parser.cc
 YACCFILES=parser.hh
+
+include ../../Makefile.in
 
 .PHONY: all
 all: $(PROGRAM)

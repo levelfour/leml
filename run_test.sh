@@ -13,7 +13,7 @@ function abs() {
 	}')
 }
 
-if [ ! -f LEML ]; then
+if [ ! -f $LEML ]; then
 	echo "Error: type \`make\` to build leml first"
 	exit 1
 fi
