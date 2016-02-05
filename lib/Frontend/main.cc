@@ -78,6 +78,14 @@ int main(int argc, char** argv) {
 		if(!gNostdlib) {
 			InitEnv(env);
 		}
+
+		if(gVerbose) {
+			std::cerr <<
+				"-*-*-*-*-*- [before lift] -*-*-*-*-*-" << std::endl <<
+				*program << std::endl <<
+				"-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-" << std::endl;
+		}
+
 		std::unique_ptr<LemlType> t(check(program, env));
 
 		// lambda lifting to eliminate closure
@@ -100,9 +108,9 @@ int main(int argc, char** argv) {
 
 			if(gVerbose) {
 				std::cerr <<
-					"-*-*-*-*-*-*-*-*-*-" << std::endl <<
+					"-*-*-*-*-*- [after lift] -*-*-*-*-*-" << std::endl <<
 					*program << std::endl <<
-					"-*-*-*-*-*-*-*-*-*-" << std::endl;
+					"-*-*-*-*-*-*-*-*-*--*-*-*-*-*-*-*-*-" << std::endl;
 			}
 
 			if(o.get("jit") != "") {
