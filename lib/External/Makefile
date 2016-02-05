@@ -1,5 +1,6 @@
-CC=gcc
 EXTLIBS=__builtins.ll
+
+include ../../Makefile.in
 
 .PHONY: all
 all: $(EXTLIBS)
