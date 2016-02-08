@@ -71,9 +71,11 @@ int main(int argc, char** argv) {
 	}
 
 	// lexer/parser
+	if(gVerbose) std::cerr << "parsing ..." << std::endl;
 	if(yyparse() == 0) {
 
 		// type inference / check
+		if(gVerbose) std::cerr << "type checking ..." << std::endl;
 		TypeEnv env;
 		if(!gNostdlib) {
 			InitEnv(env);
@@ -81,13 +83,16 @@ int main(int argc, char** argv) {
 		std::unique_ptr<LemlType> t(check(program, env));
 
 		// lambda lifting to eliminate closure
+		if(gVerbose) std::cerr << "lambda lifting ..." << std::endl;
 		lambdaLifting(env, program);
 
 		// type check again
 		// in order to guarantee the soundness of closure conversion
+		if(gVerbose) std::cerr << "type checking ..." << std::endl;
 		check(program, env);
 
 		// initialize LLVM context
+		if(gVerbose) std::cerr << "generating code ..." << std::endl;
 		CodeGenContext context;
 		if(!gNostdlib) {
 			context.setBuiltInIR(BUILTIN_LIB);
@@ -106,8 +111,10 @@ int main(int argc, char** argv) {
 			}
 
 			if(o.get("jit") != "") {
+				if(gVerbose) std::cerr << "running on JIT ..." << std::endl;
 				JITExecution(context, o.get("o"), o.get("type"));
 			} else {
+				if(gVerbose) std::cerr << "emitting IR ..." << std::endl;
 				IREmission(context, o.get("o"));
 			}
 		}

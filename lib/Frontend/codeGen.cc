@@ -66,7 +66,6 @@ void CodeGenContext::setEnv(TypeEnv env) {
 
 // Compile the AST into a module
 bool CodeGenContext::generateCode(NExpression& root, std::unique_ptr<LemlType> type) {
-	if(gVerbose) std::cerr << "Generating code...\n";
 
 	// Create the top level interpreter function to call as entry
 	llvm::ArrayRef<llvm::Type*> argTypes;
@@ -95,13 +94,11 @@ bool CodeGenContext::generateCode(NExpression& root, std::unique_ptr<LemlType> t
 
 	fpm->run(*fnMain);
 
-	if(gVerbose) std::cerr << "Code is generated.\n";
 	return true;
 }
 
 // Executes the AST by running the main function
 void CodeGenContext::runCode() {
-	if(gVerbose) std::cerr << "Running code...\n";
 
 	// build JIT engine
 	llvm::ExecutionEngine *ee =
@@ -112,8 +109,6 @@ void CodeGenContext::runCode() {
 	// llvm::ExecutionEngine::getPointerToFunction is deprecated in ver3.6
 	int (*fpMain)() = (int (*)())ee->getFunctionAddress("main");
 	auto valRet = fpMain();
-
-	if(gVerbose) std::cerr << "Code was run.\n";
 
 	resultValue.d = valRet;
 }
