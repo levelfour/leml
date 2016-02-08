@@ -120,6 +120,8 @@ void InitEnv(TypeEnv& env) {
 	env["print_int"] = new LemlType({Fun, typeUnit, {typeInt}});
 	env["print_float"] = new LemlType({Fun, typeUnit, {typeFloat}});
 	env["print_newline"] = new LemlType({Fun, typeUnit, {typeUnit}});
+	env["read_int"] = new LemlType({Fun, typeInt, {typeUnit}});
+	env["read_float"] = new LemlType({Fun, typeFloat, {typeUnit}});
 	env["fabs"] = new LemlType({Fun, typeFloat, {typeFloat}});
 	env["abs_float"] = new LemlType({Fun, typeFloat, {typeFloat}});
 	env["truncate"] = new LemlType({Fun, typeInt, {typeFloat}});

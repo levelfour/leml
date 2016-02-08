@@ -13,6 +13,18 @@ void print_newline() {
 	printf("\n");
 }
 
+int read_int() {
+	int i;
+	scanf("%d", &i);
+	return i;
+}
+
+double read_float() {
+	double d;
+	scanf("%lf", &d);
+	return d;
+}
+
 double fabs(double f);
 
 double abs_float(double f) {
