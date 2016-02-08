@@ -18,6 +18,7 @@
 [\n\r]
 "(*"    { BEGIN(ML_COMMENT); }
 <ML_COMMENT>"*)" { BEGIN(INITIAL); }
+<ML_COMMENT>"\n" {}
 <ML_COMMENT>. {}
 "("     { return TOKEN(TLPAREN); }
 ")"     { return TOKEN(TRPAREN); }
