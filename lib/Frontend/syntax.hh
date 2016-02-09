@@ -225,7 +225,8 @@ public:
 class NTupleExpression: public NExpression {
 public:
 	std::vector<NExpression*> elems;
-	NTupleExpression(std::vector<NExpression*> elems): elems(elems) {}
+	std::vector<LemlType*> types;
+	NTupleExpression(std::vector<NExpression*> elems): elems(elems) { types.reserve(elems.size()); }
 	virtual llvm::Value* codeGen(CodeGenContext& context);
 	virtual std::ostream& print(std::ostream& os) const;
 };

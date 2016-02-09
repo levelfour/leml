@@ -1,9 +1,11 @@
 #include <cstdlib>
+#include <algorithm>
 #include "leml.hh"
 #include "codeGen.hh"
 #include "syntax.hh"
 #include "parser.hh"
 #include "infer.hh"
+#include "error.hh"
 
 /*
  * the definition of CodeGenContext class
@@ -528,11 +530,16 @@ llvm::Value* NArrayPutExpression::codeGen(CodeGenContext& context) {
 }
 
 llvm::Value* NTupleExpression::codeGen(CodeGenContext& context) {
+
+#ifdef LEML_DEBUG
+	vectorLengthAssertion(this->elems, this->types);
+#endif
+
+	std::vector<llvm::Type*> types(this->types.size());
+	std::transform(this->types.begin(), this->types.end(), types.begin(),
+			[](LemlType *t) { return llvmType(t); });
+
 	// build tuple type as struct
-	std::vector<llvm::Type*> types;
-	for(auto elem: elems) {
-		types.push_back(llvmType(infer(elem)));
-	}
 	auto type = llvm::StructType::get(
 			llvm::getGlobalContext(),
 			llvm::makeArrayRef(types));
@@ -556,28 +563,14 @@ llvm::Value* NTupleExpression::codeGen(CodeGenContext& context) {
 }
 
 llvm::Value* NLetTupleExpression::codeGen(CodeGenContext& context) {
-	NIdentifier* id = dynamic_cast<NIdentifier*>(&exp);
-#ifdef LEML_DEBUG
-	// assume let rec definition-exp to be an id
-	assert(id != nullptr);
-#endif
-
-	// get the allocation code of tuple
-	auto tuple_alloc = context.locals()[id->name];
-#ifdef LEML_DEBUG
-	assert(tuple_alloc != nullptr);
-#endif
-
-	// get the instance of tuple
-	auto tuple = context.builder->CreateLoad(tuple_alloc);
-
+	auto tuple_alloc = exp.codeGen(context);
 	auto zero = llvm::ConstantInt::get(llvm::Type::getInt32Ty(llvm::getGlobalContext()), 0);
 	for(unsigned long i = 0; i < ids.size(); i++) {
 		NInteger index = NInteger(i);
 		auto var = ids[i];
 		// get a pointer to each element
 		auto ptr = context.builder->CreateGEP(
-				tuple,
+				tuple_alloc,
 				llvm::ArrayRef<llvm::Value*>({zero, index.codeGen(context)}));
 		auto val = context.builder->CreateLoad(ptr);
 

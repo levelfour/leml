@@ -1,17 +1,11 @@
 #include "infer.hh"
 #include "syntax.hh"
+#include "error.hh"
 
-static void typeAssersion(LemlTypeTag tag) {
+static void typeAssertion(LemlTypeTag tag) {
 	assert( tag == Unit || tag == Bool || tag == Int ||
 			tag == Float || tag == Fun || tag == Tuple ||
 			tag == Array || tag == Var);
-}
-
-template<class T>
-static void vectorLengthAssersion(std::vector<T> v1, std::vector<T> v2) {
-	if(v1.size() != v2.size()) {
-		throw VectorLengthError();
-	}
 }
 
 // type r1 occurs in t ?
@@ -54,13 +48,13 @@ void unify(LemlType* t1, LemlType* t2) {
 	} else if(t1->tag == Float && t2->tag == Float) {
 		return;
 	} else if(t1->tag == Fun && t2->tag == Fun) {
-		vectorLengthAssersion<LemlType*>(t1->array, t2->array);
+		vectorLengthAssertion<LemlType*>(t1->array, t2->array);
 		for(std::string::size_type i = 0; i < t1->array.size(); i++) {
 			unify(t1->array[i], t2->array[i]);
 		}
 		unify(t1->data, t2->data);
 	} else if(t1->tag == Tuple && t2->tag == Tuple) {
-		vectorLengthAssersion<LemlType*>(t1->array, t2->array);
+		vectorLengthAssertion<LemlType*>(t1->array, t2->array);
 		for(std::string::size_type i = 0; i < t1->array.size(); i++) {
 			unify(t1->array[i], t2->array[i]);
 		}
@@ -210,8 +204,10 @@ LemlType *infer(NExpression* expr, TypeEnv env) {
 		NTupleExpression* e = dynamic_cast<NTupleExpression*>(expr);
 		std::vector<LemlType*> types;
 		for(auto elem: e->elems) {
-			types.push_back(infer(elem, env));
+			auto t = infer(elem, env);
+			types.push_back(t);
 		}
+		e->types = types;
 		return new LemlType({Tuple, nullptr, types});
 	} else if(typeid(*expr) == typeid(NLetTupleExpression)) {
 		NLetTupleExpression* e = dynamic_cast<NLetTupleExpression*>(expr);
@@ -277,7 +273,7 @@ LemlType* deref(LemlType* type) {
 
 // LemlType* -> llvm::Type*
 llvm::Type* llvmType(LemlType* type) {
-	typeAssersion(type->tag);
+	typeAssertion(type->tag);
 	switch(type->tag) {
 		case Unit:
 			return reinterpret_cast<llvm::Type*>(llvm::Type::getInt32Ty(llvm::getGlobalContext()));
@@ -372,6 +368,8 @@ void derefAll(NExpression *exp) {
 		for(auto elem: e->elems) {
 			derefAll(elem);
 		}
+		std::transform(e->types.begin(), e->types.end(), e->types.begin(),
+				[](LemlType *t) { return deref(t); });
 	} else if(typeid(*exp) == typeid(NLetTupleExpression)) {
 		NLetTupleExpression *e = reinterpret_cast<NLetTupleExpression*>(exp);
 		for(auto let: e->ids) {
