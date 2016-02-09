@@ -44,4 +44,14 @@ for resval in test/*.result; do
 	fi;
 done
 
+for restxt in test/*.txt; do
+	testcase=${restxt%.txt};
+	./leml -jit $testcase.ml | diff $restxt -;
+	if [ $? ]; then
+		printf "  %-20s ||  \e[34mpassed\e[0m\n" $testcase
+	else
+		printf "  %-20s ||  \e[31mfailed\e[0m\n" $testcase
+	fi;
+done
+
 printf "\n"
