@@ -60,8 +60,10 @@ public:
 	float getFloatResult();
 	std::map<std::string, llvm::Value*>& locals();
 	llvm::BasicBlock *currentBlock();
+	void setCurrentBlock(llvm::BasicBlock *block);
+	llvm::BasicBlock *getCurrentBlock();
 	void pushBlock(llvm::BasicBlock *block);
-	void popBlock();
+	llvm::BasicBlock *popBlock();
 	bool linkModule(llvm::Module *dest, std::string filename);
 };
 

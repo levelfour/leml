@@ -32,16 +32,27 @@ llvm::BasicBlock *CodeGenContext::currentBlock() {
 	return blocks.top()->block;
 }
 
+void CodeGenContext::setCurrentBlock(llvm::BasicBlock *block) {
+	builder->SetInsertPoint(block);
+	blocks.top()->block = block;
+}
+
+llvm::BasicBlock *CodeGenContext::getCurrentBlock() {
+	return blocks.top()->block;
+}
+
 void CodeGenContext::pushBlock(llvm::BasicBlock *block) {
 	blocks.push(llvm::make_unique<CodeGenBlock>(block));
 	builder->SetInsertPoint(block);
 }
 
-void CodeGenContext::popBlock() {
+llvm::BasicBlock *CodeGenContext::popBlock() {
+	auto bblock = currentBlock();
 	blocks.pop();
 	if(blocks.size() > 0) {
 		builder->SetInsertPoint(blocks.top()->block);
 	}
+	return bblock;
 }
 
 void CodeGenContext::setBuiltInIR(std::string filename) {
@@ -296,23 +307,23 @@ llvm::Value* NIfExpression::codeGen(CodeGenContext& context) {
 	context.builder->CreateCondBr(valCond, blkThen, blkElse);
 
 	// emit then-block
-	context.builder->SetInsertPoint(blkThen);
+	context.setCurrentBlock(blkThen);
 	llvm::Value* valThen = true_exp.codeGen(context);
 	if(!valThen) return nullptr;
 	context.builder->CreateBr(blkCont);
-	blkThen = context.builder->GetInsertBlock();
+	blkThen = context.getCurrentBlock();
 
 	// emit else-block
 	fn->getBasicBlockList().push_back(blkElse);
-	context.builder->SetInsertPoint(blkElse);
+	context.setCurrentBlock(blkElse);
 	llvm::Value* valElse = false_exp.codeGen(context);
 	if(!valElse) return nullptr;
 	context.builder->CreateBr(blkCont);
-	blkElse = context.builder->GetInsertBlock();
+	blkElse = context.getCurrentBlock();
 
 	// emit if-continue-block
 	fn->getBasicBlockList().push_back(blkCont);
-	context.builder->SetInsertPoint(blkCont);
+	context.setCurrentBlock(blkCont);
 #ifdef LEML_DEBUG
 	assert(valThen->getType() == valElse->getType());
 #endif
@@ -470,17 +481,17 @@ llvm::Value* NArrayExpression::codeGen(CodeGenContext& context) {
 	context.builder->CreateBr(blkCond);
 
 	// emit for-cond
-	context.builder->SetInsertPoint(blkCond);
+	context.setCurrentBlock(blkCond);
 	auto valCond = context.builder->CreateICmp(
 			llvm::CmpInst::ICMP_SLT,
 			context.builder->CreateLoad(index),
 			arrayLength, "cmp");
 	context.builder->CreateCondBr(valCond, blkBody, blkEnd);
-	blkCond = context.builder->GetInsertBlock();
+	blkCond = context.getCurrentBlock();
 
 	// emit for-body
 	fn->getBasicBlockList().push_back(blkBody);
-	context.builder->SetInsertPoint(blkBody);
+	context.setCurrentBlock(blkBody);
 	// store data to array at current index
 	auto ptr = context.builder->CreateGEP(
 			array,
@@ -494,11 +505,11 @@ llvm::Value* NArrayExpression::codeGen(CodeGenContext& context) {
 	context.builder->CreateStore(updatedIndex, index);
 	// jump to for-cond
 	context.builder->CreateBr(blkCond);
-	blkBody = context.builder->GetInsertBlock();
+	blkBody = context.getCurrentBlock();
 
 	// emit for-end
 	fn->getBasicBlockList().push_back(blkEnd);
-	context.builder->SetInsertPoint(blkEnd);
+	context.setCurrentBlock(blkEnd);
 
 	return array;
 }
