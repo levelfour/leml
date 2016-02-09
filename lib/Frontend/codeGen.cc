@@ -346,9 +346,12 @@ llvm::Value* NLetExpression::codeGen(CodeGenContext& context) {
 		if(assign != nullptr) {
 			// type of alloc must be a pointer to the type of valAssign
 			auto valAssign = assign->codeGen(context);
-			context.builder->CreateStore(
-					valAssign,
-					alloc);
+			if(valAssign->getType() != llvm::Type::getVoidTy(llvm::getGlobalContext())) {
+				// bind `assign` to variable unless its type is void
+				context.builder->CreateStore(
+						valAssign,
+						alloc);
+			}
 			return eval->codeGen(context);
 		} else {
 			return alloc;
@@ -392,7 +395,12 @@ llvm::Value* NLetRecExpression::codeGen(CodeGenContext& context) {
 	llvm::Value* valRet = body.codeGen(context);
 
 	// emit return value
-	context.builder->CreateRet(valRet);
+	if(valRet->getType() != llvm::Type::getVoidTy(llvm::getGlobalContext())) {
+		context.builder->CreateRet(valRet);
+	} else {
+		// return void
+		context.builder->CreateRet(llvm::ConstantInt::get(llvm::Type::getInt32Ty(llvm::getGlobalContext()), 0));
+	}
 
 	context.popBlock();
 
