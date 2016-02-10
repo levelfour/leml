@@ -135,6 +135,7 @@ void InitEnv(TypeEnv& env) {
 	env["floor"] = new LemlType({Fun, typeFloat, {typeFloat}});
 	env["sin"] = new LemlType({Fun, typeFloat, {typeFloat}});
 	env["cos"] = new LemlType({Fun, typeFloat, {typeFloat}});
+	env["atan"] = new LemlType({Fun, typeFloat, {typeFloat}});
 	env["sqrt"] = new LemlType({Fun, typeFloat, {typeFloat}});
 	env["int_of_float"] = new LemlType({Fun, typeInt, {typeFloat}});
 	env["float_of_int"] = new LemlType({Fun, typeFloat, {typeInt}});

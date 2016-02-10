@@ -39,6 +39,8 @@ double sin(double f);
 
 double cos(double f);
 
+double atan(double f);
+
 double sqrt(double f);
 
 int int_of_float(double f) {
