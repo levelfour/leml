@@ -126,6 +126,7 @@ int main(int argc, char** argv) {
 void InitEnv(TypeEnv& env) {
 	env["print_int"] = new LemlType({Fun, typeUnit, {typeInt}});
 	env["print_float"] = new LemlType({Fun, typeUnit, {typeFloat}});
+	env["print_char"] = new LemlType({Fun, typeUnit, {typeInt}});
 	env["print_newline"] = new LemlType({Fun, typeUnit, {typeUnit}});
 	env["read_int"] = new LemlType({Fun, typeInt, {typeUnit}});
 	env["read_float"] = new LemlType({Fun, typeFloat, {typeUnit}});
