@@ -136,6 +136,7 @@ exp:
 | exp TGREATER_EQUAL exp
     { $$ = new NCompExpression(LGE, *$1, *$3); }
 | TIF exp TTHEN exp TELSE exp
+	%prec prec_if
     { $$ = new NIfExpression(*$2, *$4, *$6); }
 | TMINUS_DOT exp
     %prec prec_unary_minus
