@@ -39,6 +39,7 @@ std::ostream& NUnaryExpression::print(std::ostream& os) const {
 	switch(op) {
 		case LNeg:  os << "-";  break;
 		case LFNeg: os << "-."; break;
+		case LNot:  os << "~"; break;
 	}
 	if( typeid(expr) == typeid(NInteger) ||
 		typeid(expr) == typeid(NFloat) ||

@@ -209,6 +209,12 @@ llvm::Value* NUnaryExpression::codeGen(CodeGenContext& context) {
 				llvm::ConstantFP::get(llvm::Type::getDoubleTy(llvm::getGlobalContext()), 0),
 				expr.codeGen(context));
 		}
+		case LNot:
+		{
+			return context.builder->CreateSub(
+				llvm::ConstantInt::get(llvm::Type::getInt1Ty(llvm::getGlobalContext()), 1),
+				expr.codeGen(context));
+		}
 		default: return nullptr;
 	}
 }
@@ -278,10 +284,7 @@ llvm::Value* NCompExpression::codeGen(CodeGenContext& context) {
 	}
 
 	// convert comparing result (i1) to i32
-	return context.builder->CreateZExtOrBitCast(
-			valCmp,
-			llvm::Type::getInt32Ty(llvm::getGlobalContext()),
-			"bool2int");
+	return valCmp;
 }
 
 llvm::Value* NIfExpression::codeGen(CodeGenContext& context) {
@@ -291,7 +294,7 @@ llvm::Value* NIfExpression::codeGen(CodeGenContext& context) {
 	// convert condition to a boolean value by comparing equal to 0
 	valCond = context.builder->CreateICmpNE(
 			valCond,
-			llvm::ConstantInt::get(llvm::Type::getInt32Ty(llvm::getGlobalContext()), 0),
+			llvm::ConstantInt::get(llvm::Type::getInt1Ty(llvm::getGlobalContext()), 0),
 			"if.cond");
 
 	llvm::Function* fn = context.builder->GetInsertBlock()->getParent();

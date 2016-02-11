@@ -13,6 +13,10 @@ void print_char(int i) {
 	printf("%c", (char)i);
 }
 
+void print_bool(int b) {
+	printf(b ? "true" : "false");
+}
+
 void print_newline() {
 	printf("\n");
 }
