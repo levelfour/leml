@@ -42,10 +42,10 @@ void extendArgs(NExpression *exp, NIdentifier func, std::vector<NExpression*> ar
 			stackExp.push(&e->false_exp);
 		} else if(typeid(*exp) == typeid(NLetExpression)) {
 			NLetExpression *e = reinterpret_cast<NLetExpression*>(exp);
-			TypeEnv localEnv1 = localEnv;
-			localEnv1[e->id.name] = e->t;
-			extendArgs(e->assign, func, args, extEnv, localEnv1, localBound);
+			stackExp.push(e->assign);
 			if(e->id.name != func.name) {
+				TypeEnv localEnv1 = localEnv;
+				localEnv1[e->id.name] = e->t;
 				extendArgs(e->eval, func, args, extEnv, localEnv1, localBound);
 			}
 		} else if(typeid(*exp) == typeid(NLetRecExpression)) {
@@ -70,9 +70,6 @@ void extendArgs(NExpression *exp, NIdentifier func, std::vector<NExpression*> ar
 			// extend args of call expression
 			NCallExpression *e = reinterpret_cast<NCallExpression*>(exp);
 
-			for(auto arg: *e->args) {
-				extendArgs(arg, func, args, extEnv, localEnv, localBound);
-			}
 			NIdentifier *funid = reinterpret_cast<NIdentifier*>(&e->fun);
 			if(funid && funid->name == func.name) {
 				// push additional args in front of original args
@@ -81,6 +78,9 @@ void extendArgs(NExpression *exp, NIdentifier func, std::vector<NExpression*> ar
 				}
 			} else {
 				// callee-function is higher-order function
+			}
+			for(auto arg: *e->args) {
+				stackExp.push(arg);
 			}
 		} else if(typeid(*exp) == typeid(NArrayPutExpression)) {
 			NArrayPutExpression *e = reinterpret_cast<NArrayPutExpression*>(exp);
