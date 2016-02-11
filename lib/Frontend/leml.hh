@@ -12,5 +12,6 @@ extern std::string gFilename;
 extern bool gVerbose;
 extern bool gNostdlib;
 extern bool gMem2reg;
+extern bool gPartialApp;
 
 #endif // __LEML_HH__

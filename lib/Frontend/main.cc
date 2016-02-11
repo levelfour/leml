@@ -22,6 +22,7 @@ std::string gFilename = "";
 bool gVerbose  = false;
 bool gNostdlib = false;
 bool gMem2reg = false;
+bool gPartialApp = false;
 
 void InitEnv(TypeEnv& env);
 void JITExecution(CodeGenContext& context, std::string gFilename, std::string type);
@@ -38,6 +39,7 @@ int main(int argc, char** argv) {
 	spec["type"] = 1; // result value type
 	spec["nostdlib"] = 0;
 	spec["mem2reg"] = 0;
+	spec["partial_app"] = 0;
 	o.set(spec);
 	try {
 		o.build();
@@ -53,6 +55,7 @@ int main(int argc, char** argv) {
 	if(o.get("v") != "")        { gVerbose = true; }
 	if(o.get("nostdlib") != "") { gNostdlib = true; }
 	if(o.get("mem2reg") != "")  { gMem2reg = true; }
+	if(o.get("partial_app") != "")  { gPartialApp = true; }
 
 	// initialization of LLVM
 	LLVMInitializeNativeTarget();

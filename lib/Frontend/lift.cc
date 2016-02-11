@@ -58,11 +58,14 @@ void extendArgs(NExpression *exp, NIdentifier func, std::vector<NExpression*> ar
 			if(e->proto->id.name != func.name) {
 				extendArgs(&e->body, func, args, extEnv, localEnv1, localBound);
 				extendArgs(&e->eval, func, args, extEnv, localEnv1, localBound);
-				for(auto arg: args) {
-					NIdentifier *a = reinterpret_cast<NIdentifier*>(arg);
-					if(localEnv1.find(a->name) == localEnv1.end()) {
-						std::set<std::string> fvs;
-						freeVariables(e, fvs, extEnv, localEnv1, localBound);
+				
+				if(gPartialApp) {
+					for(auto arg: args) {
+						NIdentifier *a = reinterpret_cast<NIdentifier*>(arg);
+						if(localEnv1.find(a->name) == localEnv1.end()) {
+							std::set<std::string> fvs;
+							freeVariables(e, fvs, extEnv, localEnv1, localBound);
+						}
 					}
 				}
 			}
