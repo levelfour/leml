@@ -355,9 +355,6 @@ void derefAll(NExpression *exp) {
 		NArrayExpression *e = reinterpret_cast<NArrayExpression*>(exp);
 		derefAll(&e->length);
 		derefAll(&e->data);
-		for(auto elem: *e->array) {
-			derefAll(elem);
-		}
 		e->t = deref(e->t);
 	} else if(typeid(*exp) == typeid(NArrayGetExpression)) {
 		NArrayGetExpression *e = reinterpret_cast<NArrayGetExpression*>(exp);

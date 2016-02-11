@@ -82,8 +82,18 @@ void extendArgs(NExpression *exp, NIdentifier func, std::vector<NExpression*> ar
 			for(auto arg: *e->args) {
 				stackExp.push(arg);
 			}
+		} else if(typeid(*exp) == typeid(NArrayExpression)) {
+			NArrayExpression *e = reinterpret_cast<NArrayExpression*>(exp);
+			stackExp.push(&e->length);
+			stackExp.push(&e->data);
+		} else if(typeid(*exp) == typeid(NArrayGetExpression)) {
+			NArrayGetExpression *e = reinterpret_cast<NArrayGetExpression*>(exp);
+			stackExp.push(&e->array);
+			stackExp.push(&e->index);
 		} else if(typeid(*exp) == typeid(NArrayPutExpression)) {
 			NArrayPutExpression *e = reinterpret_cast<NArrayPutExpression*>(exp);
+			stackExp.push(&e->array);
+			stackExp.push(&e->index);
 			stackExp.push(&e->exp);
 		} else if(typeid(*exp) == typeid(NTupleExpression)) {
 			NTupleExpression *e = reinterpret_cast<NTupleExpression*>(exp);
@@ -230,7 +240,9 @@ void freeVariables(NExpression* exp, std::set<std::string>& fvs, TypeEnv& extEnv
 			}
 			stackExp.push(&e->fun);
 		} else if(typeid(*exp) == typeid(NArrayExpression)) {
-			continue;
+			NArrayExpression *e = reinterpret_cast<NArrayExpression*>(exp);
+			stackExp.push(&e->length);
+			stackExp.push(&e->data);
 		} else if(typeid(*exp) == typeid(NArrayGetExpression)) {
 			NArrayGetExpression *e = reinterpret_cast<NArrayGetExpression*>(exp);
 			stackExp.push(&e->array);

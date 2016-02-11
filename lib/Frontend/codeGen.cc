@@ -523,6 +523,9 @@ llvm::Value* NArrayGetExpression::codeGen(CodeGenContext& context) {
 	llvm::Value *arr;
 	if(typeid(array) == typeid(NIdentifier)) {
 		auto array_alloc = context.locals()[array.name];
+#ifdef LEML_DEBUG
+		assert(array_alloc != nullptr);
+#endif
 		arr = context.builder->CreateLoad(array_alloc);
 	} else {
 		arr = array.codeGen(context);
@@ -537,6 +540,9 @@ llvm::Value* NArrayPutExpression::codeGen(CodeGenContext& context) {
 	llvm::Value *arr;
 	if(typeid(array) == typeid(NIdentifier)) {
 		auto array_alloc = context.locals()[array.name];
+#ifdef LEML_DEBUG
+		assert(array_alloc != nullptr);
+#endif
 		arr = context.builder->CreateLoad(array_alloc);
 	} else {
 		arr = array.codeGen(context);
