@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cstring>
+#include <stack>
 #include <set>
 #include "leml.hh"
 #include "lift.hh"
@@ -9,86 +10,96 @@ void freeVariables(NExpression* exp, std::set<std::string>& fvs, TypeEnv& extEnv
 void extendArgs(NExpression *exp, NIdentifier func, std::vector<NExpression*> args, TypeEnv extEnv, TypeEnv localEnv, TypeEnv localBound) {
 	if(args.size() == 0) return;
 
-	if(typeid(*exp) == typeid(NIdentifier)) {
-		NIdentifier *e = reinterpret_cast<NIdentifier*>(exp);
-		if(e->name == func.name) {
-			std::vector<NExpression*> *newArgs = new std::vector<NExpression*>(args);
-			NCallExpression call(func, newArgs);
-			std::memcpy(static_cast<void*>(exp), static_cast<void*>(&call), sizeof(NCallExpression));
-		}
-	} else if(typeid(*exp) == typeid(NUnaryExpression)) {
-		NUnaryExpression *e = reinterpret_cast<NUnaryExpression*>(exp);
-		extendArgs(&e->expr, func, args, extEnv, localEnv, localBound);
-	} else if(typeid(*exp) == typeid(NBinaryExpression)) {
-		NBinaryExpression *e = reinterpret_cast<NBinaryExpression*>(exp);
-		extendArgs(&e->lhs, func, args, extEnv, localEnv, localBound);
-		extendArgs(&e->rhs, func, args, extEnv, localEnv, localBound);
-	} else if(typeid(*exp) == typeid(NCompExpression)) {
-		NCompExpression *e = reinterpret_cast<NCompExpression*>(exp);
-		extendArgs(&e->lhs, func, args, extEnv, localEnv, localBound);
-		extendArgs(&e->rhs, func, args, extEnv, localEnv, localBound);
-	} else if(typeid(*exp) == typeid(NIfExpression)) {
-		NIfExpression *e = reinterpret_cast<NIfExpression*>(exp);
-		extendArgs(&e->cond, func, args, extEnv, localEnv, localBound);
-		extendArgs(&e->true_exp, func, args, extEnv, localEnv, localBound);
-		extendArgs(&e->false_exp, func, args, extEnv, localEnv, localBound);
-	} else if(typeid(*exp) == typeid(NLetExpression)) {
-		NLetExpression *e = reinterpret_cast<NLetExpression*>(exp);
-		localEnv[e->id.name] = e->t;
-		extendArgs(e->assign, func, args, extEnv, localEnv, localBound);
-		if(e->id.name != func.name) {
-			extendArgs(e->eval, func, args, extEnv, localEnv, localBound);
-		}
-	} else if(typeid(*exp) == typeid(NLetRecExpression)) {
-		NLetRecExpression *e = reinterpret_cast<NLetRecExpression*>(exp);
-		localEnv[e->proto->id.name] = e->t;
-		for(auto arg: e->proto->args) {
-			localEnv[arg->id.name] = arg->t;
-		}
-		if(e->proto->id.name != func.name) {
-			extendArgs(&e->body, func, args, extEnv, localEnv, localBound);
-			extendArgs(&e->eval, func, args, extEnv, localEnv, localBound);
-			for(auto arg: args) {
-				NIdentifier *a = reinterpret_cast<NIdentifier*>(arg);
-				if(localEnv.find(a->name) == localEnv.end()) {
-					std::set<std::string> fvs;
-					freeVariables(e, fvs, extEnv, localEnv, localBound);
+	std::stack<NExpression*> stackExp;
+	stackExp.push(exp);
+
+	// pseudo-recursion on expression using stack (partially)
+	while(!stackExp.empty()) {
+		NExpression *exp = stackExp.top(); stackExp.pop();
+
+		if(typeid(*exp) == typeid(NIdentifier)) {
+			NIdentifier *e = reinterpret_cast<NIdentifier*>(exp);
+			if(e->name == func.name) {
+				std::vector<NExpression*> *newArgs = new std::vector<NExpression*>(args);
+				NCallExpression call(func, newArgs);
+				std::memcpy(static_cast<void*>(exp), static_cast<void*>(&call), sizeof(NCallExpression));
+			}
+		} else if(typeid(*exp) == typeid(NUnaryExpression)) {
+			NUnaryExpression *e = reinterpret_cast<NUnaryExpression*>(exp);
+			stackExp.push(&e->expr);
+		} else if(typeid(*exp) == typeid(NBinaryExpression)) {
+			NBinaryExpression *e = reinterpret_cast<NBinaryExpression*>(exp);
+			stackExp.push(&e->lhs);
+			stackExp.push(&e->rhs);
+		} else if(typeid(*exp) == typeid(NCompExpression)) {
+			NCompExpression *e = reinterpret_cast<NCompExpression*>(exp);
+			stackExp.push(&e->lhs);
+			stackExp.push(&e->rhs);
+		} else if(typeid(*exp) == typeid(NIfExpression)) {
+			NIfExpression *e = reinterpret_cast<NIfExpression*>(exp);
+			stackExp.push(&e->cond);
+			stackExp.push(&e->true_exp);
+			stackExp.push(&e->false_exp);
+		} else if(typeid(*exp) == typeid(NLetExpression)) {
+			NLetExpression *e = reinterpret_cast<NLetExpression*>(exp);
+			TypeEnv localEnv1 = localEnv;
+			localEnv1[e->id.name] = e->t;
+			extendArgs(e->assign, func, args, extEnv, localEnv1, localBound);
+			if(e->id.name != func.name) {
+				extendArgs(e->eval, func, args, extEnv, localEnv1, localBound);
+			}
+		} else if(typeid(*exp) == typeid(NLetRecExpression)) {
+			NLetRecExpression *e = reinterpret_cast<NLetRecExpression*>(exp);
+			TypeEnv localEnv1 = localEnv;
+			localEnv1[e->proto->id.name] = e->t;
+			for(auto arg: e->proto->args) {
+				localEnv1[arg->id.name] = arg->t;
+			}
+			if(e->proto->id.name != func.name) {
+				extendArgs(&e->body, func, args, extEnv, localEnv1, localBound);
+				extendArgs(&e->eval, func, args, extEnv, localEnv1, localBound);
+				for(auto arg: args) {
+					NIdentifier *a = reinterpret_cast<NIdentifier*>(arg);
+					if(localEnv1.find(a->name) == localEnv1.end()) {
+						std::set<std::string> fvs;
+						freeVariables(e, fvs, extEnv, localEnv1, localBound);
+					}
 				}
 			}
-		}
-	} else if(typeid(*exp) == typeid(NCallExpression)) {
-		// extend args of call expression
-		NCallExpression *e = reinterpret_cast<NCallExpression*>(exp);
+		} else if(typeid(*exp) == typeid(NCallExpression)) {
+			// extend args of call expression
+			NCallExpression *e = reinterpret_cast<NCallExpression*>(exp);
 
-		for(auto arg: *e->args) {
-			extendArgs(arg, func, args, extEnv, localEnv, localBound);
-		}
-		NIdentifier *funid = reinterpret_cast<NIdentifier*>(&e->fun);
-		if(funid && funid->name == func.name) {
-			// push additional args in front of original args
-			for(auto it = args.rbegin(); it != args.rend(); it++) {
-				e->args->insert(e->args->begin(), *it);
+			for(auto arg: *e->args) {
+				extendArgs(arg, func, args, extEnv, localEnv, localBound);
 			}
-		} else {
-			// callee-function is higher-order function
-		}
-	} else if(typeid(*exp) == typeid(NArrayPutExpression)) {
-		NArrayPutExpression *e = reinterpret_cast<NArrayPutExpression*>(exp);
-		extendArgs(&e->exp, func, args, extEnv, localEnv, localBound);
-	} else if(typeid(*exp) == typeid(NTupleExpression)) {
-		NTupleExpression *e = reinterpret_cast<NTupleExpression*>(exp);
-		for(auto elem: e->elems) {
-			extendArgs(elem, func, args, extEnv, localEnv, localBound);
-		}
-	} else if(typeid(*exp) == typeid(NLetTupleExpression)) {
-		NLetTupleExpression *e = reinterpret_cast<NLetTupleExpression*>(exp);
-		extendArgs(&e->exp, func, args, extEnv, localEnv, localBound);
-		for(auto let: e->ids) {
-			if(let->id.name == func.name) {
-				return;
+			NIdentifier *funid = reinterpret_cast<NIdentifier*>(&e->fun);
+			if(funid && funid->name == func.name) {
+				// push additional args in front of original args
+				for(auto it = args.rbegin(); it != args.rend(); it++) {
+					e->args->insert(e->args->begin(), *it);
+				}
+			} else {
+				// callee-function is higher-order function
 			}
+		} else if(typeid(*exp) == typeid(NArrayPutExpression)) {
+			NArrayPutExpression *e = reinterpret_cast<NArrayPutExpression*>(exp);
+			stackExp.push(&e->exp);
+		} else if(typeid(*exp) == typeid(NTupleExpression)) {
+			NTupleExpression *e = reinterpret_cast<NTupleExpression*>(exp);
+			for(auto elem: e->elems) {
+				stackExp.push(elem);
+			}
+		} else if(typeid(*exp) == typeid(NLetTupleExpression)) {
+			NLetTupleExpression *e = reinterpret_cast<NLetTupleExpression*>(exp);
+			extendArgs(&e->exp, func, args, extEnv, localEnv, localBound);
+			for(auto let: e->ids) {
+				if(let->id.name == func.name) {
+					continue;
+				}
+			}
+			stackExp.push(&e->eval);
 		}
-		extendArgs(&e->eval, func, args, extEnv, localEnv, localBound);
 	}
 }
 
