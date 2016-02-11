@@ -187,7 +187,9 @@ LemlType *infer(NExpression* expr, TypeEnv env) {
 		return t;
 	} else if(typeid(*expr) == typeid(NArrayExpression)) {
 		NArrayExpression* e = dynamic_cast<NArrayExpression*>(expr);
-		return new LemlType({Array, infer(&e->data, env), {}});
+		auto typeData = infer(&e->data, env);
+		e->t = typeData;
+		return new LemlType({Array, typeData, {}});
 	} else if(typeid(*expr) == typeid(NArrayGetExpression)) {
 		NArrayGetExpression* e = dynamic_cast<NArrayGetExpression*>(expr);
 		auto* t = newty();
@@ -356,6 +358,7 @@ void derefAll(NExpression *exp) {
 		for(auto elem: *e->array) {
 			derefAll(elem);
 		}
+		e->t = deref(e->t);
 	} else if(typeid(*exp) == typeid(NArrayGetExpression)) {
 		NArrayGetExpression *e = reinterpret_cast<NArrayGetExpression*>(exp);
 		derefAll(&e->array);

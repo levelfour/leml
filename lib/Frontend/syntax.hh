@@ -195,8 +195,10 @@ public:
 	NExpression& length;
 	NExpression& data;
 	std::vector<NExpression*> *array;
+	LemlType *t;
 	NArrayExpression(NExpression& length, NExpression& data): length(length), data(data) {
 		array = new std::vector<NExpression*>;
+		t = nullptr;
 	}
 	virtual ~NArrayExpression() { delete array; }
 	virtual llvm::Value* codeGen(CodeGenContext& context);

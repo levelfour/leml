@@ -460,17 +460,7 @@ llvm::Value* NArrayExpression::codeGen(CodeGenContext& context) {
 	llvm::Value* valData = data.codeGen(context);
 
 	// array allocation
-	auto typeData = infer(&data, TypeEnv());
-	llvm::Type *llvmTypeData;
-	if(typeData) {
-		// if array data type can be inferred
-		llvmTypeData = llvmType(typeData);
-	} if(!typeData && typeid(data) == typeid(NIdentifier)) {
-		// try to find function
-		NIdentifier id = *reinterpret_cast<NIdentifier*>(&data);
-		llvmTypeData = context.module->getFunction(id.name.c_str())->getType();
-	}
-	auto array = context.builder->CreateAlloca(llvmTypeData, arrayLength);
+	auto array = context.builder->CreateAlloca(llvmType(t), arrayLength);
 
 	// array initialization
 	auto index = context.builder->CreateAlloca(llvm::Type::getInt32Ty(llvm::getGlobalContext()));
@@ -523,12 +513,13 @@ llvm::Value* NArrayExpression::codeGen(CodeGenContext& context) {
 }
 
 llvm::Value* NArrayGetExpression::codeGen(CodeGenContext& context) {
-	auto array_alloc = context.locals()[array.name];
-#ifdef LEML_DEBUG
-	assert(array_alloc != nullptr);
-#endif
-
-	auto arr = context.builder->CreateLoad(array_alloc);
+	llvm::Value *arr;
+	if(typeid(array) == typeid(NIdentifier)) {
+		auto array_alloc = context.locals()[array.name];
+		arr = context.builder->CreateLoad(array_alloc);
+	} else {
+		arr = array.codeGen(context);
+	}
 	auto i = index.codeGen(context);
 	auto indexList = llvm::ArrayRef<llvm::Value*>(i);
 	auto ptr = context.builder->CreateGEP(arr, indexList);
@@ -536,14 +527,13 @@ llvm::Value* NArrayGetExpression::codeGen(CodeGenContext& context) {
 }
 
 llvm::Value* NArrayPutExpression::codeGen(CodeGenContext& context) {
-	// get the allocation code of array
-	auto array_alloc = context.locals()[array.name];
-#ifdef LEML_DEBUG
-	assert(array_alloc != nullptr);
-#endif
-
-	// get the instance of array
-	auto arr = context.builder->CreateLoad(array_alloc);
+	llvm::Value *arr;
+	if(typeid(array) == typeid(NIdentifier)) {
+		auto array_alloc = context.locals()[array.name];
+		arr = context.builder->CreateLoad(array_alloc);
+	} else {
+		arr = array.codeGen(context);
+	}
 	auto ptr = context.builder->CreateGEP(arr, llvm::ArrayRef<llvm::Value*>(index.codeGen(context)));
 	return context.builder->CreateStore(exp.codeGen(context), ptr);
 }
