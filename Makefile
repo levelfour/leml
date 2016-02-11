@@ -1,6 +1,11 @@
 PROGRAM=leml
+RT_DIR=min-rt
+RT=$(RT_DIR)/raytracer
+SLD=$(RT_DIR)/contest.sld
 
-.PHONY: default, debug, clean
+include Makefile.in
+
+.PHONY: default, debug, run, clean, cleanall
 
 default:
 	@make -C lib
@@ -10,6 +15,16 @@ debug:
 	@make -C lib debug
 	ln -sf lib/$(PROGRAM) $(PROGRAM)
 
+run: $(SLD) $(RT)
+	cat $(SLD) | ./$(RT)
+
 clean:
+	rm -f $(RT) $(RT).ll
+
+cleanall:
 	@make -C lib clean
-	rm -f $(PROGRAM)
+	rm -f $(PROGRAM) $(RT) $(RT).ll
+
+$(RT): $(PROGRAM) $(RT).ml
+	./$(PROGRAM) $(RT).ml -mem2reg -o $(RT).ll
+	$(CC) -o $(RT) $(RT).ll
