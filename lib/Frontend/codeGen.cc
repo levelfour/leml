@@ -327,15 +327,19 @@ llvm::Value* NIfExpression::codeGen(CodeGenContext& context) {
 	// emit if-continue-block
 	fn->getBasicBlockList().push_back(blkCont);
 	context.setCurrentBlock(blkCont);
-#ifdef LEML_DEBUG
-	assert(valThen->getType() == valElse->getType());
-#endif
-	llvm::PHINode* pn = context.builder->CreatePHI(
-			valThen->getType(), 2, "if.tmp");
-	pn->addIncoming(valThen, blkThen);
-	pn->addIncoming(valElse, blkElse);
 
-	return pn;
+	if(valThen->getType() == llvm::Type::getVoidTy(llvm::getGlobalContext()) || valElse->getType() == llvm::Type::getVoidTy(llvm::getGlobalContext())) {
+		// if then-block and else-block returns void
+		// then manually return void
+		// (because PHIInst cannot handle void)
+		return llvm::ConstantInt::get(llvm::Type::getInt32Ty(llvm::getGlobalContext()), 0);
+	} else {
+		llvm::PHINode* pn = context.builder->CreatePHI(
+				valThen->getType(), 2, "if.tmp");
+		pn->addIncoming(valThen, blkThen);
+		pn->addIncoming(valElse, blkElse);
+		return pn;
+	}
 }
 
 llvm::Value* NLetExpression::codeGen(CodeGenContext& context) {
