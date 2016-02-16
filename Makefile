@@ -28,4 +28,4 @@ cleanall:
 
 $(RT): $(PROGRAM) $(RT).ml
 	./$(PROGRAM) $(RT).ml -mem2reg -o $(RT).ll
-	$(CC) -o $(RT) $(RT).ll
+	$(CC) -lm -o $(RT) $(RT).ll
