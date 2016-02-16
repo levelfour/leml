@@ -5,7 +5,7 @@ LEX=flex
 YACC=bison
 
 # variable
-BUILTIN_LIB=\"./lib/External/__builtins.ll\"
+BUILTIN_LIB=\"./src/__builtins.ll\"
 
 # options
 WARNING_OPTIONS=-Wall -Wno-deprecated-register -Wno-unused-function -Wno-unneeded-internal-declaration -Wno-switch
@@ -31,7 +31,7 @@ LEXTAB=lexer.cc
 YACCTAB=parser.cc
 YACCFILES=parser.hh
 
-include ../../Makefile.in
+include ../Makefile.in
 
 .PHONY: all
 all: $(PROGRAM)

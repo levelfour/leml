@@ -9,12 +9,12 @@ include Makefile.in
 .PHONY: default, debug, run, clean, cleanall
 
 default:
-	@make -C lib
-	ln -sf lib/$(PROGRAM) $(PROGRAM)
+	@make -C src
+	ln -sf src/$(PROGRAM) $(PROGRAM)
 
 debug:
-	@make -C lib debug
-	ln -sf lib/$(PROGRAM) $(PROGRAM)
+	@make -C src debug
+	ln -sf src/$(PROGRAM) $(PROGRAM)
 
 run: $(SLD) $(RT)
 	cat $(SLD) | ./$(RT) > $(PPM)
@@ -23,7 +23,7 @@ clean:
 	rm -f $(RT) $(RT).ll
 
 cleanall:
-	@make -C lib clean
+	@make -C src clean
 	rm -f $(PROGRAM) $(RT) $(RT).ll
 
 $(RT): $(PROGRAM) $(RT).ml
