@@ -573,7 +573,14 @@ llvm::Value* NTupleExpression::codeGen(CodeGenContext& context) {
 			llvm::getGlobalContext(),
 			llvm::makeArrayRef(types));
 
-	llvm::AllocaInst* alloc = context.builder->CreateAlloca(type, nullptr);
+	// tuple allocation
+	auto ITy = llvm::Type::getInt32Ty(llvm::getGlobalContext());
+	auto allocSize = llvm::ConstantExpr::getTruncOrBitCast(
+			llvm::ConstantExpr::getSizeOf(type), ITy);
+	auto alloc = llvm::CallInst::CreateMalloc(
+			context.getCurrentBlock(), ITy,
+			type, allocSize, nullptr, nullptr, "tuple");
+	context.getCurrentBlock()->getInstList().push_back(alloc);
 
 	auto zero = llvm::ConstantInt::get(llvm::Type::getInt32Ty(llvm::getGlobalContext()), 0);
 	for(unsigned long i = 0; i < elems.size(); i++) {
