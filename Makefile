@@ -2,6 +2,7 @@ PROGRAM=leml
 RT_DIR=min-rt
 RT=$(RT_DIR)/raytracer
 SLD=$(RT_DIR)/contest.sld
+PPM=output.ppm
 
 include Makefile.in
 
@@ -16,7 +17,7 @@ debug:
 	ln -sf lib/$(PROGRAM) $(PROGRAM)
 
 run: $(SLD) $(RT)
-	cat $(SLD) | ./$(RT)
+	cat $(SLD) | ./$(RT) > $(PPM)
 
 clean:
 	rm -f $(RT) $(RT).ll

@@ -10,3 +10,4 @@
 *.s
 leml
 min-rt/raytracer
+*.ppm
