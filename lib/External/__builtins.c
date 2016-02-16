@@ -3,18 +3,22 @@
 
 void print_int(int i) {
 	printf("%d", i);
+	fflush(stdout);
 }
 
 void print_float(double f) {
 	printf("%.10lf", f);
+	fflush(stdout);
 }
 
 void print_char(int i) {
 	printf("%c", (char)i);
+	fflush(stdout);
 }
 
 void print_bool(int b) {
 	printf(b ? "true" : "false");
+	fflush(stdout);
 }
 
 void print_newline() {
