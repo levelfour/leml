@@ -467,7 +467,14 @@ llvm::Value* NArrayExpression::codeGen(CodeGenContext& context) {
 	llvm::Value* valData = data.codeGen(context);
 
 	// array allocation
-	auto array = context.builder->CreateAlloca(llvmType(t), arrayLength);
+	auto llvmTy = llvmType(t);
+	auto ITy = llvm::Type::getInt32Ty(llvm::getGlobalContext());
+	auto allocSize = llvm::ConstantExpr::getTruncOrBitCast(
+			llvm::ConstantExpr::getSizeOf(llvmTy), ITy);
+	auto array = llvm::CallInst::CreateMalloc(
+			context.getCurrentBlock(), ITy,
+			llvmTy, allocSize, arrayLength, nullptr, "array");
+	context.getCurrentBlock()->getInstList().push_back(array);
 
 	// array initialization
 	auto index = context.builder->CreateAlloca(llvm::Type::getInt32Ty(llvm::getGlobalContext()));
