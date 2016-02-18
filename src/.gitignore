@@ -1,1 +1,6 @@
 leml
+
+# generated
+lexer.cc
+parser.cc
+parser.hh
