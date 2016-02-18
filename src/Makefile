@@ -5,14 +5,15 @@ LEX=flex
 YACC=bison
 
 # variable
-BUILTIN_LIB=\"./src/__builtins.ll\"
+BUILTIN_LIB=__builtins.ll
+KBUILTIN_LIB=\"./src/$(BUILTIN_LIB)\"
 
 # options
 WARNING_OPTIONS=-Wall -Wno-deprecated-register -Wno-unused-function -Wno-unneeded-internal-declaration -Wno-switch
 CXXFLAGS=-std=c++11 \
 		 `$(LLVMCONFIG) --cxxflags` \
 		 $(WARNING_OPTIONS) \
-		 -DBUILTIN_LIB=$(BUILTIN_LIB)
+		 -DBUILTIN_LIB=$(KBUILTIN_LIB)
 DEBUG_FLAGS=-g -O0 -ggdb -DLEML_DEBUG=1 #-DYYDEBUG=1 
 LDFLAGS=`$(LLVMCONFIG) --ldflags` -lncurses -lz
 LIBS=-ldl -lpthread `$(LLVMCONFIG) --libs all`
@@ -34,7 +35,7 @@ YACCFILES=parser.hh
 include ../Makefile.in
 
 .PHONY: all
-all: $(PROGRAM)
+all: $(PROGRAM) $(BUILTIN_LIB)
 
 .PHONY: debug
 debug: CXXFLAGS += $(DEBUG_FLAGS)

@@ -6,6 +6,7 @@
 # generated
 *.dSYM
 *.ll
+*.o
 
 *.s
 leml
