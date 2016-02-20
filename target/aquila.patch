@@ -1,0 +1,4378 @@
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/CMakeLists.txt llvm-3.6.2.src/CMakeLists.txt
+*** llvm-3.6.2.src.org/CMakeLists.txt	2016-02-17 03:03:53.000000000 +0900
+--- llvm-3.6.2.src/CMakeLists.txt	2016-02-18 23:57:44.000000000 +0900
+***************
+*** 160,165 ****
+--- 160,166 ----
+    CppBackend
+    Hexagon
+    Mips
++   Aquila
+    MSP430
+    NVPTX
+    PowerPC
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/cmake/config-ix.cmake llvm-3.6.2.src/cmake/config-ix.cmake
+*** llvm-3.6.2.src.org/cmake/config-ix.cmake	2016-02-17 03:03:53.000000000 +0900
+--- llvm-3.6.2.src/cmake/config-ix.cmake	2016-02-18 23:57:44.000000000 +0900
+***************
+*** 361,366 ****
+--- 361,368 ----
+    set(LLVM_NATIVE_ARCH ARM)
+  elseif (LLVM_NATIVE_ARCH MATCHES "mips")
+    set(LLVM_NATIVE_ARCH Mips)
++ elseif (LLVM_NATIVE_ARCH MATCHES "aquila")
++   set(LLVM_NATIVE_ARCH Aquila)
+  elseif (LLVM_NATIVE_ARCH MATCHES "xcore")
+    set(LLVM_NATIVE_ARCH XCore)
+  elseif (LLVM_NATIVE_ARCH MATCHES "msp430")
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/include/llvm/ADT/Triple.h llvm-3.6.2.src/include/llvm/ADT/Triple.h
+*** llvm-3.6.2.src.org/include/llvm/ADT/Triple.h	2016-02-17 03:03:53.000000000 +0900
+--- llvm-3.6.2.src/include/llvm/ADT/Triple.h	2016-02-19 02:50:41.000000000 +0900
+***************
+*** 55,60 ****
+--- 55,61 ----
+      mipsel,     // MIPSEL: mipsel, mipsallegrexel
+      mips64,     // MIPS64: mips64
+      mips64el,   // MIPS64EL: mips64el
++     aquila,       // AQUILA: aquila
+      msp430,     // MSP430: msp430
+      ppc,        // PPC: powerpc
+      ppc64,      // PPC64: powerpc64, ppu
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/include/llvm/MC/MCExpr.h llvm-3.6.2.src/include/llvm/MC/MCExpr.h
+*** llvm-3.6.2.src.org/include/llvm/MC/MCExpr.h	2016-02-17 03:03:53.000000000 +0900
+--- llvm-3.6.2.src/include/llvm/MC/MCExpr.h	2016-02-18 23:57:44.000000000 +0900
+***************
+*** 280,285 ****
+--- 280,310 ----
+      VK_Mips_PCREL_HI16,
+      VK_Mips_PCREL_LO16,
+  
++     VK_Aquila_GPREL,
++     VK_Aquila_GOT_CALL,
++     VK_Aquila_GOT16,
++     VK_Aquila_GOT,
++     VK_Aquila_ABS_HI,
++     VK_Aquila_ABS_LO,
++     VK_Aquila_TLSGD,
++     VK_Aquila_TLSLDM,
++     VK_Aquila_DTP_HI,
++     VK_Aquila_DTP_LO,
++     VK_Aquila_GOTTPREL,
++     VK_Aquila_TP_HI,
++     VK_Aquila_TP_LO,
++     VK_Aquila_GPOFF_HI,
++     VK_Aquila_GPOFF_LO,
++     VK_Aquila_GOT_DISP,
++     VK_Aquila_GOT_PAGE,
++     VK_Aquila_GOT_OFST,
++     VK_Aquila_HIGHER,
++     VK_Aquila_HIGHEST,
++     VK_Aquila_GOT_HI16,
++     VK_Aquila_GOT_LO16,
++     VK_Aquila_CALL_HI16,
++     VK_Aquila_CALL_LO16,
++ 
+      VK_COFF_IMGREL32 // symbol@imgrel (image-relative)
+    };
+  
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/include/llvm/Object/ELFObjectFile.h llvm-3.6.2.src/include/llvm/Object/ELFObjectFile.h
+*** llvm-3.6.2.src.org/include/llvm/Object/ELFObjectFile.h	2016-02-17 03:03:53.000000000 +0900
+--- llvm-3.6.2.src/include/llvm/Object/ELFObjectFile.h	2016-02-19 02:51:06.000000000 +0900
+***************
+*** 843,848 ****
+--- 843,850 ----
+        return "ELF32-hexagon";
+      case ELF::EM_MIPS:
+        return "ELF32-mips";
++     case ELF::EM_AQUILA:
++       return "ELF32-aquila";
+      case ELF::EM_PPC:
+        return "ELF32-ppc";
+      case ELF::EM_SPARC:
+***************
+*** 899,904 ****
+--- 901,913 ----
+      default:
+        report_fatal_error("Invalid ELFCLASS!");
+      }
++   case ELF::EM_AQUILA:
++     switch (EF.getHeader()->e_ident[ELF::EI_CLASS]) {
++     case ELF::ELFCLASS32:
++       return Triple::aquila;
++     default:
++       report_fatal_error("Invalid ELFCLASS!");
++     }
+    case ELF::EM_PPC:
+      return Triple::ppc;
+    case ELF::EM_PPC64:
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/include/llvm/Support/ELF.h llvm-3.6.2.src/include/llvm/Support/ELF.h
+*** llvm-3.6.2.src.org/include/llvm/Support/ELF.h	2016-02-17 03:03:53.000000000 +0900
+--- llvm-3.6.2.src/include/llvm/Support/ELF.h	2016-02-18 23:57:44.000000000 +0900
+***************
+*** 308,314 ****
+    EM_COGE          = 216, // Cognitive Smart Memory Processor
+    EM_COOL          = 217, // iCelero CoolEngine
+    EM_NORC          = 218, // Nanoradio Optimized RISC
+!   EM_CSR_KALIMBA   = 219  // CSR Kalimba architecture family
+  };
+  
+  // Object file classes.
+--- 308,316 ----
+    EM_COGE          = 216, // Cognitive Smart Memory Processor
+    EM_COOL          = 217, // iCelero CoolEngine
+    EM_NORC          = 218, // Nanoradio Optimized RISC
+!   EM_CSR_KALIMBA   = 219, // CSR Kalimba architecture family
+! 
+!   EM_AQUILA          = 999 // Document LLVM Backend Tutorial Aquila
+  };
+  
+  // Object file classes.
+***************
+*** 466,471 ****
+--- 468,478 ----
+  #include "ELFRelocs/Mips.def"
+  };
+  
++ // ELF Relocation types for Mips
++ enum {
++ #include "ELFRelocs/Aquila.def"
++ };
++ 
+  // Special values for the st_other field in the symbol table entry for MIPS.
+  enum {
+    STO_MIPS_OPTIONAL        = 0x04,  // Symbol whose definition is optional
+***************
+*** 475,480 ****
+--- 482,495 ----
+    STO_MIPS_MIPS16          = 0xf0   // MIPS Specific ISA for Mips16
+  };
+  
++ // Aquila Specific e_flags
++ enum {
++   EF_AQUILA_NOREORDER         = 0x00000001, // Don$B!G(Bt reorder instructions
++   EF_AQUILA_PIC               = 0x00000002, // Position independent code
++   EF_AQUILA_ARCH_32           = 0x50000000, // AQUILA32 instruction set per linux not elf.h
++   EF_AQUILA_ARCH              = 0xf0000000 // Mask for applying EF_AQUILA_ARCH_ variant
++ };
++ 
+  // Hexagon Specific e_flags
+  // Release 5 ABI
+  enum {
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/include/llvm/Support/ELFRelocs/Aquila.def llvm-3.6.2.src/include/llvm/Support/ELFRelocs/Aquila.def
+*** llvm-3.6.2.src.org/include/llvm/Support/ELFRelocs/Aquila.def	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/include/llvm/Support/ELFRelocs/Aquila.def	2016-02-18 23:57:44.000000000 +0900
+***************
+*** 0 ****
+--- 1,28 ----
++ #ifndef ELF_RELOC
++ #error "ELF_RELOC must be defined"
++ #endif
++ 
++ ELF_RELOC(R_AQUILA_NONE,                0)
++ ELF_RELOC(R_AQUILA_32,                  2)
++ ELF_RELOC(R_AQUILA_HI16,                5)
++ ELF_RELOC(R_AQUILA_LO16,                6)
++ ELF_RELOC(R_AQUILA_GPREL16,             7)
++ ELF_RELOC(R_AQUILA_LITERAL,             8)
++ ELF_RELOC(R_AQUILA_GOT16,               9)
++ ELF_RELOC(R_AQUILA_PC16,               10)
++ ELF_RELOC(R_AQUILA_CALL16,             11)
++ ELF_RELOC(R_AQUILA_GPREL32,            12)
++ ELF_RELOC(R_AQUILA_PC24,               13)
++ ELF_RELOC(R_AQUILA_GOT_HI16,           22)
++ ELF_RELOC(R_AQUILA_GOT_LO16,           23)
++ ELF_RELOC(R_AQUILA_RELGOT,             36)
++ ELF_RELOC(R_AQUILA_TLS_GD,             42)
++ ELF_RELOC(R_AQUILA_TLS_LDM,            43)
++ ELF_RELOC(R_AQUILA_TLS_DTP_HI16,       44)
++ ELF_RELOC(R_AQUILA_TLS_DTP_LO16,       45)
++ ELF_RELOC(R_AQUILA_TLS_GOTTPREL,       46)
++ ELF_RELOC(R_AQUILA_TLS_TPREL32,        47)
++ ELF_RELOC(R_AQUILA_TLS_TP_HI16,        49)
++ ELF_RELOC(R_AQUILA_TLS_TP_LO16,        50)
++ ELF_RELOC(R_AQUILA_GLOB_DAT,           51)
++ ELF_RELOC(R_AQUILA_JUMP_SLOT,          127)
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/MC/MCELFStreamer.cpp llvm-3.6.2.src/lib/MC/MCELFStreamer.cpp
+*** llvm-3.6.2.src.org/lib/MC/MCELFStreamer.cpp	2016-02-17 03:03:54.000000000 +0900
+--- llvm-3.6.2.src/lib/MC/MCELFStreamer.cpp	2016-02-18 23:57:44.000000000 +0900
+***************
+*** 358,363 ****
+--- 358,367 ----
+      case MCSymbolRefExpr::VK_Mips_GOTTPREL:
+      case MCSymbolRefExpr::VK_Mips_TPREL_HI:
+      case MCSymbolRefExpr::VK_Mips_TPREL_LO:
++     case MCSymbolRefExpr::VK_Aquila_TLSGD:
++     case MCSymbolRefExpr::VK_Aquila_GOTTPREL:
++     case MCSymbolRefExpr::VK_Aquila_TP_HI:
++     case MCSymbolRefExpr::VK_Aquila_TP_LO:
+      case MCSymbolRefExpr::VK_PPC_DTPMOD:
+      case MCSymbolRefExpr::VK_PPC_TPREL:
+      case MCSymbolRefExpr::VK_PPC_TPREL_LO:
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/MC/MCExpr.cpp llvm-3.6.2.src/lib/MC/MCExpr.cpp
+*** llvm-3.6.2.src.org/lib/MC/MCExpr.cpp	2016-02-17 03:03:54.000000000 +0900
+--- llvm-3.6.2.src/lib/MC/MCExpr.cpp	2016-02-18 23:57:44.000000000 +0900
+***************
+*** 281,286 ****
+--- 281,311 ----
+    case VK_Mips_PCREL_HI16: return "PCREL_HI16";
+    case VK_Mips_PCREL_LO16: return "PCREL_LO16";
+    case VK_COFF_IMGREL32: return "IMGREL";
++ 
++   case VK_Aquila_GPREL: return "GPREL";
++   case VK_Aquila_GOT_CALL: return "GOT_CALL";
++   case VK_Aquila_GOT16: return "GOT16";
++   case VK_Aquila_GOT: return "GOT";
++   case VK_Aquila_ABS_HI: return "ABS_HI";
++   case VK_Aquila_ABS_LO: return "ABS_LO";
++   case VK_Aquila_TLSGD: return "TLSGD";
++   case VK_Aquila_TLSLDM: return "TLSLDM";
++   case VK_Aquila_DTP_HI: return "DTP_HI";
++   case VK_Aquila_DTP_LO: return "DTP_LO";
++   case VK_Aquila_GOTTPREL: return "GOTTPREL";
++   case VK_Aquila_TP_HI: return "TP_HI";
++   case VK_Aquila_TP_LO: return "TP_LO";
++   case VK_Aquila_GPOFF_HI: return "GPOFF_HI";
++   case VK_Aquila_GPOFF_LO: return "GPOFF_LO";
++   case VK_Aquila_GOT_DISP: return "GOT_DISP";
++   case VK_Aquila_GOT_PAGE: return "GOT_PAGE";
++   case VK_Aquila_GOT_OFST: return "GOT_OFST";
++   case VK_Aquila_HIGHER: return "HIGHER";
++   case VK_Aquila_HIGHEST: return "HIGHEST";
++   case VK_Aquila_GOT_HI16: return "GOT_HI16";
++   case VK_Aquila_GOT_LO16: return "GOT_LO16";
++   case VK_Aquila_CALL_HI16: return "CALL_HI16";
++   case VK_Aquila_CALL_LO16: return "CALL_LO16";
+    }
+    llvm_unreachable("Invalid variant kind");
+  }
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Object/ELF.cpp llvm-3.6.2.src/lib/Object/ELF.cpp
+*** llvm-3.6.2.src.org/lib/Object/ELF.cpp	2016-02-17 03:03:54.000000000 +0900
+--- llvm-3.6.2.src/lib/Object/ELF.cpp	2016-02-18 23:57:44.000000000 +0900
+***************
+*** 39,44 ****
+--- 39,51 ----
+        break;
+      }
+      break;
++   case ELF::EM_AQUILA:
++     switch (Type) {
++ #include "llvm/Support/ELFRelocs/Aquila.def"
++     default:
++       break;
++     }
++     break;
+    case ELF::EM_AARCH64:
+      switch (Type) {
+  #include "llvm/Support/ELFRelocs/AArch64.def"
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Support/Triple.cpp llvm-3.6.2.src/lib/Support/Triple.cpp
+*** llvm-3.6.2.src.org/lib/Support/Triple.cpp	2016-02-17 03:03:54.000000000 +0900
+--- llvm-3.6.2.src/lib/Support/Triple.cpp	2016-02-19 02:51:41.000000000 +0900
+***************
+*** 28,33 ****
+--- 28,34 ----
+    case mipsel:      return "mipsel";
+    case mips64:      return "mips64";
+    case mips64el:    return "mips64el";
++   case aquila:      return "aquila";
+    case msp430:      return "msp430";
+    case ppc64:       return "powerpc64";
+    case ppc64le:     return "powerpc64le";
+***************
+*** 81,86 ****
+--- 82,89 ----
+    case mips64:
+    case mips64el:    return "mips";
+  
++   case aquila:      return "aquila";
++ 
+    case hexagon:     return "hexagon";
+  
+    case amdgcn:
+***************
+*** 195,200 ****
+--- 198,204 ----
+      .Case("mipsel", mipsel)
+      .Case("mips64", mips64)
+      .Case("mips64el", mips64el)
++     .Case("aquila", aquila)
+      .Case("msp430", msp430)
+      .Case("ppc64", ppc64)
+      .Case("ppc32", ppc)
+***************
+*** 299,304 ****
+--- 303,309 ----
+      .Cases("mipsel", "mipsallegrexel", Triple::mipsel)
+      .Cases("mips64", "mips64eb", Triple::mips64)
+      .Case("mips64el", Triple::mips64el)
++     .Cases("aquila", "aquilaeb", "aquilaallegrex", Triple::aquila)
+      .Case("r600", Triple::r600)
+      .Case("amdgcn", Triple::amdgcn)
+      .Case("hexagon", Triple::hexagon)
+***************
+*** 865,870 ****
+--- 870,876 ----
+    case llvm::Triple::le32:
+    case llvm::Triple::mips:
+    case llvm::Triple::mipsel:
++   case llvm::Triple::aquila:
+    case llvm::Triple::nvptx:
+    case llvm::Triple::ppc:
+    case llvm::Triple::r600:
+***************
+*** 935,940 ****
+--- 941,947 ----
+    case Triple::le32:
+    case Triple::mips:
+    case Triple::mipsel:
++   case Triple::aquila:
+    case Triple::nvptx:
+    case Triple::ppc:
+    case Triple::r600:
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/Aquila.h llvm-3.6.2.src/lib/Target/Aquila/Aquila.h
+*** llvm-3.6.2.src.org/lib/Target/Aquila/Aquila.h	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/Aquila.h	2016-02-20 07:54:29.000000000 +0900
+***************
+*** 0 ****
+--- 1,28 ----
++ //===-- Aquila.h - Top-level interface for Aquila representation ----*- C++ -*-===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ //
++ // This file contains the entry points for global functions defined in
++ // the LLVM Aquila back-end.
++ //
++ //===----------------------------------------------------------------------===//
++ 
++ #ifndef LLVM_LIB_TARGET_AQUILA_AQUILA_H
++ #define LLVM_LIB_TARGET_AQUILA_AQUILA_H
++ 
++ #include "MCTargetDesc/AquilaMCTargetDesc.h"
++ #include "llvm/Target/TargetMachine.h"
++ 
++ namespace llvm {
++   class AquilaTargetMachine;
++   class FunctionPass;
++ 
++ } // end namespace llvm;
++ 
++ #endif
++ 
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/Aquila.td llvm-3.6.2.src/lib/Target/Aquila/Aquila.td
+*** llvm-3.6.2.src.org/lib/Target/Aquila/Aquila.td	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/Aquila.td	2016-02-20 07:54:29.000000000 +0900
+***************
+*** 0 ****
+--- 1,42 ----
++ //===-- Aquila.td - Describe the Aquila Target Machine ---------*- tablegen -*-===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ 
++ //===----------------------------------------------------------------------===//
++ // Target-independent interfaces
++ //===----------------------------------------------------------------------===//
++ 
++ include "llvm/Target/Target.td"
++ 
++ //===----------------------------------------------------------------------===//
++ // Target-dependent interfaces
++ //===----------------------------------------------------------------------===//
++ 
++ include "AquilaRegisterInfo.td"
++ 
++ //===----------------------------------------------------------------------===//
++ // Calling Conv, Instruction Descriptions
++ //===----------------------------------------------------------------------===//
++ 
++ include "AquilaSchedule.td"
++ include "AquilaInstrInfo.td"
++ include "AquilaCallingConv.td"
++ 
++ def AquilaInstrInfo : InstrInfo;
++ 
++ def : Processor<"aquila", AquilaGenericItineraries, []>;
++ 
++ def AquilaAsmWriter : AsmWriter {
++   string AsmWriterClassName = "InstPrinter";
++   bit isMCAsmWriter = 1;
++ }
++ 
++ def Aquila : Target {
++   let InstructionSet = AquilaInstrInfo;
++   let AssemblyWriters = [AquilaAsmWriter];
++ }
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaAsmPrinter.cpp llvm-3.6.2.src/lib/Target/Aquila/AquilaAsmPrinter.cpp
+*** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaAsmPrinter.cpp	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaAsmPrinter.cpp	2016-02-20 18:52:08.000000000 +0900
+***************
+*** 0 ****
+--- 1,51 ----
++ //===-- AquilaAsmPrinter.cpp - Aquila LLVM assembly writer ----------------===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ //
++ // This file contains a printer that converts from our internal representation
++ // of machine-dependent LLVM code to the Aquila assembly language.
++ //
++ //===----------------------------------------------------------------------===//
++ 
++ #define DEBUG_TYPE "asm-printer"
++ #include "Aquila.h"
++ #include "AquilaInstrInfo.h"
++ #include "AquilaMCInstLower.h"
++ #include "AquilaTargetMachine.h"
++ #include "AquilaAsmPrinter.h"
++ #include "InstPrinter/AquilaInstPrinter.h"
++ #include "llvm/IR/Constants.h"
++ #include "llvm/IR/DerivedTypes.h"
++ #include "llvm/IR/Module.h"
++ #include "llvm/CodeGen/AsmPrinter.h"
++ #include "llvm/CodeGen/MachineModuleInfo.h"
++ #include "llvm/CodeGen/MachineFunctionPass.h"
++ #include "llvm/CodeGen/MachineConstantPool.h"
++ #include "llvm/CodeGen/MachineInstr.h"
++ #include "llvm/MC/MCAsmInfo.h"
++ #include "llvm/MC/MCInst.h"
++ #include "llvm/MC/MCStreamer.h"
++ #include "llvm/MC/MCSymbol.h"
++ #include "llvm/IR/Mangler.h"
++ #include "llvm/Support/TargetRegistry.h"
++ using namespace llvm;
++ 
++ void AquilaAsmPrinter::
++ EmitInstruction(const MachineInstr *MI) {
++   DEBUG(dbgs() << ">> AquilaAsmPinter::EmitInstruction <<\n");
++   DEBUG(MI->dump());
++   AquilaMCInstLower MCInstLowering(OutContext, *Mang, *this);
++   MCInst TmpInst;
++   MCInstLowering.Lower(MI, TmpInst);
++   OutStreamer.EmitInstruction(TmpInst, getSubtargetInfo());
++ }
++ 
++ // Force static initialization.
++ extern "C" void LLVMInitializeAquilaAsmPrinter() {
++   RegisterAsmPrinter<AquilaAsmPrinter> X(TheAquilaTarget);
++ }
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaAsmPrinter.h llvm-3.6.2.src/lib/Target/Aquila/AquilaAsmPrinter.h
+*** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaAsmPrinter.h	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaAsmPrinter.h	2016-02-20 07:54:29.000000000 +0900
+***************
+*** 0 ****
+--- 1,37 ----
++ //===-- AquilaAsmPrinter.h - Aquila LLVM assembly writer ----------------===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ //
++ // This file contains a printer that converts from our internal representation
++ // of machine-dependent LLVM code to the Aquila assembly language.
++ //
++ //===----------------------------------------------------------------------===//
++ 
++ #ifndef LLVM_LIB_TARGET_AQUILA_AQUILAASMPRINTER_H
++ #define LLVM_LIB_TARGET_AQUILA_AQUILAASMPRINTER_H
++ 
++ #include "llvm/CodeGen/AsmPrinter.h"
++ #include "llvm/Support/Compiler.h"
++ #include "llvm/Target/TargetMachine.h"
++ 
++ namespace llvm {
++ class AquilaAsmPrinter : public AsmPrinter {
++  public:
++   AquilaAsmPrinter(TargetMachine &TM, MCStreamer &Streamer)
++       : AsmPrinter(TM, Streamer) {}
++ 
++   virtual const char *getPassName() const {
++     return "Aquila Assembly Printer";
++   }
++ 
++   // should overwrite functions
++   void EmitInstruction(const MachineInstr *MI) /*override*/;
++ };
++ } // end of anonymous namespace
++ 
++ #endif
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaCCState.cpp llvm-3.6.2.src/lib/Target/Aquila/AquilaCCState.cpp
+*** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaCCState.cpp	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaCCState.cpp	2016-02-21 00:01:18.000000000 +0900
+***************
+*** 0 ****
+--- 1,142 ----
++ //===---- AquilaCCState.cpp - CCState with Aquila specific extensions ---------===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ 
++ #include "AquilaCCState.h"
++ #include "AquilaSubtarget.h"
++ #include "llvm/IR/Module.h"
++ 
++ using namespace llvm;
++ 
++ /// This function returns true if CallSym is a long double emulation routine.
++ static bool isF128SoftLibCall(const char *CallSym) {
++   const char *const LibCalls[] = {
++       "__addtf3",      "__divtf3",     "__eqtf2",       "__extenddftf2",
++       "__extendsftf2", "__fixtfdi",    "__fixtfsi",     "__fixtfti",
++       "__fixunstfdi",  "__fixunstfsi", "__fixunstfti",  "__floatditf",
++       "__floatsitf",   "__floattitf",  "__floatunditf", "__floatunsitf",
++       "__floatuntitf", "__getf2",      "__gttf2",       "__letf2",
++       "__lttf2",       "__multf3",     "__netf2",       "__powitf2",
++       "__subtf3",      "__trunctfdf2", "__trunctfsf2",  "__unordtf2",
++       "ceill",         "copysignl",    "cosl",          "exp2l",
++       "expl",          "floorl",       "fmal",          "fmodl",
++       "log10l",        "log2l",        "logl",          "nearbyintl",
++       "powl",          "rintl",        "sinl",          "sqrtl",
++       "truncl"};
++ 
++   const char *const *End = LibCalls + array_lengthof(LibCalls);
++ 
++   // Check that LibCalls is sorted alphabetically.
++   AquilaTargetLowering::LTStr Comp;
++ 
++ #ifndef NDEBUG
++   for (const char *const *I = LibCalls; I < End - 1; ++I)
++     assert(Comp(*I, *(I + 1)));
++ #endif
++ 
++   return std::binary_search(LibCalls, End, CallSym, Comp);
++ }
++ 
++ /// This function returns true if Ty is fp128, {f128} or i128 which was
++ /// originally a fp128.
++ static bool originalTypeIsF128(const Type *Ty, const SDNode *CallNode) {
++   if (Ty->isFP128Ty())
++     return true;
++ 
++   if (Ty->isStructTy() && Ty->getStructNumElements() == 1 &&
++       Ty->getStructElementType(0)->isFP128Ty())
++     return true;
++ 
++   const ExternalSymbolSDNode *ES =
++       dyn_cast_or_null<const ExternalSymbolSDNode>(CallNode);
++ 
++   // If the Ty is i128 and the function being called is a long double emulation
++   // routine, then the original type is f128.
++   return (ES && Ty->isIntegerTy(128) && isF128SoftLibCall(ES->getSymbol()));
++ }
++ 
++ AquilaCCState::SpecialCallingConvType
++ AquilaCCState::getSpecialCallingConvForCallee(const SDNode *Callee,
++                                             const AquilaSubtarget &Subtarget) {
++   AquilaCCState::SpecialCallingConvType SpecialCallingConv = NoSpecialCallingConv;
++ //  if (Subtarget.inAquila16HardFloat()) {
++ //    if (const GlobalAddressSDNode *G =
++ //            dyn_cast<const GlobalAddressSDNode>(Callee)) {
++ //      llvm::StringRef Sym = G->getGlobal()->getName();
++ //      Function *F = G->getGlobal()->getParent()->getFunction(Sym);
++ //      if (F && F->hasFnAttribute("__Aquila16RetHelper")) {
++ //        SpecialCallingConv = Aquila16RetHelperConv;
++ //      }
++ //    }
++ //  }
++   return SpecialCallingConv;
++ }
++ 
++ void AquilaCCState::PreAnalyzeCallResultForF128(
++     const SmallVectorImpl<ISD::InputArg> &Ins,
++     const TargetLowering::CallLoweringInfo &CLI) {
++   for (unsigned i = 0; i < Ins.size(); ++i) {
++     OriginalArgWasF128.push_back(
++         originalTypeIsF128(CLI.RetTy, CLI.Callee.getNode()));
++     OriginalArgWasFloat.push_back(CLI.RetTy->isFloatingPointTy());
++   }
++ }
++ 
++ /// Identify lowered values that originated from f128 arguments and record
++ /// this for use by RetCC_AquilaN.
++ void AquilaCCState::PreAnalyzeReturnForF128(
++     const SmallVectorImpl<ISD::OutputArg> &Outs) {
++   const MachineFunction &MF = getMachineFunction();
++   for (unsigned i = 0; i < Outs.size(); ++i) {
++     OriginalArgWasF128.push_back(
++         originalTypeIsF128(MF.getFunction()->getReturnType(), nullptr));
++     OriginalArgWasFloat.push_back(
++         MF.getFunction()->getReturnType()->isFloatingPointTy());
++   }
++ }
++ 
++ /// Identify lowered values that originated from f128 arguments and record
++ /// this.
++ void AquilaCCState::PreAnalyzeCallOperands(
++     const SmallVectorImpl<ISD::OutputArg> &Outs,
++     std::vector<TargetLowering::ArgListEntry> &FuncArgs,
++     const SDNode *CallNode) {
++   for (unsigned i = 0; i < Outs.size(); ++i) {
++     OriginalArgWasF128.push_back(
++         originalTypeIsF128(FuncArgs[Outs[i].OrigArgIndex].Ty, CallNode));
++     OriginalArgWasFloat.push_back(
++         FuncArgs[Outs[i].OrigArgIndex].Ty->isFloatingPointTy());
++     CallOperandIsFixed.push_back(Outs[i].IsFixed);
++   }
++ }
++ 
++ /// Identify lowered values that originated from f128 arguments and record
++ /// this.
++ void AquilaCCState::PreAnalyzeFormalArgumentsForF128(
++     const SmallVectorImpl<ISD::InputArg> &Ins) {
++   const MachineFunction &MF = getMachineFunction();
++   for (unsigned i = 0; i < Ins.size(); ++i) {
++     Function::const_arg_iterator FuncArg = MF.getFunction()->arg_begin();
++ 
++     // SRet arguments cannot originate from f128 or {f128} returns so we just
++     // push false. We have to handle this specially since SRet arguments
++     // aren't mapped to an original argument.
++     if (Ins[i].Flags.isSRet()) {
++       OriginalArgWasF128.push_back(false);
++       OriginalArgWasFloat.push_back(false);
++       continue;
++     }
++ 
++     assert(Ins[i].getOrigArgIndex() < MF.getFunction()->arg_size());
++     std::advance(FuncArg, Ins[i].getOrigArgIndex());
++ 
++     OriginalArgWasF128.push_back(
++         originalTypeIsF128(FuncArg->getType(), nullptr));
++     OriginalArgWasFloat.push_back(FuncArg->getType()->isFloatingPointTy());
++   }
++ }
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaCCState.h llvm-3.6.2.src/lib/Target/Aquila/AquilaCCState.h
+*** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaCCState.h	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaCCState.h	2016-02-20 23:31:05.000000000 +0900
+***************
+*** 0 ****
+--- 1,136 ----
++ //===---- AquilaCCState.h - CCState with Aquila specific extensions -----------===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ 
++ #ifndef AQUILACCSTATE_H
++ #define AQUILACCSTATE_H
++ 
++ #include "AquilaISelLowering.h"
++ #include "llvm/ADT/SmallVector.h"
++ #include "llvm/CodeGen/CallingConvLower.h"
++ 
++ namespace llvm {
++ class SDNode;
++ class AquilaSubtarget;
++ 
++ class AquilaCCState : public CCState {
++ public:
++   enum SpecialCallingConvType { Aquila16RetHelperConv, NoSpecialCallingConv };
++ 
++   /// Determine the SpecialCallingConvType for the given callee
++   static SpecialCallingConvType
++   getSpecialCallingConvForCallee(const SDNode *Callee,
++                                  const AquilaSubtarget &Subtarget);
++ 
++ private:
++   /// Identify lowered values that originated from f128 arguments and record
++   /// this for use by RetCC_AquilaN.
++   void PreAnalyzeCallResultForF128(const SmallVectorImpl<ISD::InputArg> &Ins,
++                                    const TargetLowering::CallLoweringInfo &CLI);
++ 
++   /// Identify lowered values that originated from f128 arguments and record
++   /// this for use by RetCC_AquilaN.
++   void PreAnalyzeReturnForF128(const SmallVectorImpl<ISD::OutputArg> &Outs);
++ 
++   /// Identify lowered values that originated from f128 arguments and record
++   /// this.
++   void
++   PreAnalyzeCallOperands(const SmallVectorImpl<ISD::OutputArg> &Outs,
++                          std::vector<TargetLowering::ArgListEntry> &FuncArgs,
++                          const SDNode *CallNode);
++ 
++   /// Identify lowered values that originated from f128 arguments and record
++   /// this.
++   void
++   PreAnalyzeFormalArgumentsForF128(const SmallVectorImpl<ISD::InputArg> &Ins);
++ 
++   /// Records whether the value has been lowered from an f128.
++   SmallVector<bool, 4> OriginalArgWasF128;
++ 
++   /// Records whether the value has been lowered from float.
++   SmallVector<bool, 4> OriginalArgWasFloat;
++ 
++   /// Records whether the value was a fixed argument.
++   /// See ISD::OutputArg::IsFixed,
++   SmallVector<bool, 4> CallOperandIsFixed;
++ 
++   // Used to handle AQUILA16-specific calling convention tweaks.
++   // FIXME: This should probably be a fully fledged calling convention.
++   SpecialCallingConvType SpecialCallingConv;
++ 
++ public:
++   AquilaCCState(CallingConv::ID CC, bool isVarArg, MachineFunction &MF,
++               SmallVectorImpl<CCValAssign> &locs, LLVMContext &C,
++               SpecialCallingConvType SpecialCC = NoSpecialCallingConv)
++       : CCState(CC, isVarArg, MF, locs, C), SpecialCallingConv(SpecialCC) {}
++ 
++   void
++   AnalyzeCallOperands(const SmallVectorImpl<ISD::OutputArg> &Outs,
++                       CCAssignFn Fn,
++                       std::vector<TargetLowering::ArgListEntry> &FuncArgs,
++                       const SDNode *CallNode) {
++     PreAnalyzeCallOperands(Outs, FuncArgs, CallNode);
++     CCState::AnalyzeCallOperands(Outs, Fn);
++     OriginalArgWasF128.clear();
++     OriginalArgWasFloat.clear();
++     CallOperandIsFixed.clear();
++   }
++ 
++   // The AnalyzeCallOperands in the base class is not usable since we must
++   // provide a means of accessing ArgListEntry::IsFixed. Delete them from this
++   // class. This doesn't stop them being used via the base class though.
++   void AnalyzeCallOperands(const SmallVectorImpl<ISD::OutputArg> &Outs,
++                            CCAssignFn Fn) LLVM_DELETED_FUNCTION;
++   void AnalyzeCallOperands(const SmallVectorImpl<MVT> &Outs,
++                            SmallVectorImpl<ISD::ArgFlagsTy> &Flags,
++                            CCAssignFn Fn) LLVM_DELETED_FUNCTION;
++ 
++   void AnalyzeFormalArguments(const SmallVectorImpl<ISD::InputArg> &Ins,
++                               CCAssignFn Fn) {
++     PreAnalyzeFormalArgumentsForF128(Ins);
++     CCState::AnalyzeFormalArguments(Ins, Fn);
++     OriginalArgWasFloat.clear();
++     OriginalArgWasF128.clear();
++   }
++ 
++   void AnalyzeCallResult(const SmallVectorImpl<ISD::InputArg> &Ins,
++                          CCAssignFn Fn,
++                          const TargetLowering::CallLoweringInfo &CLI) {
++     PreAnalyzeCallResultForF128(Ins, CLI);
++     CCState::AnalyzeCallResult(Ins, Fn);
++     OriginalArgWasFloat.clear();
++     OriginalArgWasF128.clear();
++   }
++ 
++   void AnalyzeReturn(const SmallVectorImpl<ISD::OutputArg> &Outs,
++                      CCAssignFn Fn) {
++     PreAnalyzeReturnForF128(Outs);
++     CCState::AnalyzeReturn(Outs, Fn);
++     OriginalArgWasFloat.clear();
++     OriginalArgWasF128.clear();
++   }
++ 
++   bool CheckReturn(const SmallVectorImpl<ISD::OutputArg> &ArgsFlags,
++                    CCAssignFn Fn) {
++     PreAnalyzeReturnForF128(ArgsFlags);
++     bool Return = CCState::CheckReturn(ArgsFlags, Fn);
++     OriginalArgWasFloat.clear();
++     OriginalArgWasF128.clear();
++     return Return;
++   }
++ 
++   bool WasOriginalArgF128(unsigned ValNo) { return OriginalArgWasF128[ValNo]; }
++   bool WasOriginalArgFloat(unsigned ValNo) {
++       return OriginalArgWasFloat[ValNo];
++   }
++   bool IsCallOperandFixed(unsigned ValNo) { return CallOperandIsFixed[ValNo]; }
++   SpecialCallingConvType getSpecialCallingConv() { return SpecialCallingConv; }
++ };
++ }
++ 
++ #endif
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaCallingConv.td llvm-3.6.2.src/lib/Target/Aquila/AquilaCallingConv.td
+*** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaCallingConv.td	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaCallingConv.td	2016-02-20 07:54:29.000000000 +0900
+***************
+*** 0 ****
+--- 1,30 ----
++ //===-- AquilaCallingConv.td - Calling Conventions for Aquila --*- tablegen -*-===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ // This describes the calling conventions for Aquila architecture.
++ //===----------------------------------------------------------------------===//
++ 
++ // Aquila Calling Convention
++ def CC_Aquila : CallingConv<[
++   // Promote i8/i16 arguments to i32
++   CCIfType<[i1, i8, i16], CCPromoteToType<i32>>,
++ 
++   // Integer values get stored in argument registers
++   CCIfType<[i32], CCAssignToReg<[R8, R9, R10, R11, R12, R13]>>,
++ 
++   // Integer values remaining get stored in stack slots that are 4-bytes in
++   // size and 4-bytes aligned
++   CCIfType<[i32], CCAssignToStack<4, 4>>
++ ]>;
++ 
++ def RetCC_Aquila : CallingConv<[
++   // i32 are returned in R3
++   CCIfType<[i32], CCAssignToReg<[R3]>>
++ ]>;
++ 
++ def CSR_SingleFloatOnly : CalleeSavedRegs<(add (sequence "R%u", 31, 23), R4)>;
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaFrameLowering.cpp llvm-3.6.2.src/lib/Target/Aquila/AquilaFrameLowering.cpp
+*** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaFrameLowering.cpp	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaFrameLowering.cpp	2016-02-20 07:54:29.000000000 +0900
+***************
+*** 0 ****
+--- 1,87 ----
++ //===-- AquilaFrameLowering.cpp - Aquila Frame Information --------------------===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ //
++ // This file contains the Aquila implementation of TargetFrameLowering class.
++ //
++ //===----------------------------------------------------------------------===//
++ 
++ #include "AquilaFrameLowering.h"
++ #include "AquilaInstrInfo.h"
++ #include "AquilaMachineFunction.h"
++ #include "AquilaTargetMachine.h"
++ #include "AquilaRegisterInfo.h"
++ #include "AquilaSubtarget.h"
++ #include "MCTargetDesc/AquilaMCTargetDesc.h"
++ #include "llvm/IR/Function.h"
++ #include "llvm/CodeGen/MachineFrameInfo.h"
++ #include "llvm/CodeGen/MachineFunction.h"
++ #include "llvm/CodeGen/MachineInstrBuilder.h"
++ #include "llvm/CodeGen/MachineModuleInfo.h"
++ #include "llvm/CodeGen/MachineRegisterInfo.h"
++ #include "llvm/IR/DataLayout.h"
++ #include "llvm/Target/TargetOptions.h"
++ #include "llvm/Support/CommandLine.h"
++ #include "llvm/Support/Debug.h"
++ 
++ using namespace llvm;
++ 
++ #define DEBUG_TYPE "aquila"
++ 
++ bool AquilaFrameLowering::
++ hasFP(const MachineFunction &MF) const {
++   return false;
++ }
++ 
++ void AquilaFrameLowering::
++ emitPrologue(MachineFunction &MF) const {
++   DEBUG(dbgs() << ">> AquilaFrameLowering::emitPrologue <<\n");
++ 
++   MachineBasicBlock &MBB   = MF.front();
++   MachineFrameInfo *MFI = MF.getFrameInfo();
++ 
++   const AquilaInstrInfo &TII =
++     *static_cast<const AquilaInstrInfo*>(MF.getSubtarget().getInstrInfo());
++ 
++   MachineBasicBlock::iterator MBBI = MBB.begin();
++   DebugLoc dl = MBBI != MBB.end() ? MBBI->getDebugLoc() : DebugLoc();
++ 
++   // allocate fixed size for simplicity
++   // TODO: fixme
++   uint64_t StackSize = 4 * 16;
++ 
++    // Update stack size
++   MFI->setStackSize(StackSize);
++ 
++   BuildMI(MBB, MBBI, dl, TII.get(Aquila::MR), Aquila::R8)
++       .addImm(-StackSize);
++   BuildMI(MBB, MBBI, dl, TII.get(Aquila::ADD), Aquila::R7)
++       .addReg(Aquila::R7)
++       .addReg(Aquila::R8);
++ }
++ 
++ void AquilaFrameLowering::
++ emitEpilogue(MachineFunction &MF, MachineBasicBlock &MBB) const {
++   DEBUG(dbgs() << ">> AquilaFrameLowering::emitEpilogue <<\n");
++ 
++   MachineBasicBlock::iterator MBBI = MBB.getLastNonDebugInstr();
++   MachineFrameInfo *MFI            = MF.getFrameInfo();
++   const AquilaInstrInfo &TII =
++     *static_cast<const AquilaInstrInfo*>(MF.getSubtarget().getInstrInfo());
++   DebugLoc dl = MBBI->getDebugLoc();
++ 
++   // Get the number of bytes from FrameInfo
++   uint64_t StackSize = MFI->getStackSize();
++ 
++   // Adjust stack.
++   BuildMI(MBB, MBBI, dl, TII.get(Aquila::MR), Aquila::R8)
++       .addImm(StackSize);
++   BuildMI(MBB, MBBI, dl, TII.get(Aquila::ADD), Aquila::R7)
++       .addReg(Aquila::R7)
++       .addReg(Aquila::R8);
++ }
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaFrameLowering.h llvm-3.6.2.src/lib/Target/Aquila/AquilaFrameLowering.h
+*** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaFrameLowering.h	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaFrameLowering.h	2016-02-20 07:54:29.000000000 +0900
+***************
+*** 0 ****
+--- 1,41 ----
++ //===-- AquilaFrameLowering.h - Define frame lowering for Aquila ----*- C++ -*-===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ //
++ //
++ //
++ //===----------------------------------------------------------------------===//
++ 
++ #ifndef AQUILA_FRAMELOWERING_H
++ #define AQUILA_FRAMELOWERING_H
++ 
++ #include "Aquila.h"
++ #include "AquilaSubtarget.h"
++ #include "llvm/Target/TargetFrameLowering.h"
++ 
++ namespace llvm {
++ class AquilaSubtarget;
++ 
++ class AquilaFrameLowering : public TargetFrameLowering {
++ protected:
++   const AquilaSubtarget &STI;
++ 
++ public:
++   explicit AquilaFrameLowering(const AquilaSubtarget &sti)
++       : TargetFrameLowering(StackGrowsDown, 8, 0), STI(sti) {
++   }
++ 
++   /// emitProlog/emitEpilog - These methods insert prolog and epilog code into
++   /// the function.
++   void emitPrologue(MachineFunction &MF) const /*override*/;
++   void emitEpilogue(MachineFunction &MF, MachineBasicBlock &MBB) const /*override*/;
++   bool hasFP(const MachineFunction &MF) const /*override*/;
++ };
++ } // End llvm namespace
++ 
++ #endif
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaISelDAGtoDAG.cpp llvm-3.6.2.src/lib/Target/Aquila/AquilaISelDAGtoDAG.cpp
+*** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaISelDAGtoDAG.cpp	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaISelDAGtoDAG.cpp	2016-02-21 00:10:11.000000000 +0900
+***************
+*** 0 ****
+--- 1,91 ----
++ //===-- AquilaISelDAGToDAG.cpp - A Dag to Dag Inst Selector for Aquila --------===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ //
++ // This file defines an instruction selector for the Aquila target.
++ //
++ //===----------------------------------------------------------------------===//
++ 
++ #define DEBUG_TYPE "aquila-isel"
++ #include "Aquila.h"
++ #include "AquilaRegisterInfo.h"
++ #include "AquilaSubtarget.h"
++ #include "AquilaTargetMachine.h"
++ #include "AquilaISelDAGtoDAG.h"
++ #include "MCTargetDesc/AquilaMCTargetDesc.h"
++ #include "llvm/IR/CFG.h"
++ #include "llvm/IR/GlobalValue.h"
++ #include "llvm/IR/Instructions.h"
++ #include "llvm/IR/Intrinsics.h"
++ #include "llvm/IR/Type.h"
++ #include "llvm/CodeGen/MachineConstantPool.h"
++ #include "llvm/CodeGen/MachineFunction.h"
++ #include "llvm/CodeGen/MachineFrameInfo.h"
++ #include "llvm/CodeGen/MachineInstrBuilder.h"
++ #include "llvm/CodeGen/MachineRegisterInfo.h"
++ #include "llvm/CodeGen/SelectionDAGISel.h"
++ #include "llvm/CodeGen/SelectionDAGNodes.h"
++ #include "llvm/Target/TargetMachine.h"
++ #include "llvm/Support/Debug.h"
++ #include "llvm/Support/ErrorHandling.h"
++ #include "llvm/Support/raw_ostream.h"
++ 
++ using namespace llvm;
++ 
++ //===----------------------------------------------------------------------===//
++ // Instruction Selector Implementation
++ //===----------------------------------------------------------------------===//
++ 
++ //===----------------------------------------------------------------------===//
++ // AquilaDAGToDAGISel - Aquila specific code to select Aquila machine
++ // instructions for SelectionDAG operations.
++ //===----------------------------------------------------------------------===//
++ 
++ /// ComplexPattern used on AquilaInstrInfo
++ /// Used on Aquila Load/Store instructions
++ //bool AquilaDAGToDAGISel::
++ //SelectAddr(SDValue N, SDValue &Base, SDValue &Offset) {
++ //  EVT ValTy = N.getValueType();
++ //
++ //  if (FrameIndexSDNode *FIN = dyn_cast<FrameIndexSDNode>(N)) {
++ //    Base   = CurDAG->getTargetFrameIndex(FIN->getIndex(), ValTy);
++ //    Offset = CurDAG->getTargetConstant(0, ValTy);
++ //    return true;
++ //  }
++ //
++ //  llvm_unreachable("Unknown pattern");
++ //  return true;
++ //}
++ 
++ /// Select instructions not customized! Used for
++ /// expanded, promoted and normal instructions
++ SDNode* AquilaDAGToDAGISel::
++ Select(SDNode *Node) {
++   // Select the default instruction
++   SDNode *ResNode = SelectCode(Node);
++ 
++   DEBUG(errs() << "=> ");
++   if (ResNode == NULL || ResNode == Node)
++     DEBUG(Node->dumpr(CurDAG));
++   else
++     DEBUG(ResNode->dumpr(CurDAG));
++   DEBUG(errs() << "\n");
++   return ResNode;
++ }
++ 
++ bool AquilaDAGToDAGISel::selectIntAddr(SDValue Addr, SDValue &Base,
++                                        SDValue &Offset) const {
++   llvm_unreachable("Unimplemented function.");
++   return false;
++ }
++ 
++ /// createAquilaISelDag - This pass converts a legalized DAG into a
++ /// Aquila-specific DAG, ready for instruction scheduling.
++ FunctionPass *llvm::createAquilaISelDag(AquilaTargetMachine &TM) {
++   return new AquilaDAGToDAGISel(TM);
++ }
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaISelDAGtoDAG.h llvm-3.6.2.src/lib/Target/Aquila/AquilaISelDAGtoDAG.h
+*** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaISelDAGtoDAG.h	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaISelDAGtoDAG.h	2016-02-21 00:08:35.000000000 +0900
+***************
+*** 0 ****
+--- 1,68 ----
++ //===-- AquilaISelDAGToDAG.h - A Dag to Dag Inst Selector for Aquila --------===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ 
++ #ifndef LLVM_LIB_TARGET_AQUILAISELDAGTODAG_H
++ #define LLVM_LIB_TARGET_AQUILAISELDAGTODAG_H
++ 
++ #include "Aquila.h"
++ #include "AquilaSubtarget.h"
++ #include "AquilaTargetMachine.h"
++ #include "llvm/CodeGen/SelectionDAGISel.h"
++ 
++ namespace llvm {
++ 
++ class AquilaDAGToDAGISel : public SelectionDAGISel {
++ 
++   /// TM - Keep a reference to AquilaTargetMachine.
++   const AquilaTargetMachine &TM;
++ 
++   /// Subtarget - Keep a pointer to the AquilaSubtarget around so that we can
++   /// make the right decision when generating code for different targets.
++   const AquilaSubtarget &Subtarget;
++ 
++ public:
++   explicit AquilaDAGToDAGISel(AquilaTargetMachine &tm) :
++   SelectionDAGISel(tm),
++   TM(tm),
++   Subtarget(tm.getSubtarget<AquilaSubtarget>()) {}
++ 
++   // Pass Name
++   virtual const char *getPassName() const override {
++     return "Aquila DAG->DAG Pattern Instruction Selection";
++   }
++ 
++ private:
++   // Include the pieces autogenerated from the target description.
++   #include "AquilaGenDAGISel.inc"
++ 
++   /// getTargetMachine - Return a reference to the TargetMachine, casted
++   /// to the target-specific type.
++   const AquilaTargetMachine &getTargetMachine() {
++     return static_cast<const AquilaTargetMachine &>(TM);
++   }
++ 
++   /// getInstrInfo - Return a reference to the TargetInstrInfo, casted
++   /// to the target-specific type.
++   const AquilaInstrInfo *getInstrInfo() {
++     return getTargetMachine().getInstrInfo();
++   }
++ 
++   SDNode *Select(SDNode *N) override;
++ 
++   // Complex Pattern.
++ //  bool SelectAddr(SDValue N, SDValue &Base, SDValue &Offset);
++ 
++   virtual bool selectIntAddr(SDValue Addr, SDValue &Base,
++                              SDValue &Offset) const;
++ };
++ 
++ FunctionPass *createAquilaISelDag(AquilaTargetMachine &TM);
++ 
++ }
++ 
++ #endif
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaISelLowering.cpp llvm-3.6.2.src/lib/Target/Aquila/AquilaISelLowering.cpp
+*** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaISelLowering.cpp	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaISelLowering.cpp	2016-02-20 23:54:58.000000000 +0900
+***************
+*** 0 ****
+--- 1,387 ----
++ //===-- AquilaISelLowering.cpp - Aquila DAG Lowering Implementation -----------===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ //
++ // This file defines the interfaces that Aquila uses to lower LLVM code into a
++ // selection DAG.
++ //
++ //===----------------------------------------------------------------------===//
++ 
++ #define DEBUG_TYPE "aquila-lower"
++ #include "AquilaCCState.h"
++ #include "AquilaISelLowering.h"
++ #include "AquilaMachineFunction.h"
++ #include "AquilaTargetMachine.h"
++ #include "AquilaSubtarget.h"
++ #include "InstPrinter/AquilaInstPrinter.h"
++ #include "MCTargetDesc/AquilaMCTargetDesc.h"
++ #include "llvm/IR/DerivedTypes.h"
++ #include "llvm/IR/Function.h"
++ #include "llvm/IR/GlobalVariable.h"
++ #include "llvm/IR/Intrinsics.h"
++ #include "llvm/IR/CallingConv.h"
++ #include "llvm/CodeGen/CallingConvLower.h"
++ #include "llvm/CodeGen/MachineFrameInfo.h"
++ #include "llvm/CodeGen/MachineFunction.h"
++ #include "llvm/CodeGen/MachineInstrBuilder.h"
++ #include "llvm/CodeGen/MachineRegisterInfo.h"
++ #include "llvm/CodeGen/SelectionDAGISel.h"
++ #include "llvm/CodeGen/ValueTypes.h"
++ #include "llvm/Support/Debug.h"
++ #include "llvm/Support/ErrorHandling.h"
++ #include "llvm/Support/raw_ostream.h"
++ 
++ #include "llvm/CodeGen/TargetLoweringObjectFileImpl.h"
++ 
++ using namespace llvm;
++ 
++ std::string getFlagsString(const ISD::ArgFlagsTy &Flags) {
++   if (Flags.isZExt()) {
++     return "ZExt";
++   } else if (Flags.isSExt()) {
++     return "SExt";
++   } else if (Flags.isInReg()) {
++     return "Reg";
++   } else if (Flags.isSRet()) {
++     return "SRet";
++   } else if (Flags.isByVal()) {
++     return "ByVal";
++   } else if (Flags.isNest()) {
++     return "Nest";
++   } else {
++     return "No Flags";
++   }
++ }
++ 
++ AquilaTargetLowering::
++ AquilaTargetLowering(const AquilaTargetMachine &TM)
++   : TargetLowering(TM),
++     Subtarget(*TM.getSubtargetImpl()) {
++   DEBUG(dbgs() << ">> AquilaTargetLowering::constructor <<\n");
++ 
++   // booleanをどう表すかを定義
++   setBooleanContents(ZeroOrOneBooleanContent);
++   setBooleanVectorContents(ZeroOrOneBooleanContent);
++ 
++   // ターゲットで利用できるレジスタを登録
++   addRegisterClass(MVT::i32, &Aquila::CPURegsRegClass);
++ 
++   // (符号)拡張ロード命令が対応していない型の操作方法を登録
++   for(MVT VT : MVT::integer_valuetypes()) {
++     setLoadExtAction(ISD::EXTLOAD,  VT, MVT::i1,  Promote);
++     setLoadExtAction(ISD::ZEXTLOAD, VT, MVT::i1,  Promote);
++     setLoadExtAction(ISD::SEXTLOAD, VT, MVT::i1,  Promote);
++   }
++ 
++   // 関数のアラインメント
++   setMinFunctionAlignment(2);
++ 
++   // スタックポインタのレジスタを指定
++   setStackPointerRegisterToSaveRestore(Aquila::R7);
++ 
++   // レジスタの操作方法を計算
++   computeRegisterProperties();
++ }
++ 
++ SDValue AquilaTargetLowering::
++ LowerOperation(SDValue Op, SelectionDAG &DAG) const {
++   llvm_unreachable("not supported operation");
++   return SDValue();
++ }
++ 
++ //===----------------------------------------------------------------------===//
++ //                      Calling Convention Implementation
++ //===----------------------------------------------------------------------===//
++ 
++ #include "AquilaGenCallingConv.inc"
++ 
++ SDValue AquilaTargetLowering::
++ LowerFormalArguments(SDValue Chain, CallingConv::ID CallConv,
++                      bool isVarArg,
++                      const SmallVectorImpl<ISD::InputArg> &Ins,
++                      SDLoc dl, SelectionDAG &DAG,
++                      SmallVectorImpl<SDValue> &InVals) const {
++   DEBUG(dbgs() << ">> AquilaTargetLowering::LowerFormalArguments <<\n");
++   DEBUG(dbgs() << "  Chain: ";  Chain->dumpr(););
++ 
++   MachineFunction &MF = DAG.getMachineFunction();
++   MachineFrameInfo *MFI = MF.getFrameInfo();
++   MachineRegisterInfo &RegInfo = MF.getRegInfo();
++ 
++   // Assign locations to all of the incoming arguments.
++   SmallVector<CCValAssign, 16> ArgLocs;
++   AquilaCCState CCInfo(CallConv, isVarArg, DAG.getMachineFunction(),
++                        ArgLocs, *DAG.getContext());
++   CCInfo.AnalyzeFormalArguments(Ins, CC_Aquila);
++ 
++   for (unsigned i = 0, e = ArgLocs.size(); i != e; ++i) {
++     CCValAssign &VA = ArgLocs[i];
++     if (VA.isRegLoc()) {
++       // 引数がレジスタで渡された場合
++       EVT RegVT = VA.getLocVT();
++       const TargetRegisterClass *RC = &Aquila::CPURegsRegClass;
++ 
++       DEBUG(dbgs() << "  Reg N" << i 
++             << " LowerFormalArguments Unhandled argument type: "
++             << RegVT.getSimpleVT().SimpleTy << "\n";);
++       if (VA.getLocInfo() != CCValAssign::Full) {
++         llvm_unreachable("not supported yet");
++       }
++ 
++       unsigned VReg = RegInfo.createVirtualRegister(RC);
++       RegInfo.addLiveIn(VA.getLocReg(), VReg);
++       SDValue ArgValue = DAG.getCopyFromReg(Chain, dl, VReg, RegVT);
++       InVals.push_back(ArgValue);
++     } else { // VA.isRegLoc()
++       // 引数がメモリで渡された場合
++  
++       // Sanity check
++       assert(VA.isMemLoc());
++       // Load the argument to a virtual register
++       unsigned ObjSize = VA.getLocVT().getSizeInBits()/8;
++       DEBUG(dbgs() << "  Mem N" << i
++             << " LowerFormalArguments Unhandled argument type: "
++             << EVT(VA.getLocVT()).getEVTString()
++             << "\n";);
++ 
++       // フレームインデックスを作成する
++       int FI = MFI->CreateFixedObject(ObjSize, VA.getLocMemOffset(), true);
++ 
++       // スタックから引数を取得するためにloadノードを作成する
++       SDValue FIN = DAG.getFrameIndex(FI, MVT::i32);
++       InVals.push_back(DAG.getLoad(VA.getLocVT(), dl, Chain, FIN,
++                                    MachinePointerInfo::getFixedStack(FI),
++                                    false, false, false, 0));
++     }
++   }
++ 
++   DEBUG(
++       for (SmallVectorImpl<SDValue>::const_iterator i = InVals.begin();
++            i != InVals.end(); ++i) {
++         dbgs() << "  InVals: "; i->getNode()->dump();
++       });
++     
++   DEBUG(dbgs() << ">> done LowerFormalArguments <<\n";);
++   return Chain;
++ }
++ 
++ //===----------------------------------------------------------------------===//
++ //                  Call Calling Convention Implementation
++ //===----------------------------------------------------------------------===//
++ 
++ /// LowerCall - functions arguments are copied from virtual regs to
++ /// (physical regs)/(stack frame), CALLSEQ_START and CALLSEQ_END are emitted.
++ /// TODO: isTailCall.
++ SDValue AquilaTargetLowering::
++ LowerCall(CallLoweringInfo &CLI,
++           SmallVectorImpl<SDValue> &InVals) const {
++   SelectionDAG &DAG                     = CLI.DAG;
++   SDLoc &dl                             = CLI.DL;
++   SmallVector<ISD::OutputArg, 32> &Outs = CLI.Outs;
++   SmallVector<SDValue, 32> &OutVals     = CLI.OutVals;
++   SmallVector<ISD::InputArg, 32> &Ins   = CLI.Ins;
++   SDValue InChain                       = CLI.Chain;
++   SDValue Callee                        = CLI.Callee;
++   bool &isTailCall                      = CLI.IsTailCall;
++   CallingConv::ID CallConv              = CLI.CallConv;
++   bool isVarArg                         = CLI.IsVarArg;
++ 
++   DEBUG(dbgs() << ">> AquilaTargetLowering::LowerCall <<\n");
++   DEBUG(dbgs() << "  InChain: "; InChain->dumpr(););
++   DEBUG(dbgs() << "  Callee: "; Callee->dumpr(););
++ 
++   // 末尾呼び出しは未対応
++   isTailCall = false;
++   
++   // 関数のオペランドを解析してオペランドをレジスタに割り当てる
++   SmallVector<CCValAssign, 16> ArgLocs;
++   AquilaCCState CCInfo(CallConv, isVarArg, DAG.getMachineFunction(),
++                        ArgLocs, *DAG.getContext());
++ 
++   CCInfo.AnalyzeCallOperands(Outs, CC_Aquila, CLI.getArgs(), Callee.getNode());
++ 
++   // スタックを何Byte使っているか取得
++   unsigned NumBytes = CCInfo.getNextStackOffset();
++   DEBUG(dbgs() << "  stack offset: " << NumBytes << "\n");
++ 
++   // 関数呼び出し開始のNode
++   InChain = DAG.getCALLSEQ_START(InChain,
++                                  DAG.getConstant(NumBytes, getPointerTy()),
++                                  dl);
++ 
++   SmallVector<std::pair<unsigned, SDValue>, 4> RegsToPass;
++   SDValue StackPtr;
++ 
++   // 引数をRegsToPassに追加していく
++   for (unsigned i = 0, e = ArgLocs.size(); i != e; ++i) {
++     SDValue Arg = OutVals[i];
++     CCValAssign &VA = ArgLocs[i];
++     ISD::ArgFlagsTy Flags = Outs[i].Flags;
++     DEBUG(dbgs() << "  Arg: "; Arg->dumpr());
++ 
++     // 引数が数値
++     if (Flags.isByVal()) {
++       assert(Flags.getByValSize() &&
++              "ByVal args of size 0 should have been ignored by front-end.");
++       llvm_unreachable("ByVal arguments are not supported");
++       continue;
++     }
++ 
++     // 必要に応じてPromoteする
++     switch (VA.getLocInfo()) {
++       default: llvm_unreachable("Unknown loc info!");
++       case CCValAssign::Full: break;
++       case CCValAssign::SExt:
++         Arg = DAG.getNode(ISD::SIGN_EXTEND, dl, VA.getLocVT(), Arg);
++         break;
++       case CCValAssign::ZExt:
++         Arg = DAG.getNode(ISD::ZERO_EXTEND, dl, VA.getLocVT(), Arg);
++         break;
++       case CCValAssign::AExt:
++         Arg = DAG.getNode(ISD::ANY_EXTEND, dl, VA.getLocVT(), Arg);
++         break;
++     }
++ 
++     // レジスタ経由の引数はRegsToPassに追加
++     if (VA.isRegLoc()) {
++       DEBUG(dbgs() << "    Reg: " << VA.getLocReg() << "\n");
++       RegsToPass.push_back(std::make_pair(VA.getLocReg(), Arg));
++     } else {
++       assert(VA.isMemLoc());
++       llvm_unreachable("MemLoc arguments are not supported");
++     }
++   }
++ 
++   // レジスタをコピーするノードを作成
++   SDValue InFlag;
++   for (unsigned i = 0, e = RegsToPass.size(); i != e; ++i) {
++     InChain = DAG.getCopyToReg(InChain, dl, RegsToPass[i].first,
++                              RegsToPass[i].second, InFlag);
++     InFlag = InChain.getValue(1);
++   }
++ 
++   if (GlobalAddressSDNode *G = dyn_cast<GlobalAddressSDNode>(Callee)) {
++     Callee = DAG.getTargetGlobalAddress(G->getGlobal(), dl, MVT::i32);
++     DEBUG(dbgs() << "  Global: " << Callee.getNode() << "\n");
++   } else if (ExternalSymbolSDNode *E = dyn_cast<ExternalSymbolSDNode>(Callee)) {
++     Callee = DAG.getTargetExternalSymbol(E->getSymbol(), MVT::i32);
++     DEBUG(dbgs() << "  External: " << Callee.getNode() << "\n");
++   }
++ 
++   SDVTList NodeTys = DAG.getVTList(MVT::Other, MVT::Glue);
++   SmallVector<SDValue, 8> Ops;
++   Ops.push_back(InChain);
++   Ops.push_back(Callee);
++ 
++   // 引数のレジスタをリストに追加
++   for (unsigned i = 0, e = RegsToPass.size(); i != e; ++i) {
++     Ops.push_back(DAG.getRegister(RegsToPass[i].first,
++                                   RegsToPass[i].second.getValueType()));
++   }
++ 
++   if (InFlag.getNode())
++     Ops.push_back(InFlag);
++ 
++   InChain = DAG.getNode(AquilaISD::JmpLink, dl, NodeTys, Ops[0]);
++   InFlag = InChain.getValue(1);
++ 
++   // 関数呼び出し終了のNode
++   InChain = DAG.getCALLSEQ_END(InChain,
++                                DAG.getConstant(NumBytes, getPointerTy(), true),
++                                DAG.getConstant(0, getPointerTy(), true),
++                                InFlag, dl);
++   InFlag = InChain.getValue(1);
++ 
++   // 戻り値の処理
++   return LowerCallResult(InChain, InFlag, CallConv, isVarArg,
++                          Ins, dl, DAG, InVals, CLI);
++ }
++ 
++ /// LowerCallResult - Lower the result values of a call into the
++ /// appropriate copies out of appropriate physical registers.
++ SDValue AquilaTargetLowering::
++ LowerCallResult(SDValue Chain, SDValue InFlag,
++                 CallingConv::ID CallConv, bool isVarArg,
++                 const SmallVectorImpl<ISD::InputArg> &Ins,
++                 SDLoc dl, SelectionDAG &DAG,
++                 SmallVectorImpl<SDValue> &InVals,
++                 TargetLowering::CallLoweringInfo &CLI) const {
++   // Assign locations to each value returned by this call.
++   SmallVector<CCValAssign, 16> RVLocs;
++   AquilaCCState CCInfo(CallConv, isVarArg, DAG.getMachineFunction(),
++                        RVLocs, *DAG.getContext());
++ 
++   CCInfo.AnalyzeCallResult(Ins, RetCC_Aquila, CLI);
++ 
++   // 結果レジスタをコピー
++   for (unsigned i = 0; i != RVLocs.size(); ++i) {
++     Chain = DAG.getCopyFromReg(Chain, dl, RVLocs[i].getLocReg(),
++                                RVLocs[i].getValVT(), InFlag).getValue(1);
++     InFlag = Chain.getValue(2);
++     InVals.push_back(Chain.getValue(0));
++   }
++ 
++   return Chain;
++ }
++ 
++ //===----------------------------------------------------------------------===//
++ //               Return Value Calling Convention Implementation
++ //===----------------------------------------------------------------------===//
++ 
++ SDValue AquilaTargetLowering::
++ LowerReturn(SDValue Chain,
++             CallingConv::ID CallConv, bool isVarArg,
++             const SmallVectorImpl<ISD::OutputArg> &Outs,
++             const SmallVectorImpl<SDValue> &OutVals,
++             SDLoc dl, SelectionDAG &DAG) const {
++   DEBUG(dbgs() << ">> AquilaTargetLowering::LowerReturn <<\n");
++   DEBUG(dbgs() << " Chain: "; Chain->dumpr(););
++ 
++   SmallVector<CCValAssign, 16> RVLocs;
++   CCState CCInfo(CallConv, isVarArg, DAG.getMachineFunction(),
++ 		         RVLocs, *DAG.getContext());
++ 
++   // 戻り値を解析する
++   CCInfo.AnalyzeReturn(Outs, RetCC_Aquila);
++ 
++   // この関数で最初の戻り値の場合はレジスタをliveoutに追加
++   if (DAG.getMachineFunction().getRegInfo().livein_empty()) {
++     for (unsigned i = 0; i != RVLocs.size(); ++i)
++       if (RVLocs[i].isRegLoc())
++         DAG.getMachineFunction().getRegInfo().addLiveIn(RVLocs[i].getLocReg());
++   }
++ 
++   SDValue Flag;
++ 
++   // 戻り値をレジスタにコピーするノードを作成
++   for (unsigned i = 0; i != RVLocs.size(); ++i) {
++     CCValAssign &VA = RVLocs[i];
++     assert(VA.isRegLoc() && "Can only return in registers!");
++ 
++     Chain = DAG.getCopyToReg(Chain, dl, VA.getLocReg(),
++                              OutVals[i], Flag);
++ 
++     // Guarantee that all emitted copies are stuck together,
++     // avoiding something bad.
++     Flag = Chain.getValue(1);
++   }
++ 
++   DEBUG(
++       for (SmallVectorImpl<SDValue>::const_iterator i = OutVals.begin();
++            i != OutVals.end(); ++i) {
++         dbgs() << "  OutVals: "; i->getNode()->dump();
++       });
++ 
++   // 常に "ret $ra" を生成
++   if (Flag.getNode())
++     return DAG.getNode(AquilaISD::Ret, dl, MVT::Other,
++                        Chain, DAG.getRegister(Aquila::R4, MVT::i32), Flag);
++   else // Return Void
++     return DAG.getNode(AquilaISD::Ret, dl, MVT::Other,
++                        Chain, DAG.getRegister(Aquila::R4, MVT::i32));
++ }
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaISelLowering.h llvm-3.6.2.src/lib/Target/Aquila/AquilaISelLowering.h
+*** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaISelLowering.h	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaISelLowering.h	2016-02-21 00:03:03.000000000 +0900
+***************
+*** 0 ****
+--- 1,85 ----
++ //===-- AquilaISelLowering.h - Aquila DAG Lowering Interface --------*- C++ -*-===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ //
++ // This file defines the interfaces that Aquila uses to lower LLVM code into a
++ // selection DAG.
++ //
++ //===----------------------------------------------------------------------===//
++ 
++ #ifndef AQUILA_ISELLOWERING_H
++ #define AQUILA_ISELLOWERING_H
++ 
++ #include "Aquila.h"
++ #include "AquilaSubtarget.h"
++ #include "llvm/CodeGen/SelectionDAG.h"
++ #include "llvm/Target/TargetLowering.h"
++ 
++ namespace llvm {
++ namespace AquilaISD {
++   enum {
++     FIRST_NUMBER = ISD::BUILTIN_OP_END,
++ 
++     // Jump and link (call)
++     JmpLink,
++ 
++     // Return
++     Ret
++   };
++ }
++ 
++ class AquilaSubtarget;
++ //===--------------------------------------------------------------------===//
++ // TargetLowering Implementation
++ //===--------------------------------------------------------------------===//
++ 
++ class AquilaTargetLowering : public TargetLowering {
++   const AquilaSubtarget &Subtarget;
++ 
++  public:
++   explicit AquilaTargetLowering(const AquilaTargetMachine &TM);
++ 
++   /// LowerOperation - Provide custom lowering hooks for some operations.
++   virtual SDValue LowerOperation(SDValue Op, SelectionDAG &DAG) const override;
++   virtual SDValue
++   LowerFormalArguments(SDValue Chain, CallingConv::ID CallConv,
++                        bool isVarArg,
++                        const SmallVectorImpl<ISD::InputArg> &Ins,
++                        SDLoc dl, SelectionDAG &DAG,
++                        SmallVectorImpl<SDValue> &InVals) const override;
++ 
++   virtual SDValue
++   LowerCall(CallLoweringInfo &CLI,
++             SmallVectorImpl<SDValue> &InVals) const override;
++ 
++   virtual SDValue
++   LowerCallResult(SDValue Chain, SDValue InFlag,
++                   CallingConv::ID CallConv, bool isVarArg,
++                   const SmallVectorImpl<ISD::InputArg> &Ins,
++                   SDLoc dl, SelectionDAG &DAG,
++                   SmallVectorImpl<SDValue> &InVals,
++                   TargetLowering::CallLoweringInfo &CLI) const;
++ 
++   virtual SDValue
++   LowerReturn(SDValue Chain,
++               CallingConv::ID CallConv, bool isVarArg,
++               const SmallVectorImpl<ISD::OutputArg> &Outs,
++               const SmallVectorImpl<SDValue> &OutVals,
++               SDLoc dl, SelectionDAG &DAG) const override;
++ 
++   struct LTStr {
++     bool operator()(const char *S1, const char *S2) const {
++       return strcmp(S1, S2) < 0;
++     }
++   };
++ 
++  private:
++ };
++ } // end of namespace llvm
++ 
++ #endif // AQUILA_ISELLOWERING_H
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaInstrFormats.td llvm-3.6.2.src/lib/Target/Aquila/AquilaInstrFormats.td
+*** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaInstrFormats.td	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaInstrFormats.td	2016-02-20 14:30:02.000000000 +0900
+***************
+*** 0 ****
+--- 1,124 ----
++ //===-- AquilaInstrFormats.td - Aquila Instruction Formats -----*- tablegen -*-===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ 
++ class Format<bits<3> val> {
++   bits<3> Value = val;
++ }
++ 
++ def Pseudo : Format<0>;
++ def FormX  : Format<1>;
++ def FormB  : Format<2>;
++ def FormR  : Format<3>;
++ def FormI  : Format<4>;
++ 
++ // Common Format
++ class AquilaInst<dag outs, dag ins, string asmstr, list<dag> pattern, InstrItinClass itin, Format f>
++     : Instruction {
++   field bits<32> Inst;
++   Format Form = f;
++ 
++   bits<5> Opcode = 0;
++ 
++   let Namespace      = "Aquila";
++   let Size           = 4;
++   let Inst{30-26}    = Opcode;
++   let OutOperandList = outs;
++   let InOperandList  = ins;
++   let AsmString      = asmstr;
++   let Pattern        = pattern;
++   let Itinerary      = itin;
++ 
++   bits<3> FormBits = Form.Value;
++ 
++   let DecoderNamespace = "Aquila";
++ 
++   field bits<32> SoftFail = 0;
++ }
++ 
++ class AquilaPseudo<dag outs, dag ins, list<dag> pattern,
++                    InstrItinClass itin = IIPseudo>
++     : AquilaInst<outs, ins, "", pattern, itin, Pseudo> {
++   let isCodeGenOnly = 1;
++   let isPseudo      = 1;
++ }
++ 
++ class AquilaInstFormX<bits<5> op, dag outs, dag ins, string asmstr, list<dag> pattern, InstrItinClass itin>
++     : AquilaInst<outs, ins, asmstr, pattern, itin, FormX> {
++   bits<5>  rd;
++   bits<5>  rs;
++   bits<5>  rt;
++   bits<10> funct;
++ 
++   let Opcode = op;
++   
++   let Inst{31}    = 0;
++   let Inst{25-21} = rd;
++   let Inst{20-16} = rs;
++   let Inst{15-11} = rt;
++   let Inst{10-1}  = funct;
++   let Inst{0}     = 0;
++ }
++ 
++ class AquilaInstFormB<bits<5> op, dag outs, dag ins, string asmstr, list<dag> pattern, InstrItinClass itin>
++     : AquilaInst<outs, ins, asmstr, pattern, itin, FormB> {
++   bits<5>  rd;
++   bits<5>  rs;
++   bits<16> imm16;
++ 
++   let Opcode = op;
++   
++   let Inst{25-21} = rd;
++   let Inst{20-16} = rs;
++   let Inst{15-0}  = imm16;
++ }
++ 
++ class AquilaInstFormR<bits<5> op, dag outs, dag ins, string asmstr, list<dag> pattern, InstrItinClass itin>
++     : AquilaInst<outs, ins, asmstr, pattern, itin, FormR> {
++   bits<5>  rd;
++   bits<5>  rs;
++   bits<5>  rt;
++ 
++   let Opcode = op;
++   
++   let Inst{31}    = 0;
++   let Inst{25-21} = rd;
++   let Inst{20-16} = rs;
++   let Inst{15-11} = rt;
++   let Inst{10-0}  = 1;
++ }
++ 
++ class AquilaInstFormI<bits<5> op, dag outs, dag ins, string asmstr, list<dag> pattern, InstrItinClass itin>
++     : AquilaInst<outs, ins, asmstr, pattern, itin, FormI> {
++   bits<5>  rd;
++   bits<5>  rs;
++   bits<16> imm16;
++ 
++   let Opcode = op;
++   
++   let Inst{31}    = 0;
++   let Inst{25-21} = rd;
++   let Inst{20-16} = rs;
++   let Inst{15-0}  = imm16;
++ }
++ 
++ class AquilaInstJumpLink<bits<5> op, dag outs, dag ins, string asmstr, list<dag> pattern, InstrItinClass itin>
++     : AquilaInstFormI<op, outs, ins, asmstr, pattern, itin> {
++   bits<16> addr;
++ 
++   let rd = 0;
++   let imm16 = addr;
++ }
++ 
++ class AquilaInstJumpReg<bits<5> op, dag outs, dag ins, string asmstr, list<dag> pattern, InstrItinClass itin>
++     : AquilaInstFormR<op, outs, ins, asmstr, pattern, itin> {
++   bits<16> addr;
++ 
++   let rd = 0;
++   let rs = 0;
++ }
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaInstrInfo.cpp llvm-3.6.2.src/lib/Target/Aquila/AquilaInstrInfo.cpp
+*** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaInstrInfo.cpp	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaInstrInfo.cpp	2016-02-21 00:13:58.000000000 +0900
+***************
+*** 0 ****
+--- 1,268 ----
++ //===-- AquilaInstrInfo.cpp - Aquila Instruction Information ------------------===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ //
++ // This file contains the Aquila implementation of the TargetInstrInfo class.
++ //
++ //===----------------------------------------------------------------------===//
++ 
++ #include "AquilaInstrInfo.h"
++ #include "AquilaTargetMachine.h"
++ #include "AquilaMachineFunction.h"
++ #include "MCTargetDesc/AquilaMCTargetDesc.h"
++ #include "InstPrinter/AquilaInstPrinter.h"
++ #include "llvm/CodeGen/MachineInstrBuilder.h"
++ #include "llvm/CodeGen/MachineRegisterInfo.h"
++ #include "llvm/Support/ErrorHandling.h"
++ #include "llvm/Support/TargetRegistry.h"
++ #include "llvm/ADT/STLExtras.h"
++ 
++ #define GET_INSTRINFO_CTOR
++ #include "AquilaGenInstrInfo.inc"
++ 
++ #define DEBUG_TYPE "aquila-instrinfo"
++ 
++ using namespace llvm;
++ 
++ AquilaInstrInfo::AquilaInstrInfo(AquilaTargetMachine &tm, unsigned UncondBrOpc)
++   : AquilaGenInstrInfo(Aquila::ADJCALLSTACKDOWN, Aquila::ADJCALLSTACKUP),
++     TM(tm)
++     /*, RI(*this)*/ {}
++ 
++ //const AquilaRegisterInfo &AquilaInstrInfo::getRegisterInfo() const {
++ //  return RI;
++ //}
++ 
++ 
++ /// isLoadFromStackSlot - If the specified machine instruction is a direct
++ /// load from a stack slot, return the virtual or physical register number of
++ /// the destination along with the FrameIndex of the loaded stack slot.  If
++ /// not, return 0.  This predicate must return 0 if the instruction has
++ /// any side effects other than loading from the stack slot.
++ unsigned AquilaInstrInfo::
++ isLoadFromStackSlot(const MachineInstr *MI, int &FrameIndex) const {
++   unsigned Opc = MI->getOpcode();
++ 
++   if (Opc == Aquila::LD       && // Load命令
++       MI->getOperand(1).isFI()  && // スタックスロット
++       MI->getOperand(2).isImm() && // 即値が0
++       MI->getOperand(2).getImm() == 0) {
++     FrameIndex = MI->getOperand(1).getIndex();
++     return MI->getOperand(0).getReg();
++   }
++   return 0;
++ }
++ 
++ /// isStoreToStackSlot - If the specified machine instruction is a direct
++ /// store to a stack slot, return the virtual or physical register number of
++ /// the source reg along with the FrameIndex of the loaded stack slot.  If
++ /// not, return 0.  This predicate must return 0 if the instruction has
++ /// any side effects other than storing to the stack slot.
++ unsigned AquilaInstrInfo::
++ isStoreToStackSlot(const MachineInstr *MI, int &FrameIndex) const {
++   unsigned Opc = MI->getOpcode();
++ 
++   if (Opc == Aquila::ST      && // Store命令
++       MI->getOperand(1).isFI()  && // スタックスロット
++       MI->getOperand(2).isImm() && // 即値が0
++       MI->getOperand(2).getImm() == 0) {
++     FrameIndex = MI->getOperand(1).getIndex();
++     return MI->getOperand(0).getReg();
++   }
++   return 0;
++ }
++ 
++ void AquilaInstrInfo::
++ copyPhysReg(MachineBasicBlock &MBB,
++             MachineBasicBlock::iterator I, DebugLoc DL,
++             unsigned DestReg, unsigned SrcReg,
++             bool KillSrc) const {
++   unsigned Opc = 0, ZeroReg = 0;
++   Opc = Aquila::ADD, ZeroReg = Aquila::R0;
++ 
++   MachineInstrBuilder MIB = BuildMI(MBB, I, DL, get(Opc));
++ 
++   if (DestReg)
++     MIB.addReg(DestReg, RegState::Define);
++ 
++   if (ZeroReg)
++     MIB.addReg(ZeroReg);
++ 
++   if (SrcReg)
++     MIB.addReg(SrcReg, getKillRegState(KillSrc));
++ }
++ 
++ void AquilaInstrInfo::
++ storeRegToStackSlot(MachineBasicBlock &MBB, MachineBasicBlock::iterator I,
++                     unsigned SrcReg, bool isKill, int FI,
++                     const TargetRegisterClass *RC,
++                     const TargetRegisterInfo *TRI) const {
++   DEBUG(dbgs() << ">> AquilaInstrInfo::storeRegToStackSlot <<\n");
++ 
++   DebugLoc DL;
++   if (I != MBB.end()) DL = I->getDebugLoc();
++   MachineFunction &MF = *MBB.getParent();
++   MachineFrameInfo &MFI = *MF.getFrameInfo();
++ 
++   MachineMemOperand *MMO =
++     MF.getMachineMemOperand(MachinePointerInfo::getFixedStack(FI),
++                             MachineMemOperand::MOStore,
++                             MFI.getObjectSize(FI),
++                             MFI.getObjectAlignment(FI));
++ 
++   BuildMI(MBB, I, DL, get(Aquila::ST))
++       .addReg(SrcReg, getKillRegState(isKill))
++       .addFrameIndex(FI).addImm(0).addMemOperand(MMO);
++ }
++ 
++ void AquilaInstrInfo::
++ loadRegFromStackSlot(MachineBasicBlock &MBB,
++                      MachineBasicBlock::iterator MI,
++                      unsigned DestReg, int FI,
++                      const TargetRegisterClass *RC,
++                      const TargetRegisterInfo *TRI) const
++ {
++   DEBUG(dbgs() << ">> AquilaInstrInfo::loadRegFromStackSlot <<\n");
++ 
++   DebugLoc DL;
++   if (MI != MBB.end()) DL = MI->getDebugLoc();
++   MachineFunction &MF = *MBB.getParent();
++   MachineFrameInfo &MFI = *MF.getFrameInfo();
++ 
++   MachineMemOperand *MMO =
++     MF.getMachineMemOperand(MachinePointerInfo::getFixedStack(FI),
++                             MachineMemOperand::MOLoad,
++                             MFI.getObjectSize(FI),
++                             MFI.getObjectAlignment(FI));
++ 
++   BuildMI(MBB, MI, DL, get(Aquila::LD))
++       .addReg(DestReg).addFrameIndex(FI).addImm(0).addMemOperand(MMO);
++ }
++ 
++ //===----------------------------------------------------------------------===//
++ // Branch Analysis
++ //===----------------------------------------------------------------------===//
++ 
++ bool AquilaInstrInfo::
++ AnalyzeBranch(MachineBasicBlock &MBB,
++               MachineBasicBlock *&TBB,
++               MachineBasicBlock *&FBB,
++               SmallVectorImpl<MachineOperand> &Cond,
++               bool AllowModify) const
++ {
++   SmallVector<MachineInstr*, 2> BranchInstrs;
++   MachineBasicBlock::reverse_iterator I = MBB.rbegin(), REnd = MBB.rend();
++ 
++   // Skip all the debug instructions
++   while(I != REnd && I->isDebugValue()) ++I;
++ 
++   if(I == REnd || !isUnpredicatedTerminator(&*I)) {
++     // This block ends with no branchs (it just falls through to its succ)
++ 	// Leave TBB/FBB null
++     TBB = FBB = nullptr;
++     return BT_NoBranch;
++   }
++ 
++   MachineInstr *LastInst = &*I;
++   unsigned LastOpc = LastInst->getOpcode();
++   BranchInstrs.push_back(LastInst);
++ 
++   // Not an analyzable branch (e.g., indirect jump)
++   if(!getAnalyzableBrOpc(LastOpc))
++     return LastInst->isIndirectBranch() ? BT_Indirect : BT_None;
++ 
++   // Get the second to last instruction in the block
++   unsigned SecondLastOpc = 0;
++   MachineInstr *SecondLastInst = nullptr;
++ 
++   if(++I != REnd) {
++     SecondLastInst = &*I;
++     SecondLastOpc = getAnalyzableBrOpc(SecondLastInst->getOpcode());
++ 
++     // Not analyzable branch (must be an indirect jump)
++ 	if(isUnpredicatedTerminator(SecondLastInst) && !SecondLastOpc)
++       return BT_None;
++   }
++ 
++   // If there is only one terminator instruction, process it
++   if(!SecondLastOpc) {
++     // Unconditional Branch
++     if(LastOpc == UncondBrOpc) {
++       TBB = LastInst->getOperand(0).getMBB();
++       return BT_Uncond;
++     }
++ 
++     // Conditional branch
++     AnalyzeCondBr(LastInst, LastOpc, TBB, Cond);
++     return BT_Cond;
++   }
++ 
++   // If we reached here, there are two branches
++   // If there are three terminators, we don't know what sort of block this is
++   if(++I != REnd && isUnpredicatedTerminator(&*I))
++     return BT_None;
++ 
++   BranchInstrs.insert(BranchInstrs.begin(), SecondLastInst);
++ 
++   // If second to last instruciont is an unconditional branch,
++   // analyze it and remove the last instruction
++   if(SecondLastOpc == UncondBrOpc) {
++     // Return if the last instruction cannot be removed
++     if(!AllowModify)
++       return BT_None;
++ 
++     TBB = SecondLastInst->getOperand(0).getMBB();
++     LastInst->eraseFromParent();
++     BranchInstrs.pop_back();
++     return BT_Uncond;
++   }
++ 
++   // Conditional branch followed by an unconditional branch
++   // The last one must be unconditional
++   if(LastOpc != UncondBrOpc)
++     return BT_None;
++ 
++   AnalyzeCondBr(SecondLastInst, SecondLastOpc, TBB, Cond);
++   FBB = LastInst->getOperand(0).getMBB();
++ 
++   return BT_CondUncond;
++ }
++ 
++ unsigned AquilaInstrInfo::
++ InsertBranch(MachineBasicBlock &MBB, MachineBasicBlock *TBB,
++              MachineBasicBlock *FBB,
++              const SmallVectorImpl<MachineOperand> &Cond,
++              DebugLoc DL) const {
++   llvm_unreachable("Target doesn't implement AquilaInstrInfo::InsertBranch!");
++ }
++ 
++ unsigned AquilaInstrInfo::
++ RemoveBranch(MachineBasicBlock &MBB) const
++ {
++   llvm_unreachable("Target doesn't implement AquilaInstrInfo::RemoveBranch");
++ }
++ 
++ unsigned AquilaInstrInfo::
++ getAnalyzableBrOpc(unsigned Opc) const {
++   return 0;
++ }
++ 
++ void AquilaInstrInfo::AnalyzeCondBr(const MachineInstr *Inst, unsigned Opc,
++                                     MachineBasicBlock *&BB,
++                                     SmallVectorImpl<MachineOperand> &Cond) const {
++   assert(getAnalyzableBrOpc(Opc) && "Not an analyzable branch");
++   int NumOp = Inst->getNumExplicitOperands();
++ 
++   // for both int and fp branches, the last explicit operand is the MBB
++   BB = Inst->getOperand(NumOp-1).getMBB();
++   Cond.push_back(MachineOperand::CreateImm(Opc));
++ 
++   for(int i = 0; i < NumOp - 1; i++) {
++     Cond.push_back(Inst->getOperand(i));
++   }
++ }
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaInstrInfo.h llvm-3.6.2.src/lib/Target/Aquila/AquilaInstrInfo.h
+*** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaInstrInfo.h	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaInstrInfo.h	2016-02-21 00:30:38.000000000 +0900
+***************
+*** 0 ****
+--- 1,91 ----
++ //===-- AquilaInstrInfo.h - Aquila Instruction Information ----------*- C++ -*-===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ //
++ // This file contains the Aquila implementation of the TargetInstrInfo class.
++ //
++ //===----------------------------------------------------------------------===//
++ 
++ #ifndef AQUILA_INSTRUCTIONINFO_H
++ #define AQUILA_INSTRUCTIONINFO_H
++ 
++ #include "Aquila.h"
++ #include "AquilaRegisterInfo.h"
++ #include "llvm/Support/ErrorHandling.h"
++ #include "llvm/Target/TargetInstrInfo.h"
++ 
++ #define GET_INSTRINFO_HEADER
++ #include "AquilaGenInstrInfo.inc"
++ 
++ namespace llvm {
++ 
++ class AquilaInstrInfo : public AquilaGenInstrInfo {
++   AquilaTargetMachine &TM;
++ //  const AquilaRegisterInfo RI;
++   unsigned UncondBrOpc;
++ 
++ public:
++   enum BranchType {
++     BT_None,       // Couldn't analyze branch
++     BT_NoBranch,   // No branches found
++     BT_Uncond,     // One unconditional branch
++     BT_Cond,       // One conditional branch
++     BT_CondUncond, // A conditional branch followed by an unconditional branch
++     BT_Indirect,   // One indirect branch
++   };
++ 
++   explicit AquilaInstrInfo(AquilaTargetMachine &TM, unsigned UncondBrOpc);
++ 
++ //  virtual const AquilaRegisterInfo &getRegisterInfo() const;
++ 
++   virtual unsigned isLoadFromStackSlot(const MachineInstr *MI,
++                                        int &FrameIndex) const override;
++ 
++   virtual unsigned isStoreToStackSlot(const MachineInstr *MI,
++                                       int &FrameIndex) const override;
++ 
++   virtual void copyPhysReg(MachineBasicBlock &MBB,
++                            MachineBasicBlock::iterator MI, DebugLoc DL,
++                            unsigned DestReg, unsigned SrcReg,
++                            bool KillSrc) const override;
++ 
++   virtual void storeRegToStackSlot(MachineBasicBlock &MBB,
++                                    MachineBasicBlock::iterator MBBI,
++                                    unsigned SrcReg, bool isKill, int FrameIndex,
++                                    const TargetRegisterClass *RC,
++                                    const TargetRegisterInfo *TRI) const override;
++ 
++   virtual void loadRegFromStackSlot(MachineBasicBlock &MBB,
++                                     MachineBasicBlock::iterator MBBI,
++                                     unsigned DestReg, int FrameIndex,
++                                     const TargetRegisterClass *RC,
++                                     const TargetRegisterInfo *TRI) const override;
++ 
++   bool AnalyzeBranch(MachineBasicBlock &MBB, MachineBasicBlock *&TBB,
++                      MachineBasicBlock *&FBB,
++                      SmallVectorImpl<MachineOperand> &Cond,
++                      bool AllowModify) const override;
++ 
++   unsigned RemoveBranch(MachineBasicBlock &MBB) const override;
++ 
++   unsigned InsertBranch(MachineBasicBlock &MBB, MachineBasicBlock *TBB,
++                         MachineBasicBlock *FBB,
++                         const SmallVectorImpl<MachineOperand> &Cond,
++                         DebugLoc DL) const override;
++ 
++ private:
++   unsigned getAnalyzableBrOpc(unsigned Opc) const;
++ 
++   void AnalyzeCondBr(const MachineInstr *Inst, unsigned Opc,
++                      MachineBasicBlock *&BB,
++                      SmallVectorImpl<MachineOperand> &Cond) const;
++ };
++ 
++ }
++ 
++ #endif
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaInstrInfo.td llvm-3.6.2.src/lib/Target/Aquila/AquilaInstrInfo.td
+*** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaInstrInfo.td	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaInstrInfo.td	2016-02-20 18:50:41.000000000 +0900
+***************
+*** 0 ****
+--- 1,155 ----
++ //===- AquilaInstrInfo.td - Target Description for Aquila Target -*- tablegen -*-=//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ 
++ //===----------------------------------------------------------------------===//
++ // Instruction format superclass
++ //===----------------------------------------------------------------------===//
++ 
++ include "AquilaInstrFormats.td"
++ 
++ //===----------------------------------------------------------------------===//
++ // Profiles and Nodes
++ //===----------------------------------------------------------------------===//
++ 
++ def SDT_AquilaJmpLink : SDTypeProfile<0, 1, [SDTCisVT<0, iPTR>]>;
++ 
++ def SDT_AquilaCallSeqStart : SDCallSeqStart<[SDTCisVT<0, i32>]>;
++ def SDT_AquilaCallSeqEnd   : SDCallSeqEnd<[SDTCisVT<0, i32>, SDTCisVT<1, i32>]>;
++ 
++ // Call
++ def AquilaJmpLink : SDNode<"AquilaISD::JmpLink", SDT_AquilaJmpLink,
++                            [SDNPHasChain, SDNPOutGlue, SDNPOptInGlue,
++                             SDNPVariadic]>;
++ 
++ // Return
++ def AquilaRet : SDNode<"AquilaISD::Ret", SDTNone,
++                        [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
++ 
++ // These are target-independent nodes, but have target-specific formats
++ def callseq_start : SDNode<"ISD::CALLSEQ_START", SDT_AquilaCallSeqStart,
++                            [SDNPHasChain, SDNPSideEffect, SDNPOutGlue]>;
++ def callseq_end   : SDNode<"ISD::CALLSEQ_END", SDT_AquilaCallSeqEnd,
++                            [SDNPHasChain, SDNPSideEffect,
++                             SDNPOptInGlue, SDNPOutGlue]>;
++ 
++ //===----------------------------------------------------------------------===//
++ // Operand, Complex Patterns and Transformations Definitions
++ //===----------------------------------------------------------------------===//
++ def simm16 : Operand<i32> {
++   let DecoderMethod = "DecodeSimm16";
++ }
++ 
++ def immSExt16 : PatLeaf<(imm), [{ return isInt<16>(N->getSExtValue()); }]>;
++ 
++ def mem : Operand<i32> {
++   let PrintMethod = "printMemOperand";
++   let MIOperandInfo = (ops CPURegs, simm16);
++   let EncoderMethod = "getMemEncoding";
++ }
++ 
++ def addr : ComplexPattern<iPTR, 2, "selectIntAddr", [frameindex]>;
++ 
++ def calltarget : Operand<iPTR> {
++   let EncoderMethod = "getJumpTargetOpValue";
++ }
++ 
++ //===----------------------------------------------------------------------===//
++ // Instructions
++ //===----------------------------------------------------------------------===//
++ 
++ class ArithLogicR<bits<5> op, string asmstr, SDNode OpNode, InstrItinClass itin, RegisterClass RC>
++     : AquilaInstFormR<op, (outs RC:$rd), (ins RC:$rs, RC:$rt),
++ 	                  !strconcat(asmstr, "\t$rd, $rs, $rt"),
++ 					  [(set RC:$rd, (OpNode RC:$rs, RC:$rt))], itin> {
++ }
++ 
++ class ArithLogicI<bits<5> op, string asmstr, SDNode OpNode, InstrItinClass itin, RegisterClass RC>
++     : AquilaInstFormI<op, (outs RC:$rd), (ins RC:$rs, simm16:$imm16),
++ 	                  !strconcat(asmstr, "\t$rd, $rs, $imm16"),
++                       [(set RC:$rd, (OpNode RC:$rs, immSExt16:$imm16))], itin> {
++ }
++ 
++ let isCall=1 in {
++   class JumpLink<bits<5> op, string asmstr>
++       : AquilaInstJumpLink<op, (outs), (ins calltarget:$addr, variable_ops),
++   	                      !strconcat(asmstr, "\t$addr"),
++                           [(AquilaJmpLink imm:$addr)], IIBranch> {
++     let DecoderMethod = "DecodeJumpTarget";
++   }
++ }
++ 
++ let isTerminator=1, isBarrier=1 in
++ class JumpRegister<bits<5> op, string asmstr, RegisterClass RC>
++     : AquilaInstJumpReg<op, (outs), (ins RC:$rt),
++ 	                    !strconcat(asmstr, "\t$rt"), [(null_frag RC:$rt)], IIBranch> {
++   let isBranch = 1;
++   let isIndirectBranch = 1;
++ }
++ 
++ class Load<bits<5> op, string asmstr, SDPatternOperator OpNode = null_frag, InstrItinClass itin, RegisterClass RC>
++     : AquilaInstFormI<op, (outs RC:$rd), (ins mem:$addr),
++ 	                  !strconcat(asmstr, "\t$rd, $addr"),
++ 					  [(set RC:$rd, (OpNode addr:$addr))], itin> {
++   let DecoderMethod = "DecodeMem";
++ }
++ 
++ class Store<bits<5> op, string asmstr, SDPatternOperator OpNode = null_frag, InstrItinClass itin, RegisterClass RC>
++     : AquilaInstFormI<op, (outs), (ins RC:$rd, mem:$addr),
++ 	                  !strconcat(asmstr, "\t$rd, $addr"),
++ 					  [(OpNode RC:$rd, addr:$addr)], itin> {
++   let DecoderMethod = "DecodeMem";
++ }
++ 
++ def ADD : ArithLogicR<0x00, "add", add, IIAlu, CPURegs>;
++ def SUB : ArithLogicR<0x01, "sub", sub, IIAlu, CPURegs>;
++ 
++ def ADDi : ArithLogicI<0x00, "addi", add, IIAlu, CPURegs>;
++ 
++ def JAL : JumpLink<0x06, "jal">;
++ def JR : JumpRegister<0x02, "jr", CPURegs>;
++ 
++ def LD : Load<0x0c, "ld", load, IILoad, CPURegs>;
++ def ST : Store<0x0d, "st", store, IIStore, CPURegs>;
++ 
++ class MOVR3216<string asmstr, InstrItinClass itin>:
++   AquilaInstFormI<0x00, (outs CPURegs:$rd), (ins CPURegs:$rs),
++                   !strconcat(asmstr, "\t$rd, $rs"), [], itin>;
++ 
++ def MR : MOVR3216<"li", IIAlu>;
++ 
++ //===----------------------------------------------------------------------===//
++ // Instruction aliases
++ //===----------------------------------------------------------------------===//
++ 
++ class AquilaInstAlias<string Asm, dag Result, bit Emit = 0b1> :
++   InstAlias<Asm, Result, Emit>;
++ 
++ //def LI : AquilaInstAlias<"li $rd, $imm16", (ADD CPURegs:$rd, $imm16), 1>;
++ 
++ 
++ //===----------------------------------------------------------------------===//
++ // Pseudo instructions
++ //===----------------------------------------------------------------------===//
++ let isReturn=1, isTerminator=1, isBarrier=1 in
++ def RetRA : AquilaPseudo<(outs), (ins), [(AquilaRet)]>;
++ 
++ let Defs = [R7], Uses = [R7], hasSideEffects = 1 in {
++   def ADJCALLSTACKDOWN : AquilaPseudo<(outs), (ins i32imm:$amt),
++                                       [(callseq_start timm:$amt)]>;
++   def ADJCALLSTACKUP   : AquilaPseudo<(outs), (ins i32imm:$amt1, i32imm:$amt2),
++                                       [(callseq_end timm:$amt1, timm:$amt2)]>;
++ }
++ 
++ //===----------------------------------------------------------------------===//
++ // Arbitrary patterns that map to one or more instructions
++ //===----------------------------------------------------------------------===//
++ 
++ def : Pat<(AquilaJmpLink (i32 tglobaladdr:$dst)),
++           (JAL tglobaladdr:$dst)>;
++ def : Pat<(AquilaJmpLink (i32 texternalsym:$dst)),
++           (JAL texternalsym:$dst)>;
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaMCInstLower.cpp llvm-3.6.2.src/lib/Target/Aquila/AquilaMCInstLower.cpp
+*** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaMCInstLower.cpp	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaMCInstLower.cpp	2016-02-20 16:34:36.000000000 +0900
+***************
+*** 0 ****
+--- 1,124 ----
++ //===-- AquilaMCInstLower.cpp - Convert Aquila MachineInstr to an MCInst --===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ //
++ // This file contains code to lower Aquila MachineInstrs to their corresponding
++ // MCInst records.
++ //
++ //===----------------------------------------------------------------------===//
++ 
++ #include "AquilaMCInstLower.h"
++ #include "llvm/CodeGen/AsmPrinter.h"
++ #include "llvm/CodeGen/MachineBasicBlock.h"
++ #include "llvm/CodeGen/MachineInstr.h"
++ #include "llvm/CodeGen/MachineOperand.h"
++ #include "llvm/MC/MCAsmInfo.h"
++ #include "llvm/MC/MCContext.h"
++ #include "llvm/MC/MCExpr.h"
++ #include "llvm/MC/MCInst.h"
++ #include "llvm/IR/Mangler.h"
++ #include "llvm/Support/raw_ostream.h"
++ #include "llvm/Support/ErrorHandling.h"
++ #include "llvm/ADT/SmallString.h"
++ #include "llvm/MC/MCSymbol.h"
++ #include "llvm/Support/Debug.h"
++ 
++ #define DEBUG_TYPE "aquila-mcinstlower"
++ 
++ using namespace llvm;
++ 
++ MCOperand AquilaMCInstLower::
++ LowerSymbolOperand(const MachineOperand &MO,
++                    MachineOperandType MOTy) const {
++   DEBUG(dbgs() << ">>> LowerSymbolOperand <<<\n");
++ 
++   switch(MO.getTargetFlags()) {
++     default: llvm_unreachable("Invalid target flag!");
++     case 0: break;
++   }
++ 
++   const MCSymbol *Symbol;
++   unsigned Offset = 0;
++   switch (MOTy) {
++   case MachineOperand::MO_MachineBasicBlock:
++     Symbol = MO.getMBB()->getSymbol();
++     break;
++   case MachineOperand::MO_GlobalAddress:
++     Symbol = Printer.getSymbol(MO.getGlobal());
++     Offset = MO.getOffset();
++     break;
++   case MachineOperand::MO_BlockAddress:
++     Symbol = Printer.GetBlockAddressSymbol(MO.getBlockAddress());
++     break;
++   case MachineOperand::MO_ExternalSymbol:
++     Symbol = Printer.GetExternalSymbolSymbol(MO.getSymbolName());
++     break;
++   case MachineOperand::MO_JumpTableIndex:
++     Symbol = Printer.GetJTISymbol(MO.getIndex());
++     break;
++   case MachineOperand::MO_ConstantPoolIndex:
++     Symbol = Printer.GetCPISymbol(MO.getIndex());
++     Offset = MO.getOffset();
++     break;
++   default:
++     llvm_unreachable("<unknown operand type>");
++   }
++ 
++   const MCExpr *Expr = MCSymbolRefExpr::Create(Symbol, Ctx);
++ 
++   if (Offset) {
++     const MCConstantExpr *OffsetExpr =  MCConstantExpr::Create(Offset, Ctx);
++     Expr = MCBinaryExpr::CreateAdd(Expr, OffsetExpr, Ctx);
++   }
++ 
++   return MCOperand::CreateExpr(Expr);
++ }
++ 
++ MCOperand AquilaMCInstLower::
++ LowerOperand(const MachineOperand& MO) const {
++ //  DEBUG(dbgs() 
++ //        << ">>> LowerOperand:" << MO 
++ //        << " type:" << MO.getType() << "\n");
++ 
++   MachineOperandType MOTy = MO.getType();
++   switch (MOTy) {
++   case MachineOperand::MO_Register:
++     // Ignore all implicit register operands.
++     if (MO.isImplicit()) break;
++     return MCOperand::CreateReg(MO.getReg());
++   case MachineOperand::MO_Immediate:
++     return MCOperand::CreateImm(MO.getImm());
++   case MachineOperand::MO_MachineBasicBlock:
++   case MachineOperand::MO_GlobalAddress:
++   case MachineOperand::MO_ExternalSymbol:
++   case MachineOperand::MO_JumpTableIndex:
++   case MachineOperand::MO_ConstantPoolIndex:
++   case MachineOperand::MO_BlockAddress:
++     return LowerSymbolOperand(MO, MOTy);
++   case MachineOperand::MO_RegisterMask:
++     break;
++   default:
++     llvm_unreachable("unknown operand type");
++  }
++ 
++   return MCOperand();
++ }
++ 
++ void AquilaMCInstLower::
++ Lower(const MachineInstr *MI, MCInst &OutMI) const {
++   DEBUG(dbgs() << ">> AquilaMCInstLower::Lower <<\n");
++   OutMI.setOpcode(MI->getOpcode());
++ 
++   for (unsigned i = 0, e = MI->getNumOperands(); i != e; ++i) {
++     const MachineOperand &MO = MI->getOperand(i);
++     MCOperand MCOp = LowerOperand(MO);
++ 
++     if (MCOp.isValid())
++       OutMI.addOperand(MCOp);
++   }
++ }
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaMCInstLower.h llvm-3.6.2.src/lib/Target/Aquila/AquilaMCInstLower.h
+*** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaMCInstLower.h	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaMCInstLower.h	2016-02-20 16:35:14.000000000 +0900
+***************
+*** 0 ****
+--- 1,47 ----
++ //===-- AquilaMCInstLower.h - Lower MachineInstr to MCInst ------*- C++ -*-===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ 
++ #ifndef AQUILA_MCINSTLOWER_H
++ #define AQUILA_MCINSTLOWER_H
++ 
++ #include "llvm/Support/Compiler.h"
++ #include "llvm/CodeGen/MachineOperand.h"
++ 
++ namespace llvm {
++   class AsmPrinter;
++   class MCContext;
++   class MCInst;
++   class MCOperand;
++   class MCSymbol;
++   class MachineInstr;
++   class MachineModuleInfoMachO;
++   class MachineOperand;
++   class Mangler;
++ 
++   /// AquilaMCInstLower - This class is used to lower an MachineInstr
++   /// into an MCInst.
++ class LLVM_LIBRARY_VISIBILITY AquilaMCInstLower {
++   typedef MachineOperand::MachineOperandType MachineOperandType;
++   MCContext &Ctx;
++   Mangler &Mang;
++   const AsmPrinter &Printer;
++ 
++  public:
++   AquilaMCInstLower(MCContext &ctx, Mangler &mang, AsmPrinter &printer)
++     : Ctx(ctx), Mang(mang), Printer(printer) {}
++   void Lower(const MachineInstr *MI, MCInst &OutMI) const;
++ 
++  private:
++   MCOperand LowerOperand(const MachineOperand& MO) const;
++   MCOperand LowerSymbolOperand(const MachineOperand &MO,
++                                MachineOperandType MOTy) const;
++ };
++ } // end of namespace llvm
++ 
++ #endif
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaMachineFunction.cpp llvm-3.6.2.src/lib/Target/Aquila/AquilaMachineFunction.cpp
+*** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaMachineFunction.cpp	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaMachineFunction.cpp	2016-02-20 07:54:29.000000000 +0900
+***************
+*** 0 ****
+--- 1,20 ----
++ //===-- AquilaMachineFunction.cpp - Private data used for Aquila ----------===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ 
++ #include "AquilaMachineFunction.h"
++ #include "AquilaInstrInfo.h"
++ #include "MCTargetDesc/AquilaMCTargetDesc.h"
++ #include "llvm/IR/Function.h"
++ #include "llvm/CodeGen/MachineInstrBuilder.h"
++ #include "llvm/CodeGen/MachineRegisterInfo.h"
++ #include "llvm/Support/CommandLine.h"
++ 
++ using namespace llvm;
++ 
++ void AquilaMachineFunctionInfo::anchor() {}
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaMachineFunction.h llvm-3.6.2.src/lib/Target/Aquila/AquilaMachineFunction.h
+*** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaMachineFunction.h	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaMachineFunction.h	2016-02-20 07:54:29.000000000 +0900
+***************
+*** 0 ****
+--- 1,33 ----
++ //===-- AquilaMachineFunction.h - Private data used for Aquila ----*- C++ -*-=//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ //
++ // This file declares the Aquila specific subclass of MachineFunctionInfo.
++ //
++ //===----------------------------------------------------------------------===//
++ 
++ #ifndef AQUILA_MACHINE_FUNCTION_INFO_H
++ #define AQUILA_MACHINE_FUNCTION_INFO_H
++ 
++ #include "llvm/CodeGen/MachineFunction.h"
++ #include "llvm/CodeGen/MachineFrameInfo.h"
++ #include <utility>
++ 
++ namespace llvm {
++ 
++ /// AquilaFunctionInfo - This class is derived from MachineFunction private
++ /// Aquila target-specific information for each MachineFunction.
++ class AquilaMachineFunctionInfo : public MachineFunctionInfo {
++   virtual void anchor();
++ 
++ public:
++   AquilaMachineFunctionInfo(MachineFunction& MF) {}
++ };
++ } // end of namespace llvm
++ 
++ #endif // AQUILA_MACHINE_FUNCTION_INFO_H
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaRegisterInfo.cpp llvm-3.6.2.src/lib/Target/Aquila/AquilaRegisterInfo.cpp
+*** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaRegisterInfo.cpp	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaRegisterInfo.cpp	2016-02-20 07:54:29.000000000 +0900
+***************
+*** 0 ****
+--- 1,126 ----
++ //===-- AquilaRegisterInfo.cpp - Aquila Register Information -== --------------===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ //
++ // This file contains the Aquila implementation of the TargetRegisterInfo class.
++ //
++ //===----------------------------------------------------------------------===//
++ 
++ #define DEBUG_TYPE "aquila-reg-info"
++ 
++ #include "AquilaRegisterInfo.h"
++ #include "Aquila.h"
++ #include "llvm/IR/Constants.h"
++ #include "llvm/IR/Type.h"
++ #include "llvm/IR/Function.h"
++ #include "llvm/CodeGen/ValueTypes.h"
++ #include "llvm/CodeGen/MachineInstrBuilder.h"
++ #include "llvm/CodeGen/MachineFunction.h"
++ #include "llvm/CodeGen/MachineFrameInfo.h"
++ #include "llvm/Target/TargetFrameLowering.h"
++ #include "llvm/Target/TargetMachine.h"
++ #include "llvm/Target/TargetOptions.h"
++ #include "llvm/Target/TargetInstrInfo.h"
++ #include "llvm/Support/CommandLine.h"
++ #include "llvm/Support/Debug.h"
++ #include "llvm/Support/ErrorHandling.h"
++ #include "llvm/Support/raw_ostream.h"
++ #include "llvm/ADT/BitVector.h"
++ #include "llvm/ADT/STLExtras.h"
++ #include "llvm/IR/DebugInfo.h"
++ 
++ #include "MCTargetDesc/AquilaMCTargetDesc.h"
++ 
++ #define GET_REGINFO_TARGET_DESC
++ #include "AquilaGenRegisterInfo.inc"
++ 
++ using namespace llvm;
++ 
++ AquilaRegisterInfo::
++ AquilaRegisterInfo(const AquilaSubtarget &ST)
++   : AquilaGenRegisterInfo(Aquila::R4), Subtarget(ST) {}
++ 
++ //===----------------------------------------------------------------------===//
++ // Callee Saved Registers methods
++ //===----------------------------------------------------------------------===//
++ 
++ // 呼び出し先待避レジスタ
++ const MCPhysReg *AquilaRegisterInfo::
++ getCalleeSavedRegs(const MachineFunction *MF) const {
++     return CSR_SingleFloatOnly_SaveList;
++ }
++ 
++ // 呼び出し元待避レジスタ
++ const uint32_t* AquilaRegisterInfo::
++ getCallPreservedMask(CallingConv::ID) const {  
++     return CSR_SingleFloatOnly_RegMask;
++ }
++ 
++ BitVector AquilaRegisterInfo::
++ getReservedRegs(const MachineFunction &MF) const {
++   static const uint16_t ReservedCPURegs[] = {
++     Aquila::R0, Aquila::R1, Aquila::R2, Aquila::R4,
++     Aquila::R5, Aquila::R6, Aquila::R7,
++   };
++ 
++   BitVector Reserved(getNumRegs());
++   typedef TargetRegisterClass::const_iterator RegIter;
++ 
++   for (unsigned I = 0; I < array_lengthof(ReservedCPURegs); ++I)
++     Reserved.set(ReservedCPURegs[I]);
++ 
++   return Reserved;
++ }
++ 
++ // ADJCALLSTACKDOWNとADJCALLSTACKUPを単純に削除する
++ void AquilaRegisterInfo::
++ eliminateCallFramePseudoInstr(MachineFunction &MF, MachineBasicBlock &MBB,
++                               MachineBasicBlock::iterator I) const {
++   DEBUG(dbgs() << ">> AquilaRegisterInfo::eliminateCallFramePseudoInstr <<\n";);
++   MBB.erase(I);
++ }
++ 
++ // FrameIndexをスタックポインタに置き換える
++ void AquilaRegisterInfo::
++ eliminateFrameIndex(MachineBasicBlock::iterator II, int SPAdj,
++                     unsigned FIOperandNum, RegScavenger *RS) const {
++   DEBUG(dbgs() << ">> AquilaRegisterInfo::eliminateFrameIndex <<\n";);
++ 
++   MachineInstr &MI = *II;
++   const MachineFunction &MF = *MI.getParent()->getParent();
++ 
++   unsigned opIndex;
++   for (opIndex = 0; opIndex < MI.getNumOperands(); opIndex++) {
++     if (MI.getOperand(opIndex).isFI()) break;
++   }
++   assert(opIndex < MI.getNumOperands() && "Instr doesn't have FrameIndex operand!");
++ 
++   int FrameIndex = MI.getOperand(opIndex).getIndex();
++   uint64_t stackSize = MF.getFrameInfo()->getStackSize();
++   int64_t spOffset = MF.getFrameInfo()->getObjectOffset(FrameIndex);
++   int64_t Offset = spOffset + stackSize + MI.getOperand(opIndex+1).getImm();
++   unsigned FrameReg = Aquila::R7;
++ 
++   DEBUG(errs() 
++         << "\nFunction : " << MF.getFunction()->getName() << "\n"
++         << "<--------->\n" << MI
++         << "FrameIndex : " << FrameIndex << "\n"
++         << "spOffset   : " << spOffset << "\n"
++         << "stackSize  : " << stackSize << "\n"
++         << "Offset     : " << Offset << "\n" << "<--------->\n");
++ 
++   DEBUG(errs() << "Before:" << MI);
++   MI.getOperand(opIndex).ChangeToRegister(FrameReg, false);
++   MI.getOperand(opIndex+1).ChangeToImmediate(Offset);
++   DEBUG(errs() << "After:" << MI);
++ }
++ 
++ unsigned AquilaRegisterInfo::
++ getFrameRegister(const MachineFunction &MF) const {
++   return Aquila::R7;
++ }
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaRegisterInfo.h llvm-3.6.2.src/lib/Target/Aquila/AquilaRegisterInfo.h
+*** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaRegisterInfo.h	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaRegisterInfo.h	2016-02-20 07:54:29.000000000 +0900
+***************
+*** 0 ****
+--- 1,54 ----
++ 
++ //===-- AquilaRegisterInfo.h - Aquila Register Information Impl -----*- C++ -*-===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ //
++ // This file contains the Aquila implementation of the TargetRegisterInfo class.
++ //
++ //===----------------------------------------------------------------------===//
++ 
++ #ifndef AQUILAREGISTERINFO_H
++ #define AQUILAREGISTERINFO_H
++ 
++ #include "Aquila.h"
++ #include "llvm/Target/TargetRegisterInfo.h"
++ 
++ #define GET_REGINFO_HEADER
++ #include "AquilaGenRegisterInfo.inc"
++ 
++ namespace llvm {
++ class AquilaSubtarget;
++ class Type;
++ 
++ struct AquilaRegisterInfo : public AquilaGenRegisterInfo {
++   const AquilaSubtarget &Subtarget;
++ 
++   AquilaRegisterInfo(const AquilaSubtarget &Subtarget);
++ 
++   /// Code Generation virtual methods...
++   const MCPhysReg *getCalleeSavedRegs(const MachineFunction* MF = nullptr) const override;
++   const uint32_t *getCallPreservedMask(CallingConv::ID) const override;
++ 
++   BitVector getReservedRegs(const MachineFunction &MF) const override;
++ 
++   void eliminateCallFramePseudoInstr(MachineFunction &MF,
++                                      MachineBasicBlock &MBB,
++                                      MachineBasicBlock::iterator I) const /*override*/;
++ 
++   /// Stack Frame Processing Methods
++   void eliminateFrameIndex(MachineBasicBlock::iterator II,
++                            int SPAdj, unsigned FIOperandNum,
++                            RegScavenger *RS = nullptr) const override;
++ 
++   /// Debug information queries.
++   unsigned getFrameRegister(const MachineFunction &MF) const override;
++ };
++ 
++ } // end namespace llvm
++ 
++ #endif
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaRegisterInfo.td llvm-3.6.2.src/lib/Target/Aquila/AquilaRegisterInfo.td
+*** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaRegisterInfo.td	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaRegisterInfo.td	2016-02-20 07:54:29.000000000 +0900
+***************
+*** 0 ****
+--- 1,89 ----
++ //===-- AquilaRegisterInfo.td - Aquila Register defs -----------*- tablegen -*-===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ 
++ //===----------------------------------------------------------------------===//
++ //  Declarations that describe the AQUILA register file
++ //===----------------------------------------------------------------------===//
++ 
++ // We have banks of 16 registers each.
++ class AquilaReg<bits<16> Enc, string n> : Register<n> {
++   let HWEncoding = Enc;
++   let Namespace = "Aquila";
++ }
++ 
++ // Aquila CPU Registers
++ class AquilaGPRReg<bits<16> Enc, string n> : AquilaReg<Enc, n>;
++ 
++ //===----------------------------------------------------------------------===//
++ //@Registers
++ //===----------------------------------------------------------------------===//
++ // The register string, such as "9" or "gp" will show on "llvm-objdump -d"
++ //@ All registers definition
++ let Namespace = "Aquila" in {
++   //@ General Purpose Registers
++   def R0   : AquilaGPRReg<0,  "r0">,   DwarfRegNum<[0]>;
++   def R1   : AquilaGPRReg<1,  "r1">,   DwarfRegNum<[1]>;
++   def R2   : AquilaGPRReg<2,  "r2">,   DwarfRegNum<[2]>;
++   def R3   : AquilaGPRReg<3,  "r3">,   DwarfRegNum<[3]>;
++   def R4   : AquilaGPRReg<4,  "r4">,   DwarfRegNum<[4]>;
++   def R5   : AquilaGPRReg<5,  "r5">,   DwarfRegNum<[5]>;
++   def R6   : AquilaGPRReg<6,  "r6">,   DwarfRegNum<[6]>;
++   def R7   : AquilaGPRReg<7,  "r7">,   DwarfRegNum<[7]>;
++   def R8   : AquilaGPRReg<8,  "r8">,   DwarfRegNum<[8]>;
++   def R9   : AquilaGPRReg<9,  "r9">,   DwarfRegNum<[9]>;
++   def R10  : AquilaGPRReg<10, "r10">,  DwarfRegNum<[10]>;
++   def R11  : AquilaGPRReg<11, "r11">,  DwarfRegNum<[11]>;
++   def R12  : AquilaGPRReg<12, "r12">,  DwarfRegNum<[12]>;
++   def R13  : AquilaGPRReg<13, "r13">,  DwarfRegNum<[13]>;
++   def R14  : AquilaGPRReg<14, "r14">,  DwarfRegNum<[14]>;
++   def R15  : AquilaGPRReg<15, "r15">,  DwarfRegNum<[15]>;
++   def R16  : AquilaGPRReg<16, "r16">,  DwarfRegNum<[16]>;
++   def R17  : AquilaGPRReg<17, "r17">,  DwarfRegNum<[17]>;
++   def R18  : AquilaGPRReg<18, "r18">,  DwarfRegNum<[18]>;
++   def R19  : AquilaGPRReg<19, "r19">,  DwarfRegNum<[19]>;
++   def R20  : AquilaGPRReg<20, "r20">,  DwarfRegNum<[20]>;
++   def R21  : AquilaGPRReg<21, "r21">,  DwarfRegNum<[21]>;
++   def R22  : AquilaGPRReg<22, "r22">,  DwarfRegNum<[22]>;
++   def R23  : AquilaGPRReg<23, "r23">,  DwarfRegNum<[23]>;
++   def R24  : AquilaGPRReg<24, "r24">,  DwarfRegNum<[24]>;
++   def R25  : AquilaGPRReg<25, "r25">,  DwarfRegNum<[25]>;
++   def R26  : AquilaGPRReg<26, "r26">,  DwarfRegNum<[26]>;
++   def R27  : AquilaGPRReg<27, "r27">,  DwarfRegNum<[27]>;
++   def R28  : AquilaGPRReg<28, "r28">,  DwarfRegNum<[28]>;
++   def R29  : AquilaGPRReg<29, "r29">,  DwarfRegNum<[29]>;
++   def R30  : AquilaGPRReg<30, "r30">,  DwarfRegNum<[30]>;
++   def R31  : AquilaGPRReg<31, "r31">,  DwarfRegNum<[31]>;
++ }
++ 
++ //===----------------------------------------------------------------------===//
++ //@Register Classes
++ //===----------------------------------------------------------------------===//
++ 
++ def CPURegs : RegisterClass<"Aquila", [i32], 32, (add
++   // Reserved (zero register)
++   R0,
++   // Reserved (assembly temporary)
++   R1, R2,
++   // Return Values
++   R3,
++   // Reserved (return address)
++   R4,
++   // Reserved (heap pointer)
++   R5,
++   // Reserved (closure pointer)
++   R6,
++   // Reserved (stack pointer)
++   R7,
++   // Reserved (arguments registers)
++   R8, R9, R10, R11, R12, R13,
++   // Not preserved across procedure calls
++   R14, R15, R16, R17, R18, R19, R20, R21, R22,
++   // Callee save
++   R23, R24, R25, R26, R27, R28, R29, R30, R31
++ )>;
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaSchedule.td llvm-3.6.2.src/lib/Target/Aquila/AquilaSchedule.td
+*** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaSchedule.td	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaSchedule.td	2016-02-20 07:54:29.000000000 +0900
+***************
+*** 0 ****
+--- 1,37 ----
++ //===-- AquilaSchedule.td - Aquila Scheduling Definitions ------*- tablegen -*-===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ 
++ //===----------------------------------------------------------------------===//
++ // Functional units across Aquila chips sets. Based on GCC/Aquila backend files.
++ //===----------------------------------------------------------------------===//
++ def ALU     : FuncUnit;
++ def IMULDIV : FuncUnit;
++ 
++ //===----------------------------------------------------------------------===//
++ // Instruction Itinerary classes used for Aquila
++ //===----------------------------------------------------------------------===//
++ def IIAlu              : InstrItinClass;
++ def IILoad             : InstrItinClass;
++ def IIStore            : InstrItinClass;
++ def IIBranch           : InstrItinClass;
++ def IIPseudo           : InstrItinClass;
++ 
++ //===----------------------------------------------------------------------===//
++ // Aquila Generic instruction itineraries.
++ //===----------------------------------------------------------------------===//
++ //@ http://llvm.org/docs/doxygen/html/structllvm_1_1InstrStage.html
++ def AquilaGenericItineraries : ProcessorItineraries<[ALU, IMULDIV], [], [
++ //@2
++   InstrItinData<IIAlu              , [InstrStage<1,  [ALU]>]>,
++   InstrItinData<IILoad             , [InstrStage<3,  [ALU]>]>,
++   InstrItinData<IIStore            , [InstrStage<3,  [ALU]>]>,
++   InstrItinData<IIBranch           , [InstrStage<1,  [ALU]>]>,
++   InstrItinData<IIPseudo           , [InstrStage<1,  [ALU]>]>
++ ]>;
++ 
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaSelectionDAGInfo.cpp llvm-3.6.2.src/lib/Target/Aquila/AquilaSelectionDAGInfo.cpp
+*** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaSelectionDAGInfo.cpp	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaSelectionDAGInfo.cpp	2016-02-20 07:54:29.000000000 +0900
+***************
+*** 0 ****
+--- 1,21 ----
++ //===-- AquilaSelectionDAGInfo.cpp - Aquila SelectionDAG Info -----------------===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ //
++ // This file implements the AquilaSelectionDAGInfo class.
++ //
++ //===----------------------------------------------------------------------===//
++ 
++ #define DEBUG_TYPE "aquila-selectiondag-info"
++ #include "AquilaTargetMachine.h"
++ using namespace llvm;
++ 
++ AquilaSelectionDAGInfo::AquilaSelectionDAGInfo(const DataLayout &DL)
++     : TargetSelectionDAGInfo(&DL) {}
++ 
++ AquilaSelectionDAGInfo::~AquilaSelectionDAGInfo() {}
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaSelectionDAGInfo.h llvm-3.6.2.src/lib/Target/Aquila/AquilaSelectionDAGInfo.h
+*** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaSelectionDAGInfo.h	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaSelectionDAGInfo.h	2016-02-20 07:54:29.000000000 +0900
+***************
+*** 0 ****
+--- 1,30 ----
++ //===-- AquilaSelectionDAGInfo.h - Aquila SelectionDAG Info ---------*- C++ -*-===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ //
++ // This file defines the Aquila subclass for TargetSelectionDAGInfo.
++ //
++ //===----------------------------------------------------------------------===//
++ 
++ #ifndef AQUILA_SELECTIONDAGINFO_H
++ #define AQUILA_SELECTIONDAGINFO_H
++ 
++ #include "llvm/Target/TargetSelectionDAGInfo.h"
++ 
++ namespace llvm {
++ 
++ class AquilaTargetMachine;
++ 
++ class AquilaSelectionDAGInfo : public TargetSelectionDAGInfo {
++ public:
++   explicit AquilaSelectionDAGInfo(const DataLayout &DL);
++   ~AquilaSelectionDAGInfo();
++ };
++ } // end of namespace llvm
++ 
++ #endif
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaSubtarget.cpp llvm-3.6.2.src/lib/Target/Aquila/AquilaSubtarget.cpp
+*** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaSubtarget.cpp	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaSubtarget.cpp	2016-02-20 07:54:29.000000000 +0900
+***************
+*** 0 ****
+--- 1,34 ----
++ //===-- AquilaSubtarget.cpp - Aquila Subtarget Information --------------------===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ //
++ // This file implements the Aquila specific subclass of TargetSubtargetInfo.
++ //
++ //===----------------------------------------------------------------------===//
++ 
++ #include "AquilaSubtarget.h"
++ #include "Aquila.h"
++ #include "llvm/Support/TargetRegistry.h"
++ 
++ using namespace llvm;
++ 
++ #define DEBUG_TYPE "aquila-subtarget"
++ 
++ #define GET_SUBTARGETINFO_TARGET_DESC
++ #define GET_SUBTARGETINFO_CTOR
++ #include "AquilaGenSubtargetInfo.inc"
++ 
++ AquilaSubtarget::AquilaSubtarget(const std::string &TT,
++                                  const std::string &CPU,
++                                  const std::string &FS)
++     : AquilaGenSubtargetInfo(TT, CPU, FS) {
++   std::string CPUName = "generic";
++ 
++   // Parse features string.
++   ParseSubtargetFeatures(CPUName, FS);
++ }
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaSubtarget.h llvm-3.6.2.src/lib/Target/Aquila/AquilaSubtarget.h
+*** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaSubtarget.h	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaSubtarget.h	2016-02-20 07:54:29.000000000 +0900
+***************
+*** 0 ****
+--- 1,40 ----
++ //===-- AquilaSubtarget.h - Define Subtarget for the Aquila ---------*- C++ -*-===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ //
++ // This file declares the Aquila specific subclass of TargetSubtargetInfo.
++ //
++ //===----------------------------------------------------------------------===//
++ 
++ #ifndef LLVM_LIB_TARGET_AQUILA_AQUILASUBTARGET_H
++ #define LLVM_LIB_TARGET_AQUILA_AQUILASUBTARGET_H
++ 
++ #include "llvm/Target/TargetSubtargetInfo.h"
++ #include <string>
++ 
++ #define GET_SUBTARGETINFO_HEADER
++ #include "AquilaGenSubtargetInfo.inc"
++ 
++ namespace llvm {
++ class StringRef;
++ 
++ class AquilaSubtarget : public AquilaGenSubtargetInfo {
++   virtual void anchor() {}
++   bool ExtendedInsts;
++ 
++ public:
++ 
++   AquilaSubtarget(const std::string &TT, const std::string &CPU,
++ 		          const std::string &FS);
++ 
++   // automatically generated by TableGen
++   void ParseSubtargetFeatures(StringRef CPU, StringRef FS);
++ };
++ }
++ 
++ #endif
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaTargetMachine.cpp llvm-3.6.2.src/lib/Target/Aquila/AquilaTargetMachine.cpp
+*** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaTargetMachine.cpp	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaTargetMachine.cpp	2016-02-20 07:54:29.000000000 +0900
+***************
+*** 0 ****
+--- 1,48 ----
++ //===-- AquilaTargetMachine.cpp - Define TargetMachine for Aquila -------------===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ //
++ // Implements the info about Aquila target spec.
++ //
++ //===----------------------------------------------------------------------===//
++ 
++ #include "AquilaTargetMachine.h"
++ #include "AquilaISelDAGtoDAG.h"
++ #include "Aquila.h"
++ 
++ #include "llvm/IR/LegacyPassManager.h"
++ #include "llvm/CodeGen/Passes.h"
++ #include "llvm/Support/TargetRegistry.h"
++ 
++ using namespace llvm;
++ 
++ #define DEBUG_TYPE "aquila"
++ 
++ extern "C" void LLVMInitializeAquilaTarget() {
++ }
++ 
++ class AquilaPassConfig : public TargetPassConfig {
++ public:
++   AquilaPassConfig(AquilaTargetMachine *TM, PassManagerBase &PM)
++     : TargetPassConfig(TM, PM) {}
++ 
++   AquilaTargetMachine &getAquilaTargetMachine() const {
++     return getTM<AquilaTargetMachine>();
++   }
++ 
++   virtual bool addInstSelector();
++ };
++ 
++ bool AquilaPassConfig::addInstSelector() {
++   addPass(createAquilaISelDag(getAquilaTargetMachine()));
++   return false;
++ }
++ 
++ TargetPassConfig *AquilaTargetMachine::createPassConfig(PassManagerBase &PM) {
++   return new AquilaPassConfig(this, PM);
++ }
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaTargetMachine.h llvm-3.6.2.src/lib/Target/Aquila/AquilaTargetMachine.h
+*** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaTargetMachine.h	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaTargetMachine.h	2016-02-21 00:30:44.000000000 +0900
+***************
+*** 0 ****
+--- 1,78 ----
++ //===-- AquilaTargetMachine.h - Define TargetMachine for Aquila -----*- C++ -*-===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ //
++ // This file declares the Aquila specific subclass of TargetMachine.
++ //
++ //===----------------------------------------------------------------------===//
++ 
++ #ifndef LLVM_LIB_TARGET_AQUILA_AQUILATARGETMACHINE_H
++ #define LLVM_LIB_TARGET_AQUILA_AQUILATARGETMACHINE_H
++ 
++ #include "AquilaFrameLowering.h"
++ #include "AquilaInstrInfo.h"
++ #include "AquilaISelLowering.h"
++ #include "AquilaSelectionDAGInfo.h"
++ #include "AquilaRegisterInfo.h"
++ #include "AquilaSubtarget.h"
++ #include "llvm/IR/DataLayout.h"
++ #include "llvm/Target/TargetMachine.h"
++ #include "llvm/Target/TargetFrameLowering.h"
++ #include "llvm/Support/Debug.h"
++ 
++ #define GET_INSTRINFO_CTOR_DTOR
++ 
++ namespace llvm {
++ 
++ class AquilaTargetMachine : public LLVMTargetMachine {
++   const DataLayout DL;
++   AquilaSubtarget Subtarget;
++   AquilaInstrInfo InstrInfo;
++   AquilaFrameLowering FrameLowering;
++   AquilaTargetLowering TLInfo;
++   AquilaSelectionDAGInfo TSInfo;
++ 
++ public:
++   AquilaTargetMachine(const Target &T, StringRef TT, StringRef CPU, StringRef FS,
++                       const TargetOptions &Options, Reloc::Model RM,
++                       CodeModel::Model CM, CodeGenOpt::Level OL);
++ 
++   virtual const AquilaInstrInfo *getInstrInfo() const {
++     return &InstrInfo;
++   }
++ 
++   virtual const AquilaSubtarget *getSubtargetImpl() const override {
++     return &Subtarget;
++   }
++ 
++ //  virtual const AquilaRegisterInfo *getRegisterInfo() const {
++ //    return &InstrInfo.getRegisterInfo();
++ //  }
++ 
++   virtual const DataLayout *getDataLayout() const {
++     return &DL;
++   }
++ 
++   virtual const AquilaTargetLowering *getTargetLowering() const {
++     return &TLInfo;
++   }
++ 
++   virtual const AquilaFrameLowering *getFrameLowering() const {
++     return &FrameLowering;
++   }
++ 
++   virtual const AquilaSelectionDAGInfo *getSelectionDAGInfo() const {
++     return &TSInfo;
++   }
++ 
++   virtual TargetPassConfig *createPassConfig(PassManagerBase &PM) override;
++ };
++ 
++ }
++ 
++ #endif
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/CMakeLists.txt llvm-3.6.2.src/lib/Target/Aquila/CMakeLists.txt
+*** llvm-3.6.2.src.org/lib/Target/Aquila/CMakeLists.txt	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/CMakeLists.txt	2016-02-20 23:59:13.000000000 +0900
+***************
+*** 0 ****
+--- 1,36 ----
++ set(LLVM_TARGET_DEFINITIONS Aquila.td)
++ 
++ tablegen(LLVM AquilaGenRegisterInfo.inc -gen-register-info)
++ tablegen(LLVM AquilaGenInstrInfo.inc -gen-instr-info)
++ tablegen(LLVM AquilaGenMCCodeEmitter.inc -gen-emitter)
++ tablegen(LLVM AquilaGenAsmWriter.inc -gen-asm-writer)
++ tablegen(LLVM AquilaGenDAGISel.inc -gen-dag-isel)
++ tablegen(LLVM AquilaGenCallingConv.inc -gen-callingconv)
++ tablegen(LLVM AquilaGenSubtargetInfo.inc -gen-subtarget)
++ tablegen(LLVM AquilaGenAsmMatcher.inc -gen-asm-matcher)
++ tablegen(LLVM AquilaGenMCPseudoLowering.inc -gen-pseudo-lowering)
++ 
++ # AquilaCommonTableGen must be defined
++ add_public_tablegen_target(AquilaCommonTableGen)
++ 
++ # AquilaCodeGen should match with LLVMBuild.txt AquilaCodeGen
++ add_llvm_target(AquilaCodeGen
++   AquilaAsmPrinter.cpp
++   AquilaCCState.cpp
++   AquilaFrameLowering.cpp
++   AquilaInstrInfo.cpp
++   AquilaISelDAGtoDAG.cpp
++   AquilaISelLowering.cpp
++   AquilaMachineFunction.cpp
++   AquilaMCInstLower.cpp
++   AquilaRegisterInfo.cpp
++   AquilaSelectionDAGInfo.cpp
++   AquilaSubtarget.cpp
++   AquilaTargetMachine.cpp
++   )
++ 
++ # Should match with "subdirectories =  MCTargetDesc TargetInfo" in LLVMBuild.txt
++ add_subdirectory(InstPrinter)
++ add_subdirectory(TargetInfo)
++ add_subdirectory(MCTargetDesc)
++ 
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/InstPrinter/AquilaInstPrinter.cpp llvm-3.6.2.src/lib/Target/Aquila/InstPrinter/AquilaInstPrinter.cpp
+*** llvm-3.6.2.src.org/lib/Target/Aquila/InstPrinter/AquilaInstPrinter.cpp	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/InstPrinter/AquilaInstPrinter.cpp	2016-02-20 07:54:29.000000000 +0900
+***************
+*** 0 ****
+--- 1,60 ----
++ //===-- AquilaInstPrinter.cpp - Convert Aquila MCInst to assembly syntax ------===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ //
++ // This class prints an Aquila MCInst to a .s file.
++ //
++ //===----------------------------------------------------------------------===//
++ 
++ #define DEBUG_TYPE "asm-printer"
++ #include "AquilaInstPrinter.h"
++ #include "llvm/ADT/StringExtras.h"
++ #include "llvm/MC/MCExpr.h"
++ #include "llvm/MC/MCInst.h"
++ #include "llvm/MC/MCInstrInfo.h"
++ #include "llvm/MC/MCSymbol.h"
++ #include "llvm/Support/ErrorHandling.h"
++ #include "llvm/Support/raw_ostream.h"
++ using namespace llvm;
++ 
++ #include "AquilaGenAsmWriter.inc"
++ 
++ void AquilaInstPrinter::
++ printRegName(raw_ostream &OS, unsigned RegNo) const {
++   OS << '$' << StringRef(getRegisterName(RegNo)).lower();
++ }
++ 
++ void AquilaInstPrinter::
++ printInst(const MCInst *MI, raw_ostream &O, StringRef Annot) {
++   DEBUG(dbgs() << ">>> printInst:"; MI->dump());
++   printInstruction(MI, O);
++   printAnnotation(O, Annot);
++ }
++ 
++ void AquilaInstPrinter::
++ printOperand(const MCInst *MI, unsigned OpNo, raw_ostream &O) {
++   DEBUG(dbgs() << ">>> printOperand:" << *MI << " OpNo:" << OpNo << "\n");
++   const MCOperand &Op = MI->getOperand(OpNo);
++   if (Op.isReg()) {
++     printRegName(O, Op.getReg());
++   } else if (Op.isImm()) {
++     O << Op.getImm();
++   } else {
++     assert(Op.isExpr() && "unknown operand kind in printOperand");
++     O << *Op.getExpr();
++   }
++ }
++ 
++ void AquilaInstPrinter::
++ printMemOperand(const MCInst *MI, int opNum, raw_ostream &O) {
++   DEBUG(dbgs() << ">>> printMemOperand:"; MI->dump());
++   printOperand(MI, opNum+1, O);
++   O << "(";
++   printOperand(MI, opNum, O);
++   O << ")";
++ }
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/InstPrinter/AquilaInstPrinter.h llvm-3.6.2.src/lib/Target/Aquila/InstPrinter/AquilaInstPrinter.h
+*** llvm-3.6.2.src.org/lib/Target/Aquila/InstPrinter/AquilaInstPrinter.h	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/InstPrinter/AquilaInstPrinter.h	2016-02-20 07:54:29.000000000 +0900
+***************
+*** 0 ****
+--- 1,46 ----
++ //=== AquilaInstPrinter.h - Convert Aquila MCInst to assembly syntax -*- C++ -*-==//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ //
++ // This class prints a Aquila MCInst to a .s file.
++ //
++ //===----------------------------------------------------------------------===//
++ 
++ #ifndef AQUILA_INSTPRINTER_H
++ #define AQUILA_INSTPRINTER_H
++ #include "llvm/MC/MCInstPrinter.h"
++ #include "llvm/Support/Debug.h"
++ 
++ namespace llvm {
++ // These enumeration declarations were orignally in AquilaInstrInfo.h but
++ // had to be moved here to avoid circular dependencies between
++ // LLVMAquilaCodeGen and LLVMAquilaAsmPrinter.
++ class TargetMachine;
++ 
++ class AquilaInstPrinter : public MCInstPrinter {
++  public:
++   AquilaInstPrinter(const MCAsmInfo &MAI, const MCInstrInfo &MII,
++                   const MCRegisterInfo &MRI)
++     : MCInstPrinter(MAI, MII, MRI) {}
++ 
++   // must implement
++   virtual void printRegName(raw_ostream &OS, unsigned RegNo) const /*override*/;
++   virtual void printInst(const MCInst *MI, raw_ostream &O, StringRef Annot) /*override*/;
++ 
++ private:
++   // Autogenerated by tblgen.
++   void printInstruction(const MCInst *MI, raw_ostream &O);
++   static const char *getRegisterName(unsigned RegNo);
++ 
++   // used in printInstruction
++   void printOperand(const MCInst *MI, unsigned OpNo, raw_ostream &O);
++   void printMemOperand(const MCInst *MI, int opNum, raw_ostream &O);
++ };
++ } // end namespace llvm
++ 
++ #endif
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/InstPrinter/CMakeLists.txt llvm-3.6.2.src/lib/Target/Aquila/InstPrinter/CMakeLists.txt
+*** llvm-3.6.2.src.org/lib/Target/Aquila/InstPrinter/CMakeLists.txt	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/InstPrinter/CMakeLists.txt	2016-02-20 08:20:05.000000000 +0900
+***************
+*** 0 ****
+--- 1,3 ----
++ add_llvm_library(LLVMAquilaAsmPrinter
++   AquilaInstPrinter.cpp
++   )
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/InstPrinter/LLVMBuild.txt llvm-3.6.2.src/lib/Target/Aquila/InstPrinter/LLVMBuild.txt
+*** llvm-3.6.2.src.org/lib/Target/Aquila/InstPrinter/LLVMBuild.txt	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/InstPrinter/LLVMBuild.txt	2016-02-20 07:54:29.000000000 +0900
+***************
+*** 0 ****
+--- 1,23 ----
++ ;===- ./lib/Target/Mips/InstPrinter/LLVMBuild.txt --------------*- Conf -*--===;
++ ;
++ ;                     The LLVM Compiler Infrastructure
++ ;
++ ; This file is distributed under the University of Illinois Open Source
++ ; License. See LICENSE.TXT for details.
++ ;
++ ;===------------------------------------------------------------------------===;
++ ;
++ ; This is an LLVMBuild description file for the components in this subdirectory.
++ ;
++ ; For more information on the LLVMBuild system, please see:
++ ;
++ ;   http://llvm.org/docs/LLVMBuild.html
++ ;
++ ;===------------------------------------------------------------------------===;
++ 
++ [component_0]
++ type = Library
++ name = AquilaAsmPrinter
++ parent = Aquila
++ required_libraries = MC Support
++ add_to_library_groups = Aquila
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/InstPrinter/Makefile llvm-3.6.2.src/lib/Target/Aquila/InstPrinter/Makefile
+*** llvm-3.6.2.src.org/lib/Target/Aquila/InstPrinter/Makefile	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/InstPrinter/Makefile	2016-02-20 07:54:29.000000000 +0900
+***************
+*** 0 ****
+--- 1,15 ----
++ ##===- lib/Target/Mips/AsmPrinter/Makefile -----------------*- Makefile -*-===##
++ #
++ #                     The LLVM Compiler Infrastructure
++ #
++ # This file is distributed under the University of Illinois Open Source
++ # License. See LICENSE.TXT for details.
++ #
++ ##===----------------------------------------------------------------------===##
++ LEVEL = ../../../..
++ LIBRARYNAME = LLVMAquilaAsmPrinter
++ 
++ # Hack: we need to include 'main' mips target directory to grab private headers
++ CPP.Flags += -I$(PROJ_OBJ_DIR)/.. -I$(PROJ_SRC_DIR)/..
++ 
++ include $(LEVEL)/Makefile.common
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/LLVMBuild.txt llvm-3.6.2.src/lib/Target/Aquila/LLVMBuild.txt
+*** llvm-3.6.2.src.org/lib/Target/Aquila/LLVMBuild.txt	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/LLVMBuild.txt	2016-02-21 00:56:14.000000000 +0900
+***************
+*** 0 ****
+--- 1,34 ----
++ ;===- ./lib/Target/Aquila/LLVMBuild.txt --------------------------*- Conf -*--===;
++ ;
++ ;                     The LLVM Compiler Infrastructure
++ ;
++ ; This file is distributed under the University of Illinois Open Source
++ ; License. See LICENSE.TXT for details.
++ ;
++ ;===------------------------------------------------------------------------===;
++ ;
++ ; This is an LLVMBuild description file for the components in this subdirectory.
++ ;
++ ; For more information on the LLVMBuild system, please see:
++ ;
++ ;   http://llvm.org/docs/LLVMBuild.html
++ ;
++ ;===------------------------------------------------------------------------===;
++ 
++ # Following comments extracted from http://llvm.org/docs/LLVMBuild.html
++ 
++ [common]
++ subdirectories = InstPrinter MCTargetDesc TargetInfo
++ 
++ [component_0]
++ type = TargetGroup
++ name = Aquila
++ parent = Target
++ has_asmprinter = 1
++ 
++ [component_1]
++ type = Library
++ name = AquilaCodeGen
++ parent = Aquila
++ required_libraries = Analysis AsmPrinter CodeGen Core MC AquilaAsmPrinter AquilaDesc AquilaInfo SelectionDAG Support Target
++ add_to_library_groups = Aquila
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaAsmBackend.cpp llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaAsmBackend.cpp
+*** llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaAsmBackend.cpp	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaAsmBackend.cpp	2016-02-20 15:33:19.000000000 +0900
+***************
+*** 0 ****
+--- 1,117 ----
++ //===-- AquilaASMBackend.cpp - Aquila Asm Backend  ----------------------------===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ //
++ // This file implements the AquilaAsmBackend and AquilaELFObjectWriter classes.
++ //
++ //===----------------------------------------------------------------------===//
++ //
++ 
++ #include "MCTargetDesc/AquilaFixupKinds.h"
++ #include "MCTargetDesc/AquilaAsmBackend.h"
++ #include "MCTargetDesc/AquilaMCTargetDesc.h"
++ #include "llvm/MC/MCAsmBackend.h"
++ #include "llvm/MC/MCAssembler.h"
++ #include "llvm/MC/MCContext.h"
++ #include "llvm/MC/MCDirectives.h"
++ #include "llvm/MC/MCELFObjectWriter.h"
++ #include "llvm/MC/MCFixupKindInfo.h"
++ #include "llvm/MC/MCObjectWriter.h"
++ #include "llvm/MC/MCSubtargetInfo.h"
++ #include "llvm/Support/ErrorHandling.h"
++ #include "llvm/Support/Debug.h" 
++ #include "llvm/Support/raw_ostream.h"
++ #include "llvm/Support/Format.h"
++ 
++ using namespace llvm;
++ 
++ // Prepare value for the target space for it
++ static unsigned adjustFixupValue(unsigned Kind, uint64_t Value) {
++   DEBUG(dbgs() << ">> adjustFixupValue: kind:" << Kind << " Value:" << Value << "\n");
++ 
++   switch (Kind) {
++   default:
++     return 0;
++   case Aquila::fixup_Aquila_24:
++     Value >>= 2;
++     break;
++   }
++ 
++   return Value;
++ }
++ 
++ MCObjectWriter *AquilaAsmBackend::createObjectWriter(raw_ostream &OS) const {
++   return createAquilaELFObjectWriter(OS, OSType);
++ }
++ 
++ void AquilaAsmBackend::
++ applyFixup(const MCFixup &Fixup, char *Data, unsigned DataSize,
++            uint64_t Value, bool ISPCRel) const {
++   MCFixupKind Kind = Fixup.getKind();
++   Value = adjustFixupValue((unsigned)Kind, Value);
++ 
++   if (!Value)
++     return; // Doesn't change encoding.
++ 
++   // Where do we start in the object
++   unsigned Offset = Fixup.getOffset();
++   // Number of bytes we need to fixup
++   unsigned NumBytes = (getFixupKindInfo(Kind).TargetSize + 7) / 8;
++ 
++   DEBUG(dbgs() << "  Offset: " << Offset << "\n");
++   DEBUG(dbgs() << "  NumBytes: " << NumBytes << "\n");
++   DEBUG(dbgs() << "  TargetSize: " << getFixupKindInfo(Kind).TargetSize << "\n");
++   DEBUG(dbgs() << format("  Data: 0x%08x\n", (uint32_t)Data[Offset]));
++ 
++   // Grab current value, if any, from bits.
++   uint64_t CurVal = 0;
++ 
++   for (unsigned i = 0; i != NumBytes; ++i) {
++     unsigned Idx = i;
++     CurVal |= (uint64_t)((uint8_t)Data[Offset + Idx]) << (i*8);
++   }
++   DEBUG(dbgs() << format("  CurVal: 0x%08x\n", CurVal));
++ 
++   uint64_t Mask = ((uint64_t)(-1) >> (64 - getFixupKindInfo(Kind).TargetSize));
++   CurVal |= Value & Mask;
++   DEBUG(dbgs() << format("  CurVal: 0x%08x\n", CurVal));
++ 
++   // Write out the fixed up bytes back to the code/data bits.
++   for (unsigned i = 0; i != NumBytes; ++i) {
++     unsigned Idx = i;
++     Data[Offset + Idx] = (uint8_t)((CurVal >> (i*8)) & 0xff);
++   }
++ 
++   DEBUG(dbgs() << format("  Data: 0x%08x\n", (uint32_t)Data[Offset]));
++ }
++ 
++ const MCFixupKindInfo &AquilaAsmBackend::
++ getFixupKindInfo(MCFixupKind Kind) const {
++   const static MCFixupKindInfo Infos[Aquila::NumTargetFixupKinds] = {
++     // This table *must* be in same the order of fixup_* kinds in
++     // AquilaFixupKinds.h.
++     //
++     // name                  offset    bits  flags
++     {"fixup_Aquila_24",           0,     24,     0}
++   };
++ 
++   if (Kind < FirstTargetFixupKind)
++     return MCAsmBackend::getFixupKindInfo(Kind);
++ 
++   assert(unsigned(Kind - FirstTargetFixupKind) < getNumFixupKinds() &&
++          "Invalid kind!");
++   return Infos[Kind - FirstTargetFixupKind];
++ }
++ 
++ // MCAsmBackend
++ MCAsmBackend *llvm::createAquilaAsmBackend(const Target &T,
++                                            const MCRegisterInfo &MRI,
++                                            StringRef TT,
++                                            StringRef CPU) {
++   return new AquilaAsmBackend(T, Triple(TT).getOS());
++ }
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaAsmBackend.h llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaAsmBackend.h
+*** llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaAsmBackend.h	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaAsmBackend.h	2016-02-20 15:33:19.000000000 +0900
+***************
+*** 0 ****
+--- 1,101 ----
++ //===-- AquilaASMBackend.h - Aquila Asm Backend  ----------------------------===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ //
++ // This file implements the AquilaAsmBackend and AquilaELFObjectWriter classes.
++ //
++ //===----------------------------------------------------------------------===//
++ //
++ 
++ #ifndef LLVM_LIB_TARGET_AQUILA_MCTARGETDESC_AQUILAASMBACKEND_H
++ #define LLVM_LIB_TARGET_AQUILA_MCTARGETDESC_AQUILAASMBACKEND_H
++ 
++ #include "MCTargetDesc/AquilaFixupKinds.h"
++ #include "MCTargetDesc/AquilaMCTargetDesc.h"
++ #include "llvm/MC/MCAsmBackend.h"
++ #include "llvm/MC/MCAssembler.h"
++ #include "llvm/MC/MCDirectives.h"
++ #include "llvm/MC/MCELFObjectWriter.h"
++ #include "llvm/MC/MCFixupKindInfo.h"
++ #include "llvm/MC/MCObjectWriter.h"
++ #include "llvm/MC/MCSubtargetInfo.h"
++ #include "llvm/Support/ErrorHandling.h"
++ #include "llvm/Support/Debug.h" 
++ #include "llvm/Support/raw_ostream.h"
++ #include "llvm/Support/Format.h"
++ 
++ #define DEBUG_TYPE "aquila-asmbackend"
++ 
++ namespace llvm {
++ class AquilaAsmBackend : public MCAsmBackend {
++   Triple::OSType OSType;
++ 
++ public:
++   AquilaAsmBackend(const Target &T,  Triple::OSType _OSType)
++     :MCAsmBackend(), OSType(_OSType) {}
++ 
++   MCObjectWriter *createObjectWriter(raw_ostream &OS) const override;
++ 
++   /// ApplyFixup - Apply the \arg Value for given \arg Fixup into the provided
++   /// data fragment, at the offset specified by the fixup and following the
++   /// fixup kind as appropriate.
++   void applyFixup(const MCFixup &Fixup, char *Data, unsigned DataSize,
++                   uint64_t Value, bool ISPCRel) const override;
++ 
++   unsigned getNumFixupKinds() const override {
++     return Aquila::NumTargetFixupKinds;
++   }
++ 
++   const MCFixupKindInfo &getFixupKindInfo(MCFixupKind Kind) const override;
++ 
++   /// @name Target Relaxation Interfaces
++   /// @{
++ 
++   /// MayNeedRelaxation - Check whether the given instruction may need
++   /// relaxation.
++   ///
++   /// \param Inst - The instruction to test.
++   bool mayNeedRelaxation(const MCInst &Inst) const override {
++     return false;
++   }
++ 
++   /// fixupNeedsRelaxation - Target specific predicate for whether a given
++   /// fixup requires the associated instruction to be relaxed.
++   bool fixupNeedsRelaxation(const MCFixup &Fixup,
++                             uint64_t Value,
++                             const MCRelaxableFragment *DF,
++                             const MCAsmLayout &Layout) const override {
++     // FIXME.
++     assert(0 && "RelaxInstruction() unimplemented");
++     return false;
++   }
++ 
++   /// RelaxInstruction - Relax the instruction in the given fragment
++   /// to the next wider instruction.
++   ///
++   /// \param Inst - The instruction to relax, which may be the same
++   /// as the output.
++   /// \parm Res [output] - On return, the relaxed instruction.
++   void relaxInstruction(const MCInst &Inst, MCInst &Res) const override {
++   }
++ 
++   /// @}
++ 
++   /// WriteNopData - Write an (optimal) nop sequence of Count bytes
++   /// to the given output. If the target cannot generate such a sequence,
++   /// it should return an error.
++   ///
++   /// \return - True on success.
++   bool writeNopData(uint64_t Count, MCObjectWriter *OW) const override {
++     return true;
++   }
++ }; // class AquilaAsmBackend
++ 
++ }
++ 
++ #endif
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaBaseInfo.h llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaBaseInfo.h
+*** llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaBaseInfo.h	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaBaseInfo.h	2016-02-20 15:33:19.000000000 +0900
+***************
+*** 0 ****
+--- 1,67 ----
++ //===-- AquilaBaseInfo.h - Top level definitions for MIPS MC ------*- C++ -*-===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ //
++ // This file contains small standalone helper functions and enum definitions for
++ // the Aquila target useful for the compiler back-end and the MC libraries.
++ //
++ //===----------------------------------------------------------------------===//
++ #ifndef AQUILABASEINFO_H
++ #define AQUILABASEINFO_H
++ 
++ //#include "AquilaFixupKinds.h"
++ #include "AquilaMCTargetDesc.h"
++ #include "llvm/MC/MCExpr.h"
++ #include "llvm/Support/DataTypes.h"
++ #include "llvm/Support/ErrorHandling.h"
++ 
++ namespace llvm {
++ 
++ /// getAquilaRegisterNumbering - Given the enum value for some register,
++ /// return the number that it corresponds to.
++ inline static unsigned getAquilaRegisterNumbering(unsigned RegEnum)
++ {
++   switch (RegEnum) {
++   case Aquila::R0:  return 0;
++   case Aquila::R1:  return 1;
++   case Aquila::R2:  return 2;
++   case Aquila::R3:  return 3;
++   case Aquila::R4:  return 4;
++   case Aquila::R5:  return 5;
++   case Aquila::R6:  return 6;
++   case Aquila::R7:  return 7;
++   case Aquila::R8:  return 8;
++   case Aquila::R9:  return 9;
++   case Aquila::R10: return 10;
++   case Aquila::R11: return 11;
++   case Aquila::R12: return 12;
++   case Aquila::R13: return 13;
++   case Aquila::R14: return 14;
++   case Aquila::R15: return 15;
++   case Aquila::R16: return 16;
++   case Aquila::R17: return 17;
++   case Aquila::R18: return 18;
++   case Aquila::R19: return 19;
++   case Aquila::R20: return 20;
++   case Aquila::R21: return 21;
++   case Aquila::R22: return 22;
++   case Aquila::R23: return 23;
++   case Aquila::R24: return 24;
++   case Aquila::R25: return 25;
++   case Aquila::R26: return 26;
++   case Aquila::R27: return 27;
++   case Aquila::R28: return 28;
++   case Aquila::R29: return 29;
++   case Aquila::R30: return 30;
++   case Aquila::R31: return 31;
++   default: llvm_unreachable("Unknown register number!");
++   }
++ }
++ }
++ 
++ #endif
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaELFObjectWriter.cpp llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaELFObjectWriter.cpp
+*** llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaELFObjectWriter.cpp	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaELFObjectWriter.cpp	2016-02-20 15:38:34.000000000 +0900
+***************
+*** 0 ****
+--- 1,65 ----
++ //===-- AquilaELFObjectWriter.cpp - Aquila ELF Writer -------------------------===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ 
++ #include "MCTargetDesc/AquilaBaseInfo.h"
++ #include "MCTargetDesc/AquilaFixupKinds.h"
++ #include "MCTargetDesc/AquilaMCTargetDesc.h"
++ #include "llvm/MC/MCAssembler.h"
++ #include "llvm/MC/MCELF.h"
++ #include "llvm/MC/MCELFObjectWriter.h"
++ #include "llvm/MC/MCExpr.h"
++ #include "llvm/MC/MCSection.h"
++ #include "llvm/MC/MCValue.h"
++ #include "llvm/Support/ErrorHandling.h"
++ #include <list>
++ 
++ using namespace llvm;
++ 
++ class AquilaELFObjectWriter : public MCELFObjectTargetWriter {
++  public:
++   AquilaELFObjectWriter(uint8_t OSABI);
++   virtual ~AquilaELFObjectWriter();
++ 
++   // オブジェクトを生成するときやリンク時にアドレス解決するために
++   // ELFObjectWriterなどから参照される
++   unsigned GetRelocType(const MCValue &Target, const MCFixup &Fixup,
++                                 bool IsPCRel) const override;
++ };
++ 
++ AquilaELFObjectWriter::
++ AquilaELFObjectWriter(uint8_t OSABI)
++     : MCELFObjectTargetWriter(/*_is64Bit*/ false, OSABI, ELF::EM_NONE,
++                               /*HasRelocationAddend*/ false) {}
++ 
++ AquilaELFObjectWriter::~AquilaELFObjectWriter() {}
++ 
++ unsigned AquilaELFObjectWriter::
++ GetRelocType(const MCValue &Target,
++              const MCFixup &Fixup,
++              bool IsPCRel) const {
++   // determine the type of the relocation
++   unsigned Type = (unsigned)ELF::R_MIPS_NONE;
++   unsigned Kind = (unsigned)Fixup.getKind();
++ 
++   switch (Kind) {
++   default:
++     llvm_unreachable("invalid fixup kind!");
++   case Aquila::fixup_Aquila_24:
++     Type = ELF::R_MIPS_26;
++     break;
++   }
++ 
++   return Type;
++ }
++ 
++ MCObjectWriter *llvm::createAquilaELFObjectWriter(raw_ostream &OS,
++                                                   uint8_t OSABI) {
++   MCELFObjectTargetWriter *MOTW = new AquilaELFObjectWriter(OSABI);
++   return createELFObjectWriter(MOTW, OS, /*isLittleEndian*/ true);
++ }
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaFixupKinds.h llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaFixupKinds.h
+*** llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaFixupKinds.h	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaFixupKinds.h	2016-02-20 15:33:19.000000000 +0900
+***************
+*** 0 ****
+--- 1,34 ----
++ //===-- AquilaFixupKinds.h - Aquila Specific Fixup Entries ----------*- C++ -*-===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ 
++ #ifndef LLVM_AQUILA_FIXUPKINDS_H
++ #define LLVM_AQUILA_FIXUPKINDS_H
++ 
++ #include "llvm/MC/MCFixup.h"
++ 
++ namespace llvm {
++ namespace Aquila {
++   // Although most of the current fixup types reflect a unique relocation
++   // one can have multiple fixup types for a given relocation and thus need
++   // to be uniquely named.
++   //
++   // This table *must* be in the save order of
++   // MCFixupKindInfo Infos[Aquila::NumTargetFixupKinds]
++   // in AquilaAsmBackend.cpp.
++   //
++   enum Fixups {
++     fixup_Aquila_24 = FirstTargetFixupKind,
++     LastTargetFixupKind,
++     NumTargetFixupKinds = LastTargetFixupKind - FirstTargetFixupKind
++   };
++ } // namespace Aquila
++ } // namespace llvm
++ 
++ 
++ #endif // LLVM_AQUILA_AQUILAFIXUPKINDS_H
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaMCAsmInfo.cpp llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaMCAsmInfo.cpp
+*** llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaMCAsmInfo.cpp	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaMCAsmInfo.cpp	2016-02-20 15:33:19.000000000 +0900
+***************
+*** 0 ****
+--- 1,29 ----
++ //===-- AquilaMCAsmInfo.cpp - Aquila asm properties -----------------------===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ //
++ // This file contains the declarations of the AquilaMCAsmInfo properties.
++ //
++ //===----------------------------------------------------------------------===//
++ 
++ #include "AquilaMCAsmInfo.h"
++ #include "llvm/ADT/StringRef.h"
++ using namespace llvm;
++ 
++ AquilaMCAsmInfo::AquilaMCAsmInfo(const Target &T, StringRef TT) {
++   PointerSize = 4;
++ 
++   PrivateGlobalPrefix = ".L";
++   //WeakRefDirective ="\t.weak\t";
++   //PCSymbol=".";
++   CommentString = ";";
++ 
++   AlignmentIsInBytes = false;
++   //AllowNameToStartWithDigit = true;
++   UsesELFSectionDirectiveForBSS = true;
++ }
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaMCAsmInfo.h llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaMCAsmInfo.h
+*** llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaMCAsmInfo.h	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaMCAsmInfo.h	2016-02-20 15:33:19.000000000 +0900
+***************
+*** 0 ****
+--- 1,31 ----
++ //===-- AquilaMCAsmInfo.h - Aquila asm properties --------------*- C++ -*--===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source 
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ //
++ // This file contains the declaration of the AquilaMCAsmInfo class.
++ //
++ //===----------------------------------------------------------------------===//
++ 
++ #ifndef AQUILA_TARGETASMINFO_H
++ #define AQUILA_TARGETASMINFO_H
++ 
++ #include "llvm/MC/MCAsmInfo.h"
++ 
++ namespace llvm {
++   class StringRef;
++   class Target;
++ 
++   class AquilaMCAsmInfo : public MCAsmInfo {
++     virtual void anchor() {};
++   public:
++     explicit AquilaMCAsmInfo(const Target &T, StringRef TT);
++   };
++ 
++ } // namespace llvm
++ 
++ #endif
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaMCCodeEmitter.cpp llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaMCCodeEmitter.cpp
+*** llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaMCCodeEmitter.cpp	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaMCCodeEmitter.cpp	2016-02-20 15:33:19.000000000 +0900
+***************
+*** 0 ****
+--- 1,127 ----
++ //===-- AquilaMCCodeEmitter.cpp - Convert Aquila Code to Machine Code ---------===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ //
++ // This file implements the AquilaMCCodeEmitter class.
++ //
++ //===----------------------------------------------------------------------===//
++ //
++ #define DEBUG_TYPE "mccodeemitter"
++ #include "AquilaMCCodeEmitter.h"
++ #include "MCTargetDesc/AquilaBaseInfo.h"
++ #include "MCTargetDesc/AquilaFixupKinds.h"
++ #include "MCTargetDesc/AquilaMCTargetDesc.h"
++ #include "llvm/ADT/APFloat.h"
++ #include "llvm/ADT/Statistic.h"
++ #include "llvm/MC/MCCodeEmitter.h"
++ #include "llvm/MC/MCExpr.h"
++ #include "llvm/MC/MCInst.h"
++ #include "llvm/MC/MCInstrInfo.h"
++ #include "llvm/MC/MCRegisterInfo.h"
++ #include "llvm/MC/MCSubtargetInfo.h"
++ #include "llvm/Support/raw_ostream.h"
++ 
++ #define GET_INSTRMAP_INFO
++ #include "AquilaGenInstrInfo.inc"
++ #undef GET_INSTRMAP_INFO
++ 
++ namespace llvm {
++ MCCodeEmitter *createAquilaMCCodeEmitter(const MCInstrInfo &MCII,
++                                                const MCRegisterInfo &MRI,
++                                                const MCSubtargetInfo &STI,
++                                                MCContext &Ctx)
++ {
++   return new AquilaMCCodeEmitter(MCII, STI, Ctx);
++ }
++ }
++ 
++ /// EncodeInstruction - Emit the instruction.
++ void AquilaMCCodeEmitter::
++ EncodeInstruction(const MCInst &MI, raw_ostream &OS,
++                   SmallVectorImpl<MCFixup> &Fixups,
++                   const MCSubtargetInfo &STI) const
++ {
++   uint32_t Binary = getBinaryCodeForInstr(MI, Fixups, STI);
++ 
++   // For now all instructions are 4 bytes
++   int Size = 4; // FIXME: Have Desc.getSize() return the correct value!
++ 
++   for (int i = Size - 1; i >= 0; --i) {
++     unsigned Shift = i * 8;
++     OS << char((Binary >> Shift) & 0xff);
++   }
++ }
++ 
++ /// getMachineOpValue - Return binary encoding of operand. If the machine
++ /// operand requires relocation, record the relocation and return zero.
++ unsigned AquilaMCCodeEmitter::
++ getMachineOpValue(const MCInst &MI, const MCOperand &MO,
++                   SmallVectorImpl<MCFixup> &Fixups,
++                   const MCSubtargetInfo &STI) const {
++   if (MO.isReg()) {
++     unsigned Reg = MO.getReg();
++     unsigned RegNo = getAquilaRegisterNumbering(Reg);
++     return RegNo;
++   } else if (MO.isImm()) {
++     return static_cast<unsigned>(MO.getImm());
++   } else if (MO.isFPImm()) {
++     return static_cast<unsigned>(APFloat(MO.getFPImm())
++         .bitcastToAPInt().getHiBits(32).getLimitedValue());
++   } 
++ 
++   // MO must be an Expr.
++   assert(MO.isExpr());
++ 
++   llvm_unreachable("not implemented");
++   return 0;
++ }
++ 
++ /// getMemEncoding - Return binary encoding of memory related operand.
++ /// If the offset operand requires relocation, record the relocation.
++ unsigned AquilaMCCodeEmitter::
++ getMemEncoding(const MCInst &MI, unsigned OpNo,
++                SmallVectorImpl<MCFixup> &Fixups,
++                const MCSubtargetInfo &STI) const {
++   //llvm_unreachable("not implemented");
++   // Base register is encoded in bits 20-16, offset is encoded in bits 15-0.
++   assert(MI.getOperand(OpNo).isReg());
++   unsigned RegBits = getMachineOpValue(MI, MI.getOperand(OpNo), Fixups, STI) << 16;
++   unsigned OffBits = getMachineOpValue(MI, MI.getOperand(OpNo+1), Fixups, STI);
++ 
++   return (OffBits & 0xFFFF) | RegBits;
++ }
++ 
++ /// getMoveTargetOpValue - Return binary encoding of the move
++ /// target operand.
++ unsigned AquilaMCCodeEmitter::
++ getMoveTargetOpValue(const MCInst &MI, unsigned OpNo,
++                      SmallVectorImpl<MCFixup> &Fixups) const {
++   assert(MI.getOperand(OpNo).isImm());
++   unsigned value = getMachineOpValue(MI, MI.getOperand(OpNo), Fixups, STI);
++   return value & 0xFFFF;
++ }
++ 
++ /// getJumpTargetOpValue - Return binary encoding of the jump
++ /// target operand. If the machine operand requires relocation,
++ /// record the relocation and return zero.
++ unsigned AquilaMCCodeEmitter::
++ getJumpTargetOpValue(const MCInst &MI, unsigned OpNo,
++                      SmallVectorImpl<MCFixup> &Fixups,
++                      const MCSubtargetInfo &STI) const {
++ 
++   const MCOperand &MO = MI.getOperand(OpNo);
++   assert(MO.isExpr() && "getCallTargetOpValue expects only expressions");
++ 
++   const MCExpr *Expr = MO.getExpr();
++   Fixups.push_back(MCFixup::Create(0, Expr,
++                                    MCFixupKind(Aquila::fixup_Aquila_24)));
++   return 0;
++ }
++ 
++ #include "AquilaGenMCCodeEmitter.inc"
++ 
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaMCCodeEmitter.h llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaMCCodeEmitter.h
+*** llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaMCCodeEmitter.h	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaMCCodeEmitter.h	2016-02-20 15:33:19.000000000 +0900
+***************
+*** 0 ****
+--- 1,87 ----
++ //===-- AquilaMCCodeEmitter.h - Convert Aquila Code to Machine Code ---------===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ //
++ // This file implements the AquilaMCCodeEmitter class.
++ //
++ //===----------------------------------------------------------------------===//
++ //
++ 
++ #ifndef LLVM_LIB_TARGET_AQUILA_MCTARGETDESC_AQUILAMCCODEEMITTER_H
++ #define LLVM_LIB_TARGET_AQUILA_MCTARGETDESC_AQUILAMCCODEEMITTER_H
++ 
++ #include "MCTargetDesc/AquilaBaseInfo.h"
++ #include "MCTargetDesc/AquilaFixupKinds.h"
++ #include "MCTargetDesc/AquilaMCTargetDesc.h"
++ #include "llvm/ADT/APFloat.h"
++ #include "llvm/ADT/Statistic.h"
++ #include "llvm/MC/MCCodeEmitter.h"
++ #include "llvm/MC/MCExpr.h"
++ #include "llvm/MC/MCInst.h"
++ #include "llvm/MC/MCInstrInfo.h"
++ #include "llvm/MC/MCRegisterInfo.h"
++ #include "llvm/MC/MCSubtargetInfo.h"
++ #include "llvm/Support/raw_ostream.h"
++ 
++ using namespace llvm;
++ 
++ namespace llvm {
++ class AquilaMCCodeEmitter : public MCCodeEmitter {
++   AquilaMCCodeEmitter(const AquilaMCCodeEmitter &); // DO NOT IMPLEMENT
++   void operator=(const AquilaMCCodeEmitter &); // DO NOT IMPLEMENT
++   const MCInstrInfo &MCII;
++   const MCSubtargetInfo &STI;
++   MCContext &Ctx;
++ 
++  public:
++   AquilaMCCodeEmitter(const MCInstrInfo &mcii, const MCSubtargetInfo &sti,
++                     MCContext &ctx) :
++             MCII(mcii), STI(sti) , Ctx(ctx) {}
++ 
++   ~AquilaMCCodeEmitter() {}
++ 
++   // EncodeInstruction - AsmStreamerから実行される
++   // 命令をバイナリにして出力する
++   void EncodeInstruction(const MCInst &MI, raw_ostream &OS,
++                          SmallVectorImpl<MCFixup> &Fixups,
++                          const MCSubtargetInfo &STI) const override;
++ 
++  private:
++   // getBinaryCodeForInstr - TableGenが自動生成
++   // 命令のバイナリエンコーディングを取得
++   uint64_t getBinaryCodeForInstr(const MCInst &MI,
++                                  SmallVectorImpl<MCFixup> &Fixups,
++                                  const MCSubtargetInfo &STI) const;
++ 
++   // getMachineOpValue - TableGenの中から必ず参照される
++   // オペランドのバイナリエンコーディングを取得
++   unsigned getMachineOpValue(const MCInst &MI,const MCOperand &MO,
++                              SmallVectorImpl<MCFixup> &Fixups,
++                              const MCSubtargetInfo &STI) const;
++ 
++   // getMemEncoding - TableGenのDecoderMethodで指定
++   // load/storeのオペランドのバイナリエンコーディングを取得
++   unsigned getMemEncoding(const MCInst &MI, unsigned OpNo,
++                           SmallVectorImpl<MCFixup> &Fixups,
++                           const MCSubtargetInfo &STI) const;
++ 
++   // getMoveTargetOpValue - TableGenのDecoderMethodで指定
++   // moveのオペランドのバイナリエンコーディングを取得
++   unsigned getMoveTargetOpValue(const MCInst &MI, unsigned OpNo,
++                                 SmallVectorImpl<MCFixup> &Fixups) const;
++ 
++   // call命令のオペランドのバイナリエンコーディングを取得
++   unsigned getJumpTargetOpValue(const MCInst &MI, unsigned OpNo,
++                                 SmallVectorImpl<MCFixup> &Fixups,
++                                 const MCSubtargetInfo &STI) const;
++ 
++ 
++ }; // class AquilaMCCodeEmitter
++ }  // namespace
++ 
++ #endif
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaMCTargetDesc.cpp llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaMCTargetDesc.cpp
+*** llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaMCTargetDesc.cpp	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaMCTargetDesc.cpp	2016-02-20 15:33:19.000000000 +0900
+***************
+*** 0 ****
+--- 1,44 ----
++ //===-- AquilaMCTargetDesc.cpp - Aquila Target Descriptions -------------------===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ //
++ // This file provides Aquila specific target descriptions.
++ //
++ //===----------------------------------------------------------------------===//
++ 
++ #include "AquilaMCTargetDesc.h"
++ #include "llvm/MC/MachineLocation.h"
++ #include "llvm/MC/MCCodeGenInfo.h"
++ #include "llvm/MC/MCELFStreamer.h"
++ #include "llvm/MC/MCInstPrinter.h"
++ #include "llvm/MC/MCInstrInfo.h"
++ #include "llvm/MC/MCRegisterInfo.h"
++ #include "llvm/MC/MCSubtargetInfo.h"
++ #include "llvm/MC/MCSymbol.h"
++ #include "llvm/Support/CommandLine.h"
++ #include "llvm/Support/ErrorHandling.h"
++ #include "llvm/Support/FormattedStream.h"
++ #include "llvm/Support/TargetRegistry.h"
++ 
++ using namespace llvm;
++ 
++ #define GET_INSTRINFO_MC_DESC
++ #include "AquilaGenInstrInfo.inc"
++ 
++ #define GET_SUBTARGETINFO_MC_DESC
++ #include "AquilaGenSubtargetInfo.inc"
++ 
++ #define GET_REGINFO_MC_DESC
++ #include "AquilaGenRegisterInfo.inc"
++ 
++ //@2 {
++ extern "C" void LLVMInitializeAquilaTargetMC() {
++ 
++ }
++ //@2 }
++ 
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaMCTargetDesc.h llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaMCTargetDesc.h
+*** llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaMCTargetDesc.h	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaMCTargetDesc.h	2016-02-20 15:35:07.000000000 +0900
+***************
+*** 0 ****
+--- 1,58 ----
++ //===-- AquilaMCTargetDesc.h - Aquila Target Descriptions -----------*- C++ -*-===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ //
++ // This file provides Aquila specific target descriptions.
++ //
++ //===----------------------------------------------------------------------===//
++ 
++ #ifndef LLVM_LIB_TARGET_AQUILA_MCTARGETDESC_AQUILAMCTARGETDESC_H
++ #define LLVM_LIB_TARGET_AQUILA_MCTARGETDESC_AQUILAMCTARGETDESC_H
++ 
++ #include "llvm/Support/DataTypes.h"
++ 
++ namespace llvm {
++ class MCAsmBackend;
++ class MCCodeEmitter;
++ class MCContext;
++ class MCInstrInfo;
++ class MCObjectWriter;
++ class MCRegisterInfo;
++ class MCSubtargetInfo;
++ class StringRef;
++ class Target;
++ class Triple;
++ class raw_ostream;
++ 
++ extern Target TheAquilaTarget;
++ extern Target TheAquilaelTarget;
++ 
++ MCAsmBackend *createAquilaAsmBackend(const Target &T,
++                                      const MCRegisterInfo &MRI,
++                                      StringRef TT,
++                                      StringRef CPU);
++ 
++ MCObjectWriter *createAquilaELFObjectWriter(raw_ostream &OS,
++                                             uint8_t OSABI);
++ 
++ } // End llvm namespace
++ 
++ // Defines symbolic names for Aquila registers.  This defines a mapping from
++ // register name to register number.
++ #define GET_REGINFO_ENUM
++ #include "AquilaGenRegisterInfo.inc"
++ 
++ // Defines symbolic names for the Aquila instructions.
++ #define GET_INSTRINFO_ENUM
++ #include "AquilaGenInstrInfo.inc"
++ 
++ #define GET_SUBTARGETINFO_ENUM
++ #include "AquilaGenSubtargetInfo.inc"
++ 
++ #endif
++ 
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/CMakeLists.txt llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/CMakeLists.txt
+*** llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/CMakeLists.txt	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/CMakeLists.txt	2016-02-20 15:33:19.000000000 +0900
+***************
+*** 0 ****
+--- 1,8 ----
++ add_llvm_library(LLVMAquilaDesc
++   AquilaAsmBackend.cpp
++   AquilaELFObjectWriter.cpp
++   AquilaMCAsmInfo.cpp
++   AquilaMCCodeEmitter.cpp
++   AquilaMCTargetDesc.cpp
++   )
++ 
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/LLVMBuild.txt llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/LLVMBuild.txt
+*** llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/LLVMBuild.txt	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/LLVMBuild.txt	2016-02-20 15:33:19.000000000 +0900
+***************
+*** 0 ****
+--- 1,26 ----
++ ;===- ./lib/Target/Aquila/MCTargetDesc/LLVMBuild.txt -------------*- Conf -*--===;
++ ;
++ ;                     The LLVM Compiler Infrastructure
++ ;
++ ; This file is distributed under the University of Illinois Open Source
++ ; License. See LICENSE.TXT for details.
++ ;
++ ;===------------------------------------------------------------------------===;
++ ;
++ ; This is an LLVMBuild description file for the components in this subdirectory.
++ ;
++ ; For more information on the LLVMBuild system, please see:
++ ;
++ ;   http://llvm.org/docs/LLVMBuild.html
++ ;
++ ;===------------------------------------------------------------------------===;
++ 
++ [component_0]
++ type = Library
++ name = AquilaDesc
++ parent = Aquila
++ required_libraries = MC 
++                      AquilaInfo 
++                      Support
++ add_to_library_groups = Aquila
++ 
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/TargetInfo/AquilaTargetInfo.cpp llvm-3.6.2.src/lib/Target/Aquila/TargetInfo/AquilaTargetInfo.cpp
+*** llvm-3.6.2.src.org/lib/Target/Aquila/TargetInfo/AquilaTargetInfo.cpp	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/TargetInfo/AquilaTargetInfo.cpp	2016-02-20 07:54:29.000000000 +0900
+***************
+*** 0 ****
+--- 1,21 ----
++ //===-- AquilaTargetInfo.cpp - Aquila Target Implementation -------------------===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ 
++ #include "Aquila.h"
++ #include "llvm/IR/Module.h"
++ #include "llvm/Support/TargetRegistry.h"
++ using namespace llvm;
++ 
++ Target llvm::TheAquilaTarget, llvm::TheAquilaelTarget;
++ 
++ extern "C" void LLVMInitializeAquilaTargetInfo() {
++   RegisterTarget<Triple::aquila,
++         /*HasJIT=*/true> X(TheAquilaTarget, "aquila", "Aquila");
++ }
++ 
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/TargetInfo/CMakeLists.txt llvm-3.6.2.src/lib/Target/Aquila/TargetInfo/CMakeLists.txt
+*** llvm-3.6.2.src.org/lib/Target/Aquila/TargetInfo/CMakeLists.txt	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/TargetInfo/CMakeLists.txt	2016-02-20 07:54:29.000000000 +0900
+***************
+*** 0 ****
+--- 1,4 ----
++ add_llvm_library(LLVMAquilaInfo
++   AquilaTargetInfo.cpp
++   )
++ 
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/TargetInfo/LLVMBuild.txt llvm-3.6.2.src/lib/Target/Aquila/TargetInfo/LLVMBuild.txt
+*** llvm-3.6.2.src.org/lib/Target/Aquila/TargetInfo/LLVMBuild.txt	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/TargetInfo/LLVMBuild.txt	2016-02-20 07:54:29.000000000 +0900
+***************
+*** 0 ****
+--- 1,24 ----
++ ;===- ./lib/Target/Aquila/TargetInfo/LLVMBuild.txt ---------------*- Conf -*--===;
++ ;
++ ;                     The LLVM Compiler Infrastructure
++ ;
++ ; This file is distributed under the University of Illinois Open Source
++ ; License. See LICENSE.TXT for details.
++ ;
++ ;===------------------------------------------------------------------------===;
++ ;
++ ; This is an LLVMBuild description file for the components in this subdirectory.
++ ;
++ ; For more information on the LLVMBuild system, please see:
++ ;
++ ;   http://llvm.org/docs/LLVMBuild.html
++ ;
++ ;===------------------------------------------------------------------------===;
++ 
++ [component_0]
++ type = Library
++ name = AquilaInfo
++ parent = Aquila
++ required_libraries = Support
++ add_to_library_groups = Aquila
++ 
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/LLVMBuild.txt llvm-3.6.2.src/lib/Target/LLVMBuild.txt
+*** llvm-3.6.2.src.org/lib/Target/LLVMBuild.txt	2016-02-17 03:03:54.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/LLVMBuild.txt	2016-02-18 23:57:44.000000000 +0900
+***************
+*** 16,22 ****
+  ;===------------------------------------------------------------------------===;
+  
+  [common]
+! subdirectories = ARM AArch64 CppBackend Hexagon MSP430 NVPTX Mips PowerPC R600 Sparc SystemZ X86 XCore
+  
+  ; This is a special group whose required libraries are extended (by llvm-build)
+  ; with the best execution engine (the native JIT, if available, or the
+--- 16,22 ----
+  ;===------------------------------------------------------------------------===;
+  
+  [common]
+! subdirectories = ARM AArch64 CppBackend Hexagon MSP430 NVPTX Mips PowerPC R600 Sparc SystemZ X86 XCore Aquila
+  
+  ; This is a special group whose required libraries are extended (by llvm-build)
+  ; with the best execution engine (the native JIT, if available, or the
