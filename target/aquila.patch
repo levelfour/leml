@@ -330,7 +330,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Support/Triple.cpp llvm-3.6.2.src/li
     case Triple::r600:
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/Aquila.h llvm-3.6.2.src/lib/Target/Aquila/Aquila.h
 *** llvm-3.6.2.src.org/lib/Target/Aquila/Aquila.h	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/Aquila.h	2016-02-20 07:54:29.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/Aquila.h	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,28 ----
@@ -364,7 +364,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/Aquila.h llvm-3.6.2.sr
 + 
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/Aquila.td llvm-3.6.2.src/lib/Target/Aquila/Aquila.td
 *** llvm-3.6.2.src.org/lib/Target/Aquila/Aquila.td	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/Aquila.td	2016-02-20 07:54:29.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/Aquila.td	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,42 ----
@@ -412,7 +412,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/Aquila.td llvm-3.6.2.s
 + }
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaAsmPrinter.cpp llvm-3.6.2.src/lib/Target/Aquila/AquilaAsmPrinter.cpp
 *** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaAsmPrinter.cpp	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/AquilaAsmPrinter.cpp	2016-02-20 18:52:08.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaAsmPrinter.cpp	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,51 ----
@@ -469,7 +469,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaAsmPrinter.cpp l
 + }
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaAsmPrinter.h llvm-3.6.2.src/lib/Target/Aquila/AquilaAsmPrinter.h
 *** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaAsmPrinter.h	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/AquilaAsmPrinter.h	2016-02-20 07:54:29.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaAsmPrinter.h	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,37 ----
@@ -512,7 +512,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaAsmPrinter.h llv
 + #endif
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaCCState.cpp llvm-3.6.2.src/lib/Target/Aquila/AquilaCCState.cpp
 *** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaCCState.cpp	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/AquilaCCState.cpp	2016-02-21 00:01:18.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaCCState.cpp	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,142 ----
@@ -660,7 +660,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaCCState.cpp llvm
 + }
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaCCState.h llvm-3.6.2.src/lib/Target/Aquila/AquilaCCState.h
 *** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaCCState.h	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/AquilaCCState.h	2016-02-20 23:31:05.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaCCState.h	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,136 ----
@@ -802,7 +802,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaCCState.h llvm-3
 + #endif
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaCallingConv.td llvm-3.6.2.src/lib/Target/Aquila/AquilaCallingConv.td
 *** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaCallingConv.td	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/AquilaCallingConv.td	2016-02-20 07:54:29.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaCallingConv.td	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,30 ----
@@ -838,7 +838,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaCallingConv.td l
 + def CSR_SingleFloatOnly : CalleeSavedRegs<(add (sequence "R%u", 31, 23), R4)>;
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaFrameLowering.cpp llvm-3.6.2.src/lib/Target/Aquila/AquilaFrameLowering.cpp
 *** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaFrameLowering.cpp	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/AquilaFrameLowering.cpp	2016-02-20 07:54:29.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaFrameLowering.cpp	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,87 ----
@@ -931,7 +931,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaFrameLowering.cp
 + }
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaFrameLowering.h llvm-3.6.2.src/lib/Target/Aquila/AquilaFrameLowering.h
 *** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaFrameLowering.h	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/AquilaFrameLowering.h	2016-02-20 07:54:29.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaFrameLowering.h	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,41 ----
@@ -978,7 +978,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaFrameLowering.h 
 + #endif
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaISelDAGtoDAG.cpp llvm-3.6.2.src/lib/Target/Aquila/AquilaISelDAGtoDAG.cpp
 *** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaISelDAGtoDAG.cpp	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/AquilaISelDAGtoDAG.cpp	2016-02-21 00:10:11.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaISelDAGtoDAG.cpp	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,91 ----
@@ -1075,10 +1075,10 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaISelDAGtoDAG.cpp
 + }
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaISelDAGtoDAG.h llvm-3.6.2.src/lib/Target/Aquila/AquilaISelDAGtoDAG.h
 *** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaISelDAGtoDAG.h	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/AquilaISelDAGtoDAG.h	2016-02-21 00:08:35.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaISelDAGtoDAG.h	2016-02-21 03:17:43.000000000 +0900
 ***************
 *** 0 ****
---- 1,68 ----
+--- 1,62 ----
 + //===-- AquilaISelDAGToDAG.h - A Dag to Dag Inst Selector for Aquila --------===//
 + //
 + //                     The LLVM Compiler Infrastructure
@@ -1127,12 +1127,6 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaISelDAGtoDAG.h l
 +     return static_cast<const AquilaTargetMachine &>(TM);
 +   }
 + 
-+   /// getInstrInfo - Return a reference to the TargetInstrInfo, casted
-+   /// to the target-specific type.
-+   const AquilaInstrInfo *getInstrInfo() {
-+     return getTargetMachine().getInstrInfo();
-+   }
-+ 
 +   SDNode *Select(SDNode *N) override;
 + 
 +   // Complex Pattern.
@@ -1149,7 +1143,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaISelDAGtoDAG.h l
 + #endif
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaISelLowering.cpp llvm-3.6.2.src/lib/Target/Aquila/AquilaISelLowering.cpp
 *** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaISelLowering.cpp	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/AquilaISelLowering.cpp	2016-02-20 23:54:58.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaISelLowering.cpp	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,387 ----
@@ -1542,7 +1536,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaISelLowering.cpp
 + }
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaISelLowering.h llvm-3.6.2.src/lib/Target/Aquila/AquilaISelLowering.h
 *** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaISelLowering.h	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/AquilaISelLowering.h	2016-02-21 00:03:03.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaISelLowering.h	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,85 ----
@@ -1633,7 +1627,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaISelLowering.h l
 + #endif // AQUILA_ISELLOWERING_H
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaInstrFormats.td llvm-3.6.2.src/lib/Target/Aquila/AquilaInstrFormats.td
 *** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaInstrFormats.td	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/AquilaInstrFormats.td	2016-02-20 14:30:02.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaInstrFormats.td	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,124 ----
@@ -1763,7 +1757,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaInstrFormats.td 
 + }
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaInstrInfo.cpp llvm-3.6.2.src/lib/Target/Aquila/AquilaInstrInfo.cpp
 *** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaInstrInfo.cpp	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/AquilaInstrInfo.cpp	2016-02-21 00:13:58.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaInstrInfo.cpp	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,268 ----
@@ -2037,7 +2031,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaInstrInfo.cpp ll
 + }
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaInstrInfo.h llvm-3.6.2.src/lib/Target/Aquila/AquilaInstrInfo.h
 *** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaInstrInfo.h	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/AquilaInstrInfo.h	2016-02-21 00:30:38.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaInstrInfo.h	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,91 ----
@@ -2134,7 +2128,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaInstrInfo.h llvm
 + #endif
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaInstrInfo.td llvm-3.6.2.src/lib/Target/Aquila/AquilaInstrInfo.td
 *** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaInstrInfo.td	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/AquilaInstrInfo.td	2016-02-20 18:50:41.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaInstrInfo.td	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,155 ----
@@ -2295,7 +2289,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaInstrInfo.td llv
 +           (JAL texternalsym:$dst)>;
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaMCInstLower.cpp llvm-3.6.2.src/lib/Target/Aquila/AquilaMCInstLower.cpp
 *** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaMCInstLower.cpp	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/AquilaMCInstLower.cpp	2016-02-20 16:34:36.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaMCInstLower.cpp	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,124 ----
@@ -2425,7 +2419,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaMCInstLower.cpp 
 + }
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaMCInstLower.h llvm-3.6.2.src/lib/Target/Aquila/AquilaMCInstLower.h
 *** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaMCInstLower.h	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/AquilaMCInstLower.h	2016-02-20 16:35:14.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaMCInstLower.h	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,47 ----
@@ -2478,7 +2472,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaMCInstLower.h ll
 + #endif
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaMachineFunction.cpp llvm-3.6.2.src/lib/Target/Aquila/AquilaMachineFunction.cpp
 *** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaMachineFunction.cpp	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/AquilaMachineFunction.cpp	2016-02-20 07:54:29.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaMachineFunction.cpp	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,20 ----
@@ -2504,7 +2498,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaMachineFunction.
 + void AquilaMachineFunctionInfo::anchor() {}
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaMachineFunction.h llvm-3.6.2.src/lib/Target/Aquila/AquilaMachineFunction.h
 *** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaMachineFunction.h	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/AquilaMachineFunction.h	2016-02-20 07:54:29.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaMachineFunction.h	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,33 ----
@@ -2543,7 +2537,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaMachineFunction.
 + #endif // AQUILA_MACHINE_FUNCTION_INFO_H
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaRegisterInfo.cpp llvm-3.6.2.src/lib/Target/Aquila/AquilaRegisterInfo.cpp
 *** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaRegisterInfo.cpp	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/AquilaRegisterInfo.cpp	2016-02-20 07:54:29.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaRegisterInfo.cpp	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,126 ----
@@ -2675,10 +2669,10 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaRegisterInfo.cpp
 + }
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaRegisterInfo.h llvm-3.6.2.src/lib/Target/Aquila/AquilaRegisterInfo.h
 *** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaRegisterInfo.h	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/AquilaRegisterInfo.h	2016-02-20 07:54:29.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaRegisterInfo.h	2016-02-21 03:06:10.000000000 +0900
 ***************
 *** 0 ****
---- 1,54 ----
+--- 1,55 ----
 + 
 + //===-- AquilaRegisterInfo.h - Aquila Register Information Impl -----*- C++ -*-===//
 + //
@@ -2706,7 +2700,8 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaRegisterInfo.h l
 + class AquilaSubtarget;
 + class Type;
 + 
-+ struct AquilaRegisterInfo : public AquilaGenRegisterInfo {
++ class AquilaRegisterInfo : public AquilaGenRegisterInfo {
++ public:
 +   const AquilaSubtarget &Subtarget;
 + 
 +   AquilaRegisterInfo(const AquilaSubtarget &Subtarget);
@@ -2735,7 +2730,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaRegisterInfo.h l
 + #endif
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaRegisterInfo.td llvm-3.6.2.src/lib/Target/Aquila/AquilaRegisterInfo.td
 *** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaRegisterInfo.td	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/AquilaRegisterInfo.td	2016-02-20 07:54:29.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaRegisterInfo.td	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,89 ----
@@ -2830,7 +2825,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaRegisterInfo.td 
 + )>;
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaSchedule.td llvm-3.6.2.src/lib/Target/Aquila/AquilaSchedule.td
 *** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaSchedule.td	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/AquilaSchedule.td	2016-02-20 07:54:29.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaSchedule.td	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,37 ----
@@ -2873,7 +2868,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaSchedule.td llvm
 + 
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaSelectionDAGInfo.cpp llvm-3.6.2.src/lib/Target/Aquila/AquilaSelectionDAGInfo.cpp
 *** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaSelectionDAGInfo.cpp	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/AquilaSelectionDAGInfo.cpp	2016-02-20 07:54:29.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaSelectionDAGInfo.cpp	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,21 ----
@@ -2900,7 +2895,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaSelectionDAGInfo
 + AquilaSelectionDAGInfo::~AquilaSelectionDAGInfo() {}
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaSelectionDAGInfo.h llvm-3.6.2.src/lib/Target/Aquila/AquilaSelectionDAGInfo.h
 *** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaSelectionDAGInfo.h	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/AquilaSelectionDAGInfo.h	2016-02-20 07:54:29.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaSelectionDAGInfo.h	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,30 ----
@@ -2936,7 +2931,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaSelectionDAGInfo
 + #endif
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaSubtarget.cpp llvm-3.6.2.src/lib/Target/Aquila/AquilaSubtarget.cpp
 *** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaSubtarget.cpp	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/AquilaSubtarget.cpp	2016-02-20 07:54:29.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaSubtarget.cpp	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,34 ----
@@ -2976,7 +2971,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaSubtarget.cpp ll
 + }
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaSubtarget.h llvm-3.6.2.src/lib/Target/Aquila/AquilaSubtarget.h
 *** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaSubtarget.h	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/AquilaSubtarget.h	2016-02-20 07:54:29.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaSubtarget.h	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,40 ----
@@ -3022,10 +3017,10 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaSubtarget.h llvm
 + #endif
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaTargetMachine.cpp llvm-3.6.2.src/lib/Target/Aquila/AquilaTargetMachine.cpp
 *** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaTargetMachine.cpp	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/AquilaTargetMachine.cpp	2016-02-20 07:54:29.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaTargetMachine.cpp	2016-02-21 03:14:57.000000000 +0900
 ***************
 *** 0 ****
---- 1,48 ----
+--- 1,63 ----
 + //===-- AquilaTargetMachine.cpp - Define TargetMachine for Aquila -------------===//
 + //
 + //                     The LLVM Compiler Infrastructure
@@ -3040,6 +3035,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaTargetMachine.cp
 + //===----------------------------------------------------------------------===//
 + 
 + #include "AquilaTargetMachine.h"
++ #include "AquilaTargetObjectFile.h"
 + #include "AquilaISelDAGtoDAG.h"
 + #include "Aquila.h"
 + 
@@ -3052,6 +3048,20 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaTargetMachine.cp
 + #define DEBUG_TYPE "aquila"
 + 
 + extern "C" void LLVMInitializeAquilaTarget() {
++   RegisterTargetMachine<AquilaTargetMachine> X(TheAquilaTarget);
++ }
++ 
++ AquilaTargetMachine::AquilaTargetMachine(const Target &T, StringRef TT,
++                                          StringRef CPU, StringRef FS,
++                                          const TargetOptions &Options,
++                                          Reloc::Model RM, CodeModel::Model CM,
++                                          CodeGenOpt::Level OL)
++     : LLVMTargetMachine(T, TT, CPU, FS, Options, RM, CM, OL),
++       Subtarget(nullptr),
++       DefaultSubtarget(TT, CPU, FS),
++       TLOF(make_unique<AquilaTargetObjectFile>()) {
++   Subtarget = &DefaultSubtarget;
++   initAsmInfo();
 + }
 + 
 + class AquilaPassConfig : public TargetPassConfig {
@@ -3076,10 +3086,10 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaTargetMachine.cp
 + }
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaTargetMachine.h llvm-3.6.2.src/lib/Target/Aquila/AquilaTargetMachine.h
 *** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaTargetMachine.h	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/AquilaTargetMachine.h	2016-02-21 00:30:44.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaTargetMachine.h	2016-02-21 03:16:22.000000000 +0900
 ***************
 *** 0 ****
---- 1,78 ----
+--- 1,57 ----
 + //===-- AquilaTargetMachine.h - Define TargetMachine for Aquila -----*- C++ -*-===//
 + //
 + //                     The LLVM Compiler Infrastructure
@@ -3100,7 +3110,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaTargetMachine.h 
 + #include "AquilaInstrInfo.h"
 + #include "AquilaISelLowering.h"
 + #include "AquilaSelectionDAGInfo.h"
-+ #include "AquilaRegisterInfo.h"
++ //#include "AquilaRegisterInfo.h"
 + #include "AquilaSubtarget.h"
 + #include "llvm/IR/DataLayout.h"
 + #include "llvm/Target/TargetMachine.h"
@@ -3110,46 +3120,25 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaTargetMachine.h 
 + #define GET_INSTRINFO_CTOR_DTOR
 + 
 + namespace llvm {
++ class formatted_raw_ostream;
++ class AquilaRegisterInfo;
 + 
 + class AquilaTargetMachine : public LLVMTargetMachine {
-+   const DataLayout DL;
-+   AquilaSubtarget Subtarget;
-+   AquilaInstrInfo InstrInfo;
-+   AquilaFrameLowering FrameLowering;
-+   AquilaTargetLowering TLInfo;
-+   AquilaSelectionDAGInfo TSInfo;
++   AquilaSubtarget *Subtarget;
++   AquilaSubtarget DefaultSubtarget;
++   std::unique_ptr<TargetLoweringObjectFile> TLOF;
 + 
 + public:
 +   AquilaTargetMachine(const Target &T, StringRef TT, StringRef CPU, StringRef FS,
 +                       const TargetOptions &Options, Reloc::Model RM,
 +                       CodeModel::Model CM, CodeGenOpt::Level OL);
 + 
-+   virtual const AquilaInstrInfo *getInstrInfo() const {
-+     return &InstrInfo;
-+   }
-+ 
 +   virtual const AquilaSubtarget *getSubtargetImpl() const override {
-+     return &Subtarget;
++     return Subtarget;
 +   }
 + 
-+ //  virtual const AquilaRegisterInfo *getRegisterInfo() const {
-+ //    return &InstrInfo.getRegisterInfo();
-+ //  }
-+ 
-+   virtual const DataLayout *getDataLayout() const {
-+     return &DL;
-+   }
-+ 
-+   virtual const AquilaTargetLowering *getTargetLowering() const {
-+     return &TLInfo;
-+   }
-+ 
-+   virtual const AquilaFrameLowering *getFrameLowering() const {
-+     return &FrameLowering;
-+   }
-+ 
-+   virtual const AquilaSelectionDAGInfo *getSelectionDAGInfo() const {
-+     return &TSInfo;
++   TargetLoweringObjectFile *getObjFileLowering() const override {
++     return TLOF.get();
 +   }
 + 
 +   virtual TargetPassConfig *createPassConfig(PassManagerBase &PM) override;
@@ -3158,12 +3147,93 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaTargetMachine.h 
 + }
 + 
 + #endif
-diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/CMakeLists.txt llvm-3.6.2.src/lib/Target/Aquila/CMakeLists.txt
-*** llvm-3.6.2.src.org/lib/Target/Aquila/CMakeLists.txt	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/CMakeLists.txt	2016-02-20 23:59:13.000000000 +0900
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaTargetObjectFile.cpp llvm-3.6.2.src/lib/Target/Aquila/AquilaTargetObjectFile.cpp
+*** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaTargetObjectFile.cpp	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaTargetObjectFile.cpp	2016-02-21 02:51:55.000000000 +0900
 ***************
 *** 0 ****
---- 1,36 ----
+--- 1,41 ----
++ //===-- AquilaTargetObjectFile.cpp - Aquila Object Files ----------------------===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ 
++ #include "AquilaTargetObjectFile.h"
++ #include "AquilaSubtarget.h"
++ #include "llvm/IR/DataLayout.h"
++ #include "llvm/IR/DerivedTypes.h"
++ #include "llvm/IR/GlobalVariable.h"
++ #include "llvm/MC/MCContext.h"
++ #include "llvm/MC/MCSectionELF.h"
++ #include "llvm/Support/CommandLine.h"
++ #include "llvm/Support/ELF.h"
++ #include "llvm/Target/TargetMachine.h"
++ using namespace llvm;
++ 
++ static cl::opt<unsigned>
++ SSThreshold("aquila-ssection-threshold", cl::Hidden,
++             cl::desc("Small data and bss section threshold size (default=8)"),
++             cl::init(8));
++ 
++ void AquilaTargetObjectFile::Initialize(MCContext &Ctx, const TargetMachine &TM){
++   TargetLoweringObjectFileELF::Initialize(Ctx, TM);
++   InitializeELF(TM.Options.UseInitArray);
++ 
++   SmallDataSection =
++     getContext().getELFSection(".sdata", ELF::SHT_PROGBITS,
++                                ELF::SHF_WRITE |ELF::SHF_ALLOC,
++                                SectionKind::getDataRel());
++ 
++   SmallBSSSection =
++     getContext().getELFSection(".sbss", ELF::SHT_NOBITS,
++                                ELF::SHF_WRITE |ELF::SHF_ALLOC,
++                                SectionKind::getBSS());
++   this->TM = &TM;
++ }
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/AquilaTargetObjectFile.h llvm-3.6.2.src/lib/Target/Aquila/AquilaTargetObjectFile.h
+*** llvm-3.6.2.src.org/lib/Target/Aquila/AquilaTargetObjectFile.h	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/AquilaTargetObjectFile.h	2016-02-21 02:55:57.000000000 +0900
+***************
+*** 0 ****
+--- 1,28 ----
++ //===-- llvm/Target/AquilaTargetObjectFile.h - Aquila Object Info ---*- C++ -*-===//
++ //
++ //                     The LLVM Compiler Infrastructure
++ //
++ // This file is distributed under the University of Illinois Open Source
++ // License. See LICENSE.TXT for details.
++ //
++ //===----------------------------------------------------------------------===//
++ 
++ #ifndef LLVM_LIB_TARGET_AQUILA_AQUILATARGETOBJECTFILE_H
++ #define LLVM_LIB_TARGET_AQUILA_AQUILATARGETOBJECTFILE_H
++ 
++ #include "AquilaTargetMachine.h"
++ #include "llvm/CodeGen/TargetLoweringObjectFileImpl.h"
++ 
++ namespace llvm {
++ 
++   class AquilaTargetObjectFile : public TargetLoweringObjectFileELF {
++     const MCSection *SmallDataSection;
++     const MCSection *SmallBSSSection;
++     const TargetMachine *TM;
++   public:
++ 
++     void Initialize(MCContext &Ctx, const TargetMachine &TM) override;
++   };
++ } // end namespace llvm
++ 
++ #endif
+diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/CMakeLists.txt llvm-3.6.2.src/lib/Target/Aquila/CMakeLists.txt
+*** llvm-3.6.2.src.org/lib/Target/Aquila/CMakeLists.txt	1970-01-01 09:00:00.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/CMakeLists.txt	2016-02-21 02:53:44.000000000 +0900
+***************
+*** 0 ****
+--- 1,37 ----
 + set(LLVM_TARGET_DEFINITIONS Aquila.td)
 + 
 + tablegen(LLVM AquilaGenRegisterInfo.inc -gen-register-info)
@@ -3193,6 +3263,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/CMakeLists.txt llvm-3.
 +   AquilaSelectionDAGInfo.cpp
 +   AquilaSubtarget.cpp
 +   AquilaTargetMachine.cpp
++   AquilaTargetObjectFile.cpp
 +   )
 + 
 + # Should match with "subdirectories =  MCTargetDesc TargetInfo" in LLVMBuild.txt
@@ -3202,7 +3273,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/CMakeLists.txt llvm-3.
 + 
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/InstPrinter/AquilaInstPrinter.cpp llvm-3.6.2.src/lib/Target/Aquila/InstPrinter/AquilaInstPrinter.cpp
 *** llvm-3.6.2.src.org/lib/Target/Aquila/InstPrinter/AquilaInstPrinter.cpp	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/InstPrinter/AquilaInstPrinter.cpp	2016-02-20 07:54:29.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/InstPrinter/AquilaInstPrinter.cpp	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,60 ----
@@ -3268,7 +3339,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/InstPrinter/AquilaInst
 + }
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/InstPrinter/AquilaInstPrinter.h llvm-3.6.2.src/lib/Target/Aquila/InstPrinter/AquilaInstPrinter.h
 *** llvm-3.6.2.src.org/lib/Target/Aquila/InstPrinter/AquilaInstPrinter.h	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/InstPrinter/AquilaInstPrinter.h	2016-02-20 07:54:29.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/InstPrinter/AquilaInstPrinter.h	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,46 ----
@@ -3320,7 +3391,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/InstPrinter/AquilaInst
 + #endif
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/InstPrinter/CMakeLists.txt llvm-3.6.2.src/lib/Target/Aquila/InstPrinter/CMakeLists.txt
 *** llvm-3.6.2.src.org/lib/Target/Aquila/InstPrinter/CMakeLists.txt	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/InstPrinter/CMakeLists.txt	2016-02-20 08:20:05.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/InstPrinter/CMakeLists.txt	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,3 ----
@@ -3329,11 +3400,11 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/InstPrinter/CMakeLists
 +   )
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/InstPrinter/LLVMBuild.txt llvm-3.6.2.src/lib/Target/Aquila/InstPrinter/LLVMBuild.txt
 *** llvm-3.6.2.src.org/lib/Target/Aquila/InstPrinter/LLVMBuild.txt	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/InstPrinter/LLVMBuild.txt	2016-02-20 07:54:29.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/InstPrinter/LLVMBuild.txt	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,23 ----
-+ ;===- ./lib/Target/Mips/InstPrinter/LLVMBuild.txt --------------*- Conf -*--===;
++ ;===- ./lib/Target/Aquila/InstPrinter/LLVMBuild.txt --------------*- Conf -*--===;
 + ;
 + ;                     The LLVM Compiler Infrastructure
 + ;
@@ -3358,11 +3429,11 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/InstPrinter/LLVMBuild.
 + add_to_library_groups = Aquila
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/InstPrinter/Makefile llvm-3.6.2.src/lib/Target/Aquila/InstPrinter/Makefile
 *** llvm-3.6.2.src.org/lib/Target/Aquila/InstPrinter/Makefile	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/InstPrinter/Makefile	2016-02-20 07:54:29.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/InstPrinter/Makefile	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,15 ----
-+ ##===- lib/Target/Mips/AsmPrinter/Makefile -----------------*- Makefile -*-===##
++ ##===- lib/Target/Aquila/AsmPrinter/Makefile -----------------*- Makefile -*-===##
 + #
 + #                     The LLVM Compiler Infrastructure
 + #
@@ -3373,13 +3444,13 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/InstPrinter/Makefile l
 + LEVEL = ../../../..
 + LIBRARYNAME = LLVMAquilaAsmPrinter
 + 
-+ # Hack: we need to include 'main' mips target directory to grab private headers
++ # Hack: we need to include 'main' aquila target directory to grab private headers
 + CPP.Flags += -I$(PROJ_OBJ_DIR)/.. -I$(PROJ_SRC_DIR)/..
 + 
 + include $(LEVEL)/Makefile.common
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/LLVMBuild.txt llvm-3.6.2.src/lib/Target/Aquila/LLVMBuild.txt
 *** llvm-3.6.2.src.org/lib/Target/Aquila/LLVMBuild.txt	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/LLVMBuild.txt	2016-02-21 00:56:14.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/LLVMBuild.txt	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,34 ----
@@ -3419,7 +3490,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/LLVMBuild.txt llvm-3.6
 + add_to_library_groups = Aquila
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaAsmBackend.cpp llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaAsmBackend.cpp
 *** llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaAsmBackend.cpp	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaAsmBackend.cpp	2016-02-20 15:33:19.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaAsmBackend.cpp	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,117 ----
@@ -3542,7 +3613,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaAsm
 + }
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaAsmBackend.h llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaAsmBackend.h
 *** llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaAsmBackend.h	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaAsmBackend.h	2016-02-20 15:33:19.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaAsmBackend.h	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,101 ----
@@ -3649,11 +3720,11 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaAsm
 + #endif
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaBaseInfo.h llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaBaseInfo.h
 *** llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaBaseInfo.h	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaBaseInfo.h	2016-02-20 15:33:19.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaBaseInfo.h	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,67 ----
-+ //===-- AquilaBaseInfo.h - Top level definitions for MIPS MC ------*- C++ -*-===//
++ //===-- AquilaBaseInfo.h - Top level definitions for AQUILA MC ------*- C++ -*-===//
 + //
 + //                     The LLVM Compiler Infrastructure
 + //
@@ -3722,7 +3793,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaBas
 + #endif
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaELFObjectWriter.cpp llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaELFObjectWriter.cpp
 *** llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaELFObjectWriter.cpp	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaELFObjectWriter.cpp	2016-02-20 15:38:34.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaELFObjectWriter.cpp	2016-02-21 02:55:05.000000000 +0900
 ***************
 *** 0 ****
 --- 1,65 ----
@@ -3772,14 +3843,14 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaELF
 +              const MCFixup &Fixup,
 +              bool IsPCRel) const {
 +   // determine the type of the relocation
-+   unsigned Type = (unsigned)ELF::R_MIPS_NONE;
++   unsigned Type = (unsigned)ELF::R_AQUILA_NONE;
 +   unsigned Kind = (unsigned)Fixup.getKind();
 + 
 +   switch (Kind) {
 +   default:
 +     llvm_unreachable("invalid fixup kind!");
 +   case Aquila::fixup_Aquila_24:
-+     Type = ELF::R_MIPS_26;
++     Type = ELF::R_AQUILA_32;
 +     break;
 +   }
 + 
@@ -3793,7 +3864,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaELF
 + }
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaFixupKinds.h llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaFixupKinds.h
 *** llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaFixupKinds.h	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaFixupKinds.h	2016-02-20 15:33:19.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaFixupKinds.h	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,34 ----
@@ -3833,7 +3904,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaFix
 + #endif // LLVM_AQUILA_AQUILAFIXUPKINDS_H
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaMCAsmInfo.cpp llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaMCAsmInfo.cpp
 *** llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaMCAsmInfo.cpp	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaMCAsmInfo.cpp	2016-02-20 15:33:19.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaMCAsmInfo.cpp	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,29 ----
@@ -3868,7 +3939,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaMCA
 + }
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaMCAsmInfo.h llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaMCAsmInfo.h
 *** llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaMCAsmInfo.h	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaMCAsmInfo.h	2016-02-20 15:33:19.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaMCAsmInfo.h	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,31 ----
@@ -3905,7 +3976,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaMCA
 + #endif
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaMCCodeEmitter.cpp llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaMCCodeEmitter.cpp
 *** llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaMCCodeEmitter.cpp	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaMCCodeEmitter.cpp	2016-02-20 15:33:19.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaMCCodeEmitter.cpp	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,127 ----
@@ -4038,7 +4109,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaMCC
 + 
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaMCCodeEmitter.h llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaMCCodeEmitter.h
 *** llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaMCCodeEmitter.h	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaMCCodeEmitter.h	2016-02-20 15:33:19.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaMCCodeEmitter.h	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,87 ----
@@ -4131,7 +4202,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaMCC
 + #endif
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaMCTargetDesc.cpp llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaMCTargetDesc.cpp
 *** llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaMCTargetDesc.cpp	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaMCTargetDesc.cpp	2016-02-20 15:33:19.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaMCTargetDesc.cpp	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,44 ----
@@ -4181,7 +4252,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaMCT
 + 
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaMCTargetDesc.h llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaMCTargetDesc.h
 *** llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaMCTargetDesc.h	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaMCTargetDesc.h	2016-02-20 15:35:07.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/AquilaMCTargetDesc.h	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,58 ----
@@ -4245,7 +4316,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/AquilaMCT
 + 
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/CMakeLists.txt llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/CMakeLists.txt
 *** llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/CMakeLists.txt	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/CMakeLists.txt	2016-02-20 15:33:19.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/CMakeLists.txt	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,8 ----
@@ -4259,10 +4330,10 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/CMakeList
 + 
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/LLVMBuild.txt llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/LLVMBuild.txt
 *** llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/LLVMBuild.txt	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/LLVMBuild.txt	2016-02-20 15:33:19.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/MCTargetDesc/LLVMBuild.txt	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
---- 1,26 ----
+--- 1,24 ----
 + ;===- ./lib/Target/Aquila/MCTargetDesc/LLVMBuild.txt -------------*- Conf -*--===;
 + ;
 + ;                     The LLVM Compiler Infrastructure
@@ -4284,14 +4355,12 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/MCTargetDesc/LLVMBuild
 + type = Library
 + name = AquilaDesc
 + parent = Aquila
-+ required_libraries = MC 
-+                      AquilaInfo 
-+                      Support
++ required_libraries = MC AquilaAsmPrinter AquilaInfo Support
 + add_to_library_groups = Aquila
 + 
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/TargetInfo/AquilaTargetInfo.cpp llvm-3.6.2.src/lib/Target/Aquila/TargetInfo/AquilaTargetInfo.cpp
 *** llvm-3.6.2.src.org/lib/Target/Aquila/TargetInfo/AquilaTargetInfo.cpp	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/TargetInfo/AquilaTargetInfo.cpp	2016-02-20 07:54:29.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/TargetInfo/AquilaTargetInfo.cpp	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,21 ----
@@ -4318,7 +4387,7 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/TargetInfo/AquilaTarge
 + 
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/TargetInfo/CMakeLists.txt llvm-3.6.2.src/lib/Target/Aquila/TargetInfo/CMakeLists.txt
 *** llvm-3.6.2.src.org/lib/Target/Aquila/TargetInfo/CMakeLists.txt	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/TargetInfo/CMakeLists.txt	2016-02-20 07:54:29.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/TargetInfo/CMakeLists.txt	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
 --- 1,4 ----
@@ -4328,10 +4397,10 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/TargetInfo/CMakeLists.
 + 
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/TargetInfo/LLVMBuild.txt llvm-3.6.2.src/lib/Target/Aquila/TargetInfo/LLVMBuild.txt
 *** llvm-3.6.2.src.org/lib/Target/Aquila/TargetInfo/LLVMBuild.txt	1970-01-01 09:00:00.000000000 +0900
---- llvm-3.6.2.src/lib/Target/Aquila/TargetInfo/LLVMBuild.txt	2016-02-20 07:54:29.000000000 +0900
+--- llvm-3.6.2.src/lib/Target/Aquila/TargetInfo/LLVMBuild.txt	2016-02-21 02:50:25.000000000 +0900
 ***************
 *** 0 ****
---- 1,24 ----
+--- 1,23 ----
 + ;===- ./lib/Target/Aquila/TargetInfo/LLVMBuild.txt ---------------*- Conf -*--===;
 + ;
 + ;                     The LLVM Compiler Infrastructure
@@ -4355,7 +4424,6 @@ diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/Aquila/TargetInfo/LLVMBuild.t
 + parent = Aquila
 + required_libraries = Support
 + add_to_library_groups = Aquila
-+ 
 diff -crN -x '*.pyc' llvm-3.6.2.src.org/lib/Target/LLVMBuild.txt llvm-3.6.2.src/lib/Target/LLVMBuild.txt
 *** llvm-3.6.2.src.org/lib/Target/LLVMBuild.txt	2016-02-17 03:03:54.000000000 +0900
 --- llvm-3.6.2.src/lib/Target/LLVMBuild.txt	2016-02-18 23:57:44.000000000 +0900
